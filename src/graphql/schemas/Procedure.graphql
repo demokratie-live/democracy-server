@@ -1,0 +1,20 @@
+type Proocedure {
+  _id: ID!
+  title: String!
+  price: Float
+  url: String
+  marketPlace: String
+  marketPlaceId: String
+  image: String
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+type Query {
+  getProduct(_id: ID!): Proocedure
+  getProducts: [Proocedure]
+}
+
+type Mutation {
+  createProduct(title: String!): Proocedure
+}
