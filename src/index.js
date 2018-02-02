@@ -13,6 +13,7 @@ import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
 // Models
+import ProcedureModel from './models/Procedure';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
     schema,
     context: {
       // Models
+      ProcedureModel,
     },
     tracing: true,
     cacheControl: true,

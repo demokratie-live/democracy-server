@@ -1,20 +1,23 @@
-type Proocedure {
+type Procedure {
   _id: ID!
   title: String!
-  price: Float
-  url: String
-  marketPlace: String
-  marketPlaceId: String
-  image: String
-  createdAt: Date!
-  updatedAt: Date!
+  procedureId: String
+  type: String
+  period: Int
+  title: String
+  currentStatus: String
+  signature: String
+  gestOrderNumber: String
+  approvalRequired: [String]
+  euDocNr: String
+  abstract: String
+  promulgation: [String]
+  legalValidity: [String]
+  tags: [String]
+  history: [ProcessFlow]
 }
 
 type Query {
-  getProduct(_id: ID!): Proocedure
-  getProducts: [Proocedure]
-}
-
-type Mutation {
-  createProduct(title: String!): Proocedure
+  getProcedure(_id: ID!): Procedure
+  getProcedures(pageSize: Int, offset: Int): [Procedure]
 }

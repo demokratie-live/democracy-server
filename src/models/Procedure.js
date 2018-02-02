@@ -1,5 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
+import ProcessFlow from './Schemas/ProcessFlow';
+
 const ProcedureSchema = new Schema(
   {
     procedureId: { type: String, index: { unique: true } },
@@ -14,6 +16,8 @@ const ProcedureSchema = new Schema(
     abstract: String,
     promulgation: [String],
     legalValidity: [String],
+    tags: [String],
+    history: [ProcessFlow],
   },
   { timestamps: true },
 );
