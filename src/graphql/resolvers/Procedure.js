@@ -25,8 +25,8 @@ export default {
           },
         },
         { $sort: { 'order.date': -1 } },
-        { $skip: offset },
-        { $limit: pageSize },
+        // { $skip: offset },
+        // { $limit: pageSize },
       ]).then((res) => {
         res.forEach((r, i) => console.log(`${i}: `, r._id));
         return res;

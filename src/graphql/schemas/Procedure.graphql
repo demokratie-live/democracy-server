@@ -6,15 +6,8 @@ type Procedure {
   period: Int
   title: String
   currentStatus: String
-  signature: String
-  gestOrderNumber: String
-  approvalRequired: [String]
-  euDocNr: String
   abstract: String
-  promulgation: [String]
-  legalValidity: [String]
   tags: [String]
-  history: [ProcessFlow]
 }
 
 type Query {
