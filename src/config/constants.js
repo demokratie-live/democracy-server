@@ -3,7 +3,6 @@ export default {
   db: {
     development: {
       app: 'mongodb://localhost/democracy_development',
-      bundestagIo: 'mongodb://localhost/bundestagio',
     },
   },
   GRAPHIQL_PATH: '/graphiql',
