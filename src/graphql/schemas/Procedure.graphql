@@ -1,3 +1,9 @@
+enum ProcedureType {
+  PREPARATION
+  VOTING
+  PAST
+}
+
 type Procedure {
   _id: ID!
   title: String!
@@ -11,5 +17,5 @@ type Procedure {
 
 type Query {
   getProcedure(_id: ID!): Procedure
-  procedures(pageSize: Int, offset: Int): [Procedure]
+  procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
 }
