@@ -9,6 +9,11 @@ const ProcedureSchema = new Schema(
     currentStatus: String,
     abstract: String,
     tags: [String],
+    state: {
+      type: String,
+      required: true,
+      enum: ['preparation', 'voting', 'past'],
+    },
   },
   { timestamps: true },
 );

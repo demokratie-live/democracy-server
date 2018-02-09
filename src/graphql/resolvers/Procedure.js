@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 export default {
   Query: {
     getProcedures: (parent, { offset = 0, pageSize = 20 }, { ProcedureModel }) => {

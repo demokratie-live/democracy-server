@@ -7,8 +7,9 @@
   "private": true,
   "scripts": {
     "start": "nodemon --exec babel-node src/index.js",
-    "dev": "nodemon -e js,graphql src/index.js --exec \"node --require dotenv/config --require babel-register\"",
-    "imp": "node --require babel-register scripts/import.js"
+    "dev":
+      "nodemon -e js,graphql src/index.js --exec \"node --require dotenv/config --require babel-register\"",
+    "imp": "nodemon --exec \"babel-node scripts/import.js\""
   },
   "dependencies": {
     "apollo-engine": "^0.8.8",
