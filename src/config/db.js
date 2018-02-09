@@ -8,9 +8,9 @@ mongoose.Promise = global.Promise;
 // mongoose.set('debug', true);
 (async () => {
   try {
-    mongoose.connect(CONSTANTS.DB_URL, {});
+    mongoose.connect(CONSTANTS.db.development.app, {});
   } catch (err) {
-    mongoose.createConnection(CONSTANTS.DB_URL, {});
+    mongoose.createConnection(CONSTANTS.db.development.app, {});
   }
 
   mongoose.connection.once('open', () => console.log('MongoDB is running')).on('error', (e) => {
