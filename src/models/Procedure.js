@@ -14,6 +14,7 @@ const ProcedureSchema = new Schema(
       required: true,
       enum: ['preparation', 'voting', 'past'],
     },
+    voteDate: Date,
   },
   { timestamps: true },
 );

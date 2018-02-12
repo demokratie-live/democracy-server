@@ -1,7 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 export default {
   Query: {
-    procedures: async (parent, { type }, { ProcedureModel }) => {
+    procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
       // Bundesrat hat Zustimmung versagt: 6
       // Für mit dem Grundgesetz unvereinbar erklärt: 2
       // Teile des Gesetzes für nichtig erklärt: 1
@@ -19,14 +19,12 @@ export default {
       // Zustimmung versagt: 11
       // Verabschiedet: 2
       // Noch nicht beraten: 15
-      // Erledigt durch Ablauf der Wahlperiode: 301
+      // : 301
       // Im Vermittlungsverfahren: 1
       // Keine parlamentarische Behandlung: 2
-      // Abgeschlossen - Ergebnis siehe Vorgangsablauf: 157
-      // Zurückgezogen: 50
       // Vermittlungsvorschlag liegt vor: 4
       // Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf: 1142
-      // Für nichtig erklärt: 5
+      // : 5
 
       let currentStates = [];
       switch (type) {
@@ -39,16 +37,27 @@ export default {
           ];
           break;
         case 'VOTING':
-          currentStates = ['Beschlussempfehlung liegt vor'];
+          currentStates = [
+            'Beschlussempfehlung liegt vor',
+            // Unterhalb keys für Vergangen
+            'Zurückgezogen',
+            'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
+            'Für nichtig erklärt',
+            'Erledigt durch Ablauf der Wahlperiode',
+            'Verkündet',
+          ];
           break;
-        case 'PAST':
+        case 'HOT':
           currentStates = [];
           break;
 
         default:
           break;
       }
-      return ProcedureModel.find({ currentStatus: { $in: currentStates } });
+      return ProcedureModel.find({ currentStatus: { $in: currentStates } })
+        .sort({ voteDate: -1 })
+        .skip(offset)
+        .limit(pageSize);
     },
   },
 };

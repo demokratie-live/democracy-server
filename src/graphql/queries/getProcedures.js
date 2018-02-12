@@ -10,6 +10,13 @@ export default gql`
       currentStatus
       abstract
       tags
+      history {
+        assignment
+        decision {
+          tenor
+        }
+        date
+      }
     }
   }
 `;

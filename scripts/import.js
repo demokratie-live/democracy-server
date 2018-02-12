@@ -13,11 +13,19 @@ import getProcedures from '../src/graphql/queries/getProcedures';
 
   procedures.forEach(async (bIoProcedure) => {
     //
-    // console.log(bIoProcedure);
-    await Procedure.findOneAndUpdate({ procedureId: bIoProcedure.procedureId }, bIoProcedure, {
-      upsert: true,
-    });
+    const newBIoProcedure = { ...bIoProcedure };
+    if (bIoProcedure && bIoProcedure.history) {
+      const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
+      if (btWithDecisions.length > 0) {
+        newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
+      }
+    }
+    await Procedure.findOneAndUpdate(
+      { procedureId: newBIoProcedure.procedureId },
+      newBIoProcedure,
+      {
+        upsert: true,
+      },
+    );
   });
-  await mongoose.disconnect();
-  // bIoDb.disconnect();
 })();

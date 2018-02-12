@@ -1,7 +1,7 @@
 enum ProcedureType {
   PREPARATION
   VOTING
-  PAST
+  HOT
 }
 
 type Procedure {
@@ -13,6 +13,7 @@ type Procedure {
   currentStatus: String
   abstract: String
   tags: [String]
+  voteDate: Date
 }
 
 type Query {
