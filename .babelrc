@@ -10,5 +10,5 @@
     ],
     "stage-3"
   ],
-  "plugins": [["transform-object-rest-spread"]]
+  "plugins": [["transform-object-rest-spread", "babel-plugin-inline-import"]]
 }

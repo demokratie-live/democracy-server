@@ -22,7 +22,10 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-const engine = new Engine({ engineConfig: { apiKey: process.env.ENGINE_API_KEY } });
+const engine = new Engine({
+  engineConfig: { apiKey: process.env.ENGINE_API_KEY },
+  graphqlPort: constants.PORT,
+});
 engine.start();
 app.use(engine.expressMiddleware());
 
