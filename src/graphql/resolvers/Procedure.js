@@ -40,10 +40,10 @@ export default {
           currentStates = [
             'Beschlussempfehlung liegt vor',
             // Unterhalb keys für Vergangen
-            'Zurückgezogen',
+            // 'Zurückgezogen',
             'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
             'Für nichtig erklärt',
-            'Erledigt durch Ablauf der Wahlperiode',
+            // 'Erledigt durch Ablauf der Wahlperiode',
             'Verkündet',
           ];
           break;
@@ -54,7 +54,7 @@ export default {
         default:
           break;
       }
-      return ProcedureModel.find({ currentStatus: { $in: currentStates } })
+      return ProcedureModel.find({ currentStatus: { $in: currentStates }, period: { $gte: 18 } })
         .sort({ voteDate: -1 })
         .skip(offset)
         .limit(pageSize);
