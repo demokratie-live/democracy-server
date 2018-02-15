@@ -2,11 +2,10 @@ import ProgressBar from 'cli-progress'; // eslint-disable-line
 import program from 'commander'; // eslint-disable-line
 
 import client from '../src/graphql/client';
-
-import mongoose from '../src/config/db';
 import Procedure from '../src/models/Procedure';
-
 import getProcedures from '../src/graphql/queries/getProcedures';
+
+require('../src/config/db');
 
 (async () => {
   const { data: { procedures } } = await client.query({ query: getProcedures });
