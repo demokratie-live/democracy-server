@@ -3,21 +3,22 @@ import program from 'commander'; // eslint-disable-line
 
 import client from '../src/graphql/client';
 import Procedure from '../src/models/Procedure';
-import getProcedures from '../src/graphql/queries/getProcedures';
+import getAllProcedures from '../src/graphql/queries/getAllProcedures';
 
 require('../src/config/db');
 
 const PAGE_SIZE = 20;
-const IDS = ['231766', '231534', '231097'];
 
 (async () => {
-  // Start Importing
-  const { data: { procedures } } = await client.query({
-    query: getProcedures,
-    variables: { pageSize: PAGE_SIZE, IDs: IDS },
+  console.log('Start Importing');
+  const { data: { allprocedures } } = await client.query({
+    query: getAllProcedures,
+    variables: { pageSize: PAGE_SIZE },
   });
-  // Start Inserting
-  await procedures.forEach(async (bIoProcedure) => {
+  console.log(allprocedures);
+  console.log('Start Inserting');
+  await allprocedures.forEach(async (bIoProcedure) => {
+    //
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
@@ -33,5 +34,5 @@ const IDS = ['231766', '231534', '231097'];
       },
     );
   });
-  // Imported everything!
+  console.log('Imported everything!');
 })();
