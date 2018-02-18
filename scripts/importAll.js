@@ -11,13 +11,13 @@ const PAGE_SIZE = 20;
 
 (async () => {
   console.log('Start Importing');
-  const { data: { allprocedures } } = await client.query({
+  const { data: { allProcedures } } = await client.query({
     query: getAllProcedures,
     variables: { pageSize: PAGE_SIZE },
   });
-  console.log(allprocedures);
+  console.log(allProcedures);
   console.log('Start Inserting');
-  await allprocedures.forEach(async (bIoProcedure) => {
+  await allProcedures.forEach(async (bIoProcedure) => {
     //
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
