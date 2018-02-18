@@ -15,15 +15,20 @@ const PAGE_SIZE = 20;
     query: getAllProcedures,
     variables: { pageSize: PAGE_SIZE },
   });
-  console.log(allProcedures);
+  console.log(allProcedures.map(({ procedureId }) => procedureId));
   console.log('Start Inserting');
   await allProcedures.forEach(async (bIoProcedure) => {
-    //
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
+      } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
+        const [lastHistory] = newBIoProcedure.history.slice(-1);
+        newBIoProcedure.voteDate = lastHistory.date;
+      } else {
+        const [lastHistory] = newBIoProcedure.history.slice(-1);
+        newBIoProcedure.voteDate = lastHistory.date;
       }
     }
     await Procedure.findOneAndUpdate(

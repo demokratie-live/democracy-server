@@ -2,30 +2,6 @@
 export default {
   Query: {
     procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
-      // Bundesrat hat Zustimmung versagt: 6
-      // Für mit dem Grundgesetz unvereinbar erklärt: 2
-      // Teile des Gesetzes für nichtig erklärt: 1
-      // Verkündet: 4836
-      // Überwiesen: 9
-      // Für gegenstandslos erklärt: 1
-      // Dem Bundestag zugeleitet - Noch nicht beraten: 5
-      // Bundesrat hat zugestimmt: 2
-      // Zusammengeführt mit... (siehe Vorgangsablauf): 222
-      // Für erledigt erklärt: 482
-      // Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten: 3
-      // Bundesrat hat Einspruch eingelegt: 1
-      // Bundesrat hat Vermittlungsausschuss nicht angerufen: 1
-      // Abgelehnt: 1123
-      // Zustimmung versagt: 11
-      // Verabschiedet: 2
-      // Noch nicht beraten: 15
-      // : 301
-      // Im Vermittlungsverfahren: 1
-      // Keine parlamentarische Behandlung: 2
-      // Vermittlungsvorschlag liegt vor: 4
-      // Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf: 1142
-      // : 5
-
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
@@ -34,17 +10,35 @@ export default {
             'Den Ausschüssen zugewiesen',
             'Einbringung abgelehnt',
             '1. Durchgang im Bundesrat abgeschlossen',
+            'Überwiesen',
+            'Noch nicht beraten',
+            'Keine parlamentarische Behandlung',
+            'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
           ];
           break;
         case 'VOTING':
           currentStates = [
             'Beschlussempfehlung liegt vor',
             // Unterhalb keys für Vergangen
-            // 'Zurückgezogen',
+            'Erledigt durch Ablauf der Wahlperiode',
+            'Zurückgezogen',
             'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
             'Für nichtig erklärt',
-            // 'Erledigt durch Ablauf der Wahlperiode',
             'Verkündet',
+            'Zusammengeführt mit... (siehe Vorgangsablauf)',
+            'Für erledigt erklärt',
+            'Verabschiedet',
+            'Bundesrat hat zugestimmt',
+            'Bundesrat hat Einspruch eingelegt',
+            'Bundesrat hat Zustimmung versagt',
+            'Bundesrat hat Vermittlungsausschuss nicht angerufen',
+            'Im Vermittlungsverfahren',
+            'Vermittlungsvorschlag liegt vor',
+            'Für mit dem Grundgesetz unvereinbar erklärt',
+            'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
+            'Zustimmung versagt',
+            'Teile des Gesetzes für nichtig erklärt',
+            'Für gegenstandslos erklärt',
           ];
           break;
         case 'HOT':
@@ -54,7 +48,13 @@ export default {
         default:
           break;
       }
-      return ProcedureModel.find({ currentStatus: { $in: currentStates }, period: { $gte: 18 } })
+
+      let period = { $gte: 18 };
+      if (type === 'PREPARATION') {
+        period = { $gte: 19 };
+      }
+
+      return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
         .sort({ voteDate: -1 })
         .skip(offset)
         .limit(pageSize);
