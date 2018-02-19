@@ -10,13 +10,13 @@ require('../src/config/db');
 const PAGE_SIZE = 20;
 
 (async () => {
-  console.log('Start Importing');
+  // console.log('Start Importing');
   const { data: { allProcedures } } = await client.query({
     query: getAllProcedures,
     variables: { pageSize: PAGE_SIZE },
   });
-  console.log(allProcedures.map(({ procedureId }) => procedureId));
-  console.log('Start Inserting');
+  // console.log(allProcedures.map(({ procedureId }) => procedureId));
+  // console.log('Start Inserting');
   await allProcedures.forEach(async (bIoProcedure) => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
@@ -39,5 +39,5 @@ const PAGE_SIZE = 20;
       },
     );
   });
-  console.log('Imported everything!');
+  // console.log('Imported everything!');
 })();
