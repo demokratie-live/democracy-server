@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query procedures($pageSize: Int, $IDs: [String!]) {
-    procedures(pageSize: $pageSize, IDs: $IDs) {
+  query allProcedures($pageSize: Int) {
+    allProcedures(pageSize: $pageSize) {
       title
       procedureId
       type

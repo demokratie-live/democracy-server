@@ -3,27 +3,32 @@ import program from 'commander'; // eslint-disable-line
 
 import client from '../src/graphql/client';
 import Procedure from '../src/models/Procedure';
-import getProcedures from '../src/graphql/queries/getProcedures';
+import getAllProcedures from '../src/graphql/queries/getAllProcedures';
 
 require('../src/config/db');
 
 const PAGE_SIZE = 20;
-const IDS = ['231766', '231534', '231097'];
 
 (async () => {
-  // Start Importing
-  const { data: { procedures } } = await client.query({
-    query: getProcedures,
-    variables: { pageSize: PAGE_SIZE, IDs: IDS },
+  console.log('Start Importing');
+  const { data: { allProcedures } } = await client.query({
+    query: getAllProcedures,
+    variables: { pageSize: PAGE_SIZE },
   });
-  // Start Inserting
-  await procedures.forEach(async (bIoProcedure) => {
-    // console.log(bIoProcedure);
+  console.log(allProcedures.map(({ procedureId }) => procedureId));
+  console.log('Start Inserting');
+  await allProcedures.forEach(async (bIoProcedure) => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
+      } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
+        const [lastHistory] = newBIoProcedure.history.slice(-1);
+        newBIoProcedure.voteDate = lastHistory.date;
+      } else {
+        const [lastHistory] = newBIoProcedure.history.slice(-1);
+        newBIoProcedure.voteDate = lastHistory.date;
       }
     }
     await Procedure.findOneAndUpdate(
@@ -34,5 +39,5 @@ const IDS = ['231766', '231534', '231097'];
       },
     );
   });
-  // Imported everything!
+  console.log('Imported everything!');
 })();
