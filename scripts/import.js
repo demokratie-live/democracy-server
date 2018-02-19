@@ -18,6 +18,7 @@ const IDS = ['231766', '231534', '231097'];
   });
   // Start Inserting
   await procedures.forEach(async (bIoProcedure) => {
+    // console.log(bIoProcedure);
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
