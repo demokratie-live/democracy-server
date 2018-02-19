@@ -7,6 +7,7 @@ export default {
         case 'PREPARATION':
           currentStates = [
             'Dem Bundesrat zugeleitet - Noch nicht beraten',
+            'Dem Bundestag zugeleitet - Noch nicht beraten',
             'Den Ausschüssen zugewiesen',
             'Einbringung abgelehnt',
             '1. Durchgang im Bundesrat abgeschlossen',
