@@ -20,16 +20,17 @@ const PAGE_SIZE = 20;
   await allProcedures.forEach(async (bIoProcedure) => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
-      const btWithDecisions = bIoProcedure.history.filter(({ assignment, decision }) => assignment === 'BT' && decision);
+      const [lastHistory] = newBIoProcedure.history.slice(-1);
+      const btWithDecisions = bIoProcedure.history.filter(({ assignment, initiator }) => assignment === 'BT' && initiator === '2. Beratung');
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
       } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
-        const [lastHistory] = newBIoProcedure.history.slice(-1);
-        newBIoProcedure.voteDate = lastHistory.date;
-      } else {
-        const [lastHistory] = newBIoProcedure.history.slice(-1);
         newBIoProcedure.voteDate = lastHistory.date;
       }
+
+      newBIoProcedure.lastUpdateDate = lastHistory.date;
+
+      newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
     }
     await Procedure.findOneAndUpdate(
       { procedureId: newBIoProcedure.procedureId },
@@ -39,5 +40,5 @@ const PAGE_SIZE = 20;
       },
     );
   });
-  console.log('Imported everything!');
+  console.log('Imported everything!'); // eslint-disable-line
 })();

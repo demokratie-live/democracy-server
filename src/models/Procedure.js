@@ -1,5 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
+import Document from './Schemas/Document';
+
 const ProcedureSchema = new Schema(
   {
     procedureId: { type: String, index: { unique: true } },
@@ -15,6 +17,10 @@ const ProcedureSchema = new Schema(
       enum: ['preparation', 'voting', 'past'],
     },
     voteDate: Date,
+    submissionDate: Date,
+    lastUpdateDate: Date,
+    subjectGroups: [String],
+    importantDocuments: [Document],
   },
   { timestamps: true },
 );
