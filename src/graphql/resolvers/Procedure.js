@@ -51,14 +51,18 @@ export default {
       }
 
       let period = { $gte: 18 };
+      let sort = { voteDate: -1 };
       if (type === 'PREPARATION') {
         period = { $gte: 19 };
+        sort = { lastUpdateDate: -1 };
       }
 
       return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
-        .sort({ voteDate: -1 })
+        .sort(sort)
         .skip(offset)
         .limit(pageSize);
     },
+    procedure: async (parent, { id }, { ProcedureModel }) =>
+      ProcedureModel.findOne({ procedureId: id }),
   },
 };

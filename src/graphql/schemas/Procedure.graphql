@@ -14,9 +14,12 @@ type Procedure {
   abstract: String
   tags: [String]
   voteDate: Date
+  subjectGroups: [String]
+  submissionDate: Date
+  importantDocuments: [Document]
 }
 
 type Query {
-  getProcedure(_id: ID!): Procedure
+  procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
 }
