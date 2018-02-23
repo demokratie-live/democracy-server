@@ -12,6 +12,8 @@ import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
+import importProcedures from './scripts/import';
+
 // Models
 import ProcedureModel from './models/Procedure';
 
@@ -50,6 +52,21 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
     tracing: true,
     cacheControl: true,
   })(req, res, next);
+});
+
+app.post('/webhooks/bundestagio/update', async (req, res) => {
+  const { procedureIds } = req.body;
+  try {
+    res.send({
+      updated: await importProcedures(procedureIds),
+      succeeded: true,
+    });
+  } catch (error) {
+    res.send({
+      error,
+      succeeded: false,
+    });
+  }
 });
 
 const graphqlServer = createServer(app);

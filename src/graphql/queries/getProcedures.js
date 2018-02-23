@@ -10,12 +10,20 @@ export default gql`
       currentStatus
       abstract
       tags
+      subjectGroups
       history {
         assignment
+        initiator
         decision {
           tenor
         }
         date
+      }
+      importantDocuments {
+        editor
+        type
+        url
+        number
       }
     }
   }
