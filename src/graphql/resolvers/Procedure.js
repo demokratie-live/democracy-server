@@ -50,17 +50,35 @@ export default {
           break;
       }
 
-      let period = { $gte: 18 };
+      let period = { $gte: 19 };
       let sort = { voteDate: -1 };
       if (type === 'PREPARATION') {
         period = { $gte: 19 };
         sort = { lastUpdateDate: -1 };
+        return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
+          .sort(sort)
+          .skip(offset)
+          .limit(pageSize);
       }
 
-      return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
-        .sort(sort)
+      const activeVotings = await ProcedureModel.find({
+        voteDate: { $exists: false },
+        currentStatus: { $in: currentStates },
+        period,
+      })
+        .sort({ lastUpdateDate: -1 })
         .skip(offset)
         .limit(pageSize);
+
+      return ProcedureModel.find({
+        voteDate: { $exists: true },
+        currentStatus: { $in: currentStates },
+        period,
+      })
+        .sort(sort)
+        .skip(offset - activeVotings.length > 0 ? offset - activeVotings.length : 0)
+        .limit(pageSize - activeVotings.length)
+        .then(finishedVotings => [...activeVotings, ...finishedVotings]);
     },
     procedure: async (parent, { id }, { ProcedureModel }) =>
       ProcedureModel.findOne({ procedureId: id }),
