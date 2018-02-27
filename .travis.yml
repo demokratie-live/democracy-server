@@ -20,7 +20,6 @@ matrix:
                 - export REPO="democracy/democracy-server"
                 - docker build -f Dockerfile -t $REPO:$COMMIT .
                 - docker tag $REPO:$COMMIT $REPO:$TRAVIS_BRANCH
-                - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
                 - docker push $REPO
 after_script:
   - echo "BUILD FINISHED"
