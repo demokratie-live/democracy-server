@@ -18,11 +18,13 @@ matrix:
                 - yarn lint
             after_success:
                 - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-                - export REPO=democracy/democracy-server
+                - export REPO=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "$DOCKER_USER/democracy-server"; else echo "$DOCKER_USER/democracy-server-master" ; fi`
                 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
                 - docker build -f Dockerfile -t $REPO:$COMMIT .
                 - docker tag $REPO:$COMMIT $REPO:$TAG
                 - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+                - docker tag $REPO:$COMMIT democracy/democracy-server:$TAG
+                - docker tag $REPO:$COMMIT democracy/democracy-server:travis-$TRAVIS_BUILD_NUMBER
                 - docker push $REPO
 after_script:
   - echo "BUILD FINISHED"
