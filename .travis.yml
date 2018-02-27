@@ -17,11 +17,11 @@ matrix:
                 - yarn lint
             after_success:
                 # docker on master branch
-                - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_EVENT_TYPE" != "pull_request"]; then
+                - if [ "$TRAVIS_BRANCH" == "master" && $TRAVIS_PULL_REQUEST == "false"]; then
                     docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
                     export REPO="democracy/democracy-server";
                     docker build -f Dockerfile -t $REPO:$COMMIT .;
-                    docker tag $REPO:$COMMIT $REPO:$TRAVIS_BRANCH;
+                    # docker tag $REPO:$COMMIT $REPO:$TRAVIS_BRANCH;
                     docker push $REPO;
                   fi
 after_script:
