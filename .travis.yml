@@ -16,8 +16,8 @@ matrix:
             script:
                 - yarn lint
             after_success:
-                test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "true" &&
-                (   docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
+                - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "true" &&
+                  ( docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
                     export REPO="democracy/democracy-server";
                     docker build -f Dockerfile -t $REPO:$COMMIT .;
                     docker push $REPO;)
