@@ -27,9 +27,11 @@ matrix:
                 # build version bump on PR to master
                 # echo ${TRAVIS_COMMIT_MESSAGE:0:10};
                 #- if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ]; then
-                - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ "${TRAVIS_COMMIT_MESSAGE:0:16}" != "[Travis] Build v" ]; then
+                - TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
+                - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ "${TRAVIS_COMMIT_MSG:0:16}" != "[Travis] Build v" ]; then
+                    echo TRAVIS_COMMIT_MSG;
                     yarn config set version-git-message "[Travis] Build v%s";
-                    CURRENT_VERSION=${grep -Po '"version":.*?[^\\]",' package.json};
+                    CURRENT_VERSION=`grep -Po '"version":.*?[^\\]",' package.json`;
                     echo $CURRENT_VERSION;
                     IFS=. components=(${CURRENT_VERSION});
                     MAJOR=${components[0]};
