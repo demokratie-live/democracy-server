@@ -37,7 +37,7 @@ matrix:
                     echo $MAJOR;
                     echo $MINOR;
                     echo $BUILD;
-                    yarn version --new-version "${MAJOR}.${MINOR}.${BUILD}";
+                    yarn version --new-version ${MAJOR}.${MINOR}.${BUILD};
                     git push;
                   fi
                 # minor version bump on Tag Release -> new PR
