@@ -38,11 +38,11 @@ matrix:
                     echo $minor;
                     echo $build;
                     yarn version --new-version $major.$minor.$build;
-                    git push
+                    git push;
                   fi
-                # minor version bump on PR to release -> new PR
+                # minor version bump on Tag Release -> new PR
                 #   TODO
-                # major version bump on Tag Live -> new PR
+                # major version bump on Tag Stable -> new PR
                 #   TODO
 after_script:
   - echo "BUILD FINISHED"
