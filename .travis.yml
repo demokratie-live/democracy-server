@@ -25,20 +25,20 @@ matrix:
                     docker push $REPO;
                   fi
                 # build version bump on PR to master
-                #- if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ $TRAVIS_COMMIT_MESSAGE:0:10 != "[Travis] v"]; then
-                - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ]; then
-                    echo ${TRAVIS_COMMIT_MESSAGE:0:10};
+                - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ ${TRAVIS_COMMIT_MESSAGE:0:10} != "[Travis] v"]; then
+                # - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ]; then
+                    #echo ${TRAVIS_COMMIT_MESSAGE:0:10};
                     yarn config set version-git-message "[Travis] v%s";
-                    CURRENT_VERSION=grep -Po '"version":.*?[^\\]",' package.json;
+                    CURRENT_VERSION=${grep -Po '"version":.*?[^\\]",' package.json};
                     echo $CURRENT_VERSION;
                     IFS=. components=(${CURRENT_VERSION});
-                    major=${components[0]};
-                    minor=${components[1]};
-                    build=$TRAVIS_BUILD_NUMBER;
-                    echo $major;
-                    echo $minor;
-                    echo $build;
-                    yarn version --new-version $major.$minor.$build;
+                    MAJOR=${components[0]};
+                    MINOR=${components[1]};
+                    BUILD=$TRAVIS_BUILD_NUMBER;
+                    echo $MAJOR;
+                    echo $MINOR;
+                    echo $BUILD;
+                    yarn version --new-version "$MAJOR.$MINOR.$BUILD";
                     git push;
                   fi
                 # minor version bump on Tag Release -> new PR
