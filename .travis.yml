@@ -25,20 +25,17 @@ matrix:
                     docker push $REPO;
                   fi
                 # build version bump on PR to master
-                # echo $TRAVIS_COMMIT_MSG;
+                # git push;
                 - TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
                 - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ "${TRAVIS_COMMIT_MSG:0:16}" != "[Travis] Build v" ]; then
                     yarn config set version-git-message "[Travis] Build v%s";
                     CURRENT_VERSION=`jq -r '.version' package.json`;
-                    echo $CURRENT_VERSION;
                     IFS=. components=(${CURRENT_VERSION});
                     MAJOR=${components[0]};
                     MINOR=${components[1]};
-                    echo $MAJOR;
-                    echo $MINOR;
-                    echo $BUILD;
-                    yarn version --new-version ${MAJOR}.${MINOR}.${BUILD};
-                    git push;
+                    NEW_VERSION=${MAJOR}.${MINOR}.${BUILD};
+                    echo $NEW_VERSION;
+                    yarn version --new-version $NEW_VERSION;
                   fi
                 # minor version bump on Tag Release -> new PR
                 #   TODO
