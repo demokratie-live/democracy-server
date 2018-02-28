@@ -33,7 +33,8 @@ matrix:
                     IFS=. components=(${CURRENT_VERSION});
                     MAJOR=${components[0]};
                     MINOR=${components[1]};
-                    NEW_VERSION=${MAJOR}.${MINOR}.${BUILD};
+                    BUILD=$TRAVIS_BUILD_NUMBER;
+                    NEW_VERSION="${MAJOR}\.${MINOR}\.${BUILD}";
                     echo $NEW_VERSION;
                     yarn version --new-version $NEW_VERSION;
                   fi
