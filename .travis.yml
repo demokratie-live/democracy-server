@@ -34,7 +34,7 @@ matrix:
                     MAJOR=${components[0]};
                     MINOR=${components[1]};
                     BUILD=$TRAVIS_BUILD_NUMBER;
-                    DOT='.';
+                    DOT='\.';
                     NEW_VERSION="${MAJOR}${DOT}${MINOR}${DOT}${BUILD}";
                     echo $NEW_VERSION;
                     yarn version --new-version $NEW_VERSION;
