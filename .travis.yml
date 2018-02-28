@@ -21,6 +21,7 @@ matrix:
                     docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
                     export REPO="democracy/democracy-server";
                     docker build -f Dockerfile -t $REPO:$COMMIT .;
+                    docker tag $REPO:$COMMIT $REPO:master;
                     docker push $REPO;
                   fi
                 # build version bump on PR to master
