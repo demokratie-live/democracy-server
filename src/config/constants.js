@@ -8,4 +8,5 @@ export default {
   },
   GRAPHIQL_PATH: '/graphiql',
   GRAPHQL_PATH: '/graphql',
+  BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/graphql',
 };

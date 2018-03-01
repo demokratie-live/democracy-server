@@ -2,11 +2,12 @@ import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import fetch from 'node-fetch';
+import CONSTANTS from '../config/constants';
 
 const client = new ApolloClient({
   link: new HttpLink({
     // ssrMode: true,
-    uri: 'http://localhost:3100/graphql',
+    uri: CONSTANTS.BUNDESTAGIO_SERVER_URL,
     fetch,
   }),
   cache: new InMemoryCache(),
