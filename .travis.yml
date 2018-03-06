@@ -16,6 +16,7 @@ matrix:
             script:
                 - yarn lint
             after_success:
+                # docker build on merged master
                 - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST == "false" ]; then
                     docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
                     export REPO="democracy/democracy-server";
@@ -23,5 +24,24 @@ matrix:
                     docker tag $REPO:$COMMIT $REPO:master;
                     docker push $REPO;
                   fi
+                # build version bump on PR to master
+                # git push;
+                - TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
+                - if [ $TRAVIS_BRANCH == "master" ] && [ $TRAVIS_PULL_REQUEST != "false" ] && [ "${TRAVIS_COMMIT_MSG:0:16}" != "[Travis] Build v" ]; then
+                    yarn config set version-git-message "[Travis] Build v%s";
+                    CURRENT_VERSION=`jq -r '.version' package.json`;
+                    IFS=. components=(${CURRENT_VERSION});
+                    MAJOR=${components[0]};
+                    MINOR=${components[1]};
+                    BUILD=$TRAVIS_BUILD_NUMBER;
+                    DOT='.';
+                    NEW_VERSION=${MAJOR}${DOT}${MINOR}${DOT}${BUILD};
+                    echo $NEW_VERSION;
+                    yarn version --new-version $NEW_VERSION;
+                  fi
+                # minor version bump on Tag Release -> new PR
+                #   TODO
+                # major version bump on Tag Stable -> new PR
+                #   TODO
 after_script:
   - echo "BUILD FINISHED"
