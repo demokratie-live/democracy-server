@@ -22,4 +22,5 @@ type Procedure {
 type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
+  searchProcedures(term: String!): [Procedure]
 }

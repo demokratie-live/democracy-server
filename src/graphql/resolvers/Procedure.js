@@ -82,5 +82,11 @@ export default {
     },
     procedure: async (parent, { id }, { ProcedureModel }) =>
       ProcedureModel.findOne({ procedureId: id }),
+
+    searchProcedures: (parent, { term }, { ProcedureModel }) =>
+      ProcedureModel.find(
+        { $text: { $search: term }, period: 19 },
+        { score: { $meta: 'textScore' } },
+      ).sort({ score: { $meta: 'textScore' } }),
   },
 };
