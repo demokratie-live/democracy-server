@@ -25,4 +25,30 @@ const ProcedureSchema = new Schema(
   { timestamps: true },
 );
 
+ProcedureSchema.index(
+  {
+    procedureId: 'text',
+    title: 'text',
+    abstract: 'text',
+    tags: 'text',
+    subjectGroups: 'text',
+  },
+  {
+    name: 'searchIndex',
+    default_language: 'german',
+    weights: {
+      title: 10,
+      abstract: 5,
+    },
+  },
+);
+
 export default mongoose.model('Procedure', ProcedureSchema);
+
+mongoose.model('Procedure').ensureIndexes((err) => {
+  if (!err) {
+    console.log('SearchIndexs for Procedures created');
+  } else {
+    console.log({ err });
+  }
+});
