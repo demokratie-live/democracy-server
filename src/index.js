@@ -67,7 +67,7 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
       update = update.concat(value.changedIds);
       return null;
     });
-    const updated = await importProcedures(update);
+    let updated = await importProcedures(update);
 
     const counts = await Procedure.aggregate([{
       $group: {
@@ -96,20 +96,27 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
         types: 1,
       },
     }]);
-    Object.keys(data).map(async (objectKey) => {
+    const update2 = [];
+    await Promise.all(Object.keys(data).map(async (objectKey) => {
       const { count } = data[objectKey].find(d => d.type === 'Gesetzgebung');
       const localCount = counts.find(d => d.period === parseInt(objectKey, 10)).types.find(d => d.type === 'Gesetzgebung').count;
       if (count > localCount) {
-        console.log(count);
-        console.log(localCount);
         const PAGE_SIZE = 20;
         const { data: { procedureUpdates } } = await client.query({
           query: getProcedureUpdates,
           variables: { pageSize: PAGE_SIZE, period: parseInt(objectKey, 10), type: 'Gesetzgebung' },
         });
-        console.log(procedureUpdates);
+        const localProcedureUpdates = await Procedure.find({ period: parseInt(objectKey, 10), type: 'Gesetzgebung' }, { procedureId: 1, lastUpdateDate: 1 });
+        procedureUpdates.map((data2) => {
+          const localData = localProcedureUpdates.find(d => d.procedureId === data2.procedureId);
+          if (!localData || new Date(localData.lastUpdateDate) < new Date(data2.updatedAt)) {
+            update2.push(data2.procedureId);
+          }
+          return null;
+        });
       }
-    });
+    }));
+    updated += await importProcedures(update2);
     res.send({
       updated,
       succeeded: true,
