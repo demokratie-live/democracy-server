@@ -15,7 +15,9 @@ import resolvers from './graphql/resolvers';
 import importProcedures from './scripts/import';
 
 // Models
-import ProcedureModel from './models/Procedure';
+import Procedure from './models/Procedure';
+import getProcedureUpdates from './graphql/queries/getProcedureUpdates';
+import client from './graphql/client';
 
 const app = express();
 
@@ -49,7 +51,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
     schema,
     context: {
       // Models
-      ProcedureModel,
+      Procedure,
     },
     tracing: true,
     cacheControl: true,
@@ -57,10 +59,59 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
 });
 
 app.post('/webhooks/bundestagio/update', async (req, res) => {
-  const { procedureIds } = req.body;
+  const { data } = req.body;
   try {
+    let update = [];
+    Object.keys(data).map((objectKey) => {
+      const value = data[objectKey].find(d => d.type === 'Gesetzgebung');
+      update = update.concat(value.changedIds);
+      return null;
+    });
+    const updated = await importProcedures(update);
+
+    const counts = await Procedure.aggregate([{
+      $group: {
+        _id: {
+          period: '$period',
+          type: '$type',
+        },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: '$_id.period',
+        types: {
+          $push: {
+            type: '$_id.type',
+            count: '$count',
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        period: '$_id',
+        types: 1,
+      },
+    }]);
+    Object.keys(data).map(async (objectKey) => {
+      const { count } = data[objectKey].find(d => d.type === 'Gesetzgebung');
+      const localCount = counts.find(d => d.period === parseInt(objectKey, 10)).types.find(d => d.type === 'Gesetzgebung').count;
+      if (count > localCount) {
+        console.log(count);
+        console.log(localCount);
+        const PAGE_SIZE = 20;
+        const { data: { procedureUpdates } } = await client.query({
+          query: getProcedureUpdates,
+          variables: { pageSize: PAGE_SIZE, period: parseInt(objectKey, 10), type: 'Gesetzgebung' },
+        });
+        console.log(procedureUpdates);
+      }
+    });
     res.send({
-      updated: await importProcedures(procedureIds),
+      updated,
       succeeded: true,
     });
   } catch (error) {
