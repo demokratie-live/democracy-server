@@ -85,7 +85,8 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
     await Promise.all(data.map(async (d) => {
       const period = parseInt(d.period, 10);
       const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung');
-      const localCount = groups.find(c => c.period === period).types.find(ct => ct.type === type).count;
+      const localCount = groups.find(c => c.period === period).types
+        .find(ct => ct.type === type).count;
       // Append Changed IDs
       update.concat(changedIds);
       // Compare Counts Remote & Local
@@ -96,7 +97,8 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
           variables: { pageSize: 20, period, type },
         });
         // Find local Procedure Updates
-        const localProcedureUpdates = await Procedure.find({ period, type }, { procedureId: 1, lastUpdateDate: 1 });
+        const localProcedureUpdates = await Procedure
+          .find({ period, type }, { procedureId: 1, lastUpdateDate: 1 });
         // Compare
         procedureUpdates.map((pu) => {
           const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
