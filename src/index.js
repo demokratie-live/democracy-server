@@ -61,66 +61,59 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
 app.post('/webhooks/bundestagio/update', async (req, res) => {
   const { data } = req.body;
   try {
-    let update = [];
-    Object.keys(data).map((objectKey) => {
-      const value = data[objectKey].find(d => d.type === 'Gesetzgebung');
-      update = update.concat(value.changedIds);
-      return null;
-    });
-    let updated = await importProcedures(update);
-
-    const counts = await Procedure.aggregate([{
+    // Count local Data in groups
+    const groups = await Procedure.aggregate([{
+      // Group by Period & Type
       $group: {
-        _id: {
-          period: '$period',
-          type: '$type',
-        },
+        _id: { period: '$period', type: '$type' },
         count: { $sum: 1 },
       },
     },
     {
+      // Group by Period
       $group: {
         _id: '$_id.period',
-        types: {
-          $push: {
-            type: '$_id.type',
-            count: '$count',
-          },
-        },
+        types: { $push: { type: '$_id.type', count: '$count' } },
       },
     },
     {
-      $project: {
-        _id: 0,
-        period: '$_id',
-        types: 1,
-      },
+      // Rename _id Field to period
+      $project: { _id: 0, period: '$_id', types: 1 },
     }]);
-    const update2 = [];
-    await Promise.all(Object.keys(data).map(async (objectKey) => {
-      const { count } = data[objectKey].find(d => d.type === 'Gesetzgebung');
-      const localCount = counts.find(d => d.period === parseInt(objectKey, 10)).types.find(d => d.type === 'Gesetzgebung').count;
-      if (count > localCount) {
-        const PAGE_SIZE = 20;
+
+    const update = [];
+    await Promise.all(data.map(async (d) => {
+      const period = parseInt(d.period, 10);
+      const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung');
+      const localCount = groups.find(c => c.period === period).types.find(ct => ct.type === type).count;
+      // Append Changed IDs
+      update.concat(changedIds);
+      // Compare Counts Remote & Local
+      if (countBefore > localCount) {
+        // Find remote Procedure Updates
         const { data: { procedureUpdates } } = await client.query({
           query: getProcedureUpdates,
-          variables: { pageSize: PAGE_SIZE, period: parseInt(objectKey, 10), type: 'Gesetzgebung' },
+          variables: { pageSize: 20, period, type },
         });
-        const localProcedureUpdates = await Procedure.find({ period: parseInt(objectKey, 10), type: 'Gesetzgebung' }, { procedureId: 1, lastUpdateDate: 1 });
-        procedureUpdates.map((data2) => {
-          const localData = localProcedureUpdates.find(d => d.procedureId === data2.procedureId);
-          if (!localData || new Date(localData.lastUpdateDate) < new Date(data2.updatedAt)) {
-            update2.push(data2.procedureId);
+        // Find local Procedure Updates
+        const localProcedureUpdates = await Procedure.find({ period, type }, { procedureId: 1, lastUpdateDate: 1 });
+        // Compare
+        procedureUpdates.map((pu) => {
+          const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
+          if (!localData || new Date(localData.lastUpdateDate) < new Date(pu.updatedAt)) {
+            update.push(pu.procedureId);
           }
           return null;
         });
       }
     }));
-    updated += await importProcedures(update2);
+    // Update
+    const updated = await importProcedures(update);
     res.send({
       updated,
       succeeded: true,
     });
+    console.log(`Updated: ${updated}`);
   } catch (error) {
     res.send({
       error,
