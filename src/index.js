@@ -66,6 +66,7 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
     });
     console.log(`Updated: ${updated}`);
   } catch (error) {
+    console.log(error);
     res.send({
       error,
       succeeded: false,

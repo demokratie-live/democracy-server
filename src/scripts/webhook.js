@@ -28,8 +28,9 @@ export default async (data) => {
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
     const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung');
-    const localCount = groups.find(c => c.period === period).types
-      .find(ct => ct.type === type).count;
+    const group = groups.find(c => c.period === period);
+    const localCount = group ? group.types
+      .find(ct => ct.type === type).count : 0;
     // Append Changed IDs
     update.concat(changedIds);
     // Compare Counts Remote & Local
@@ -51,6 +52,15 @@ export default async (data) => {
       });
     }
   }));
-  // Update
-  return importProcedures(update);
+
+  // Splitt in Chunks & Update
+  const chunkSize = 100;
+  let updateCount = 0;
+  let i = 0;
+  for (i = 0; i < update.length; i += chunkSize) {
+    const part = update.slice(i, i + chunkSize);
+    updateCount += await importProcedures(part); // eslint-disable-line no-await-in-loop
+  }
+
+  return updateCount;
 };
