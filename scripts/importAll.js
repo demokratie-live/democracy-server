@@ -7,13 +7,11 @@ import getAllProcedures from '../src/graphql/queries/getAllProcedures';
 
 require('../src/config/db');
 
-const PAGE_SIZE = 20;
-
 (async () => {
   console.log('Start Importing');
   const { data: { allProcedures } } = await client.query({
     query: getAllProcedures,
-    variables: { pageSize: PAGE_SIZE },
+    // variables: {},
   });
   console.log(allProcedures.map(({ procedureId }) => procedureId));
   console.log('Start Inserting');

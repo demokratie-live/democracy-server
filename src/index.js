@@ -12,12 +12,10 @@ import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
-import importProcedures from './scripts/import';
+import webhook from './scripts/webhook';
 
 // Models
-import Procedure from './models/Procedure';
-import getProcedureUpdates from './graphql/queries/getProcedureUpdates';
-import client from './graphql/client';
+import ProcedureModel from './models/Procedure';
 
 const app = express();
 
@@ -51,7 +49,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
     schema,
     context: {
       // Models
-      Procedure,
+      ProcedureModel,
     },
     tracing: true,
     cacheControl: true,
@@ -61,56 +59,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
 app.post('/webhooks/bundestagio/update', async (req, res) => {
   const { data } = req.body;
   try {
-    // Count local Data in groups
-    const groups = await Procedure.aggregate([{
-      // Group by Period & Type
-      $group: {
-        _id: { period: '$period', type: '$type' },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      // Group by Period
-      $group: {
-        _id: '$_id.period',
-        types: { $push: { type: '$_id.type', count: '$count' } },
-      },
-    },
-    {
-      // Rename _id Field to period
-      $project: { _id: 0, period: '$_id', types: 1 },
-    }]);
-
-    const update = [];
-    await Promise.all(data.map(async (d) => {
-      const period = parseInt(d.period, 10);
-      const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung');
-      const localCount = groups.find(c => c.period === period).types
-        .find(ct => ct.type === type).count;
-      // Append Changed IDs
-      update.concat(changedIds);
-      // Compare Counts Remote & Local
-      if (countBefore > localCount) {
-        // Find remote Procedure Updates
-        const { data: { procedureUpdates } } = await client.query({
-          query: getProcedureUpdates,
-          variables: { pageSize: 20, period, type },
-        });
-        // Find local Procedure Updates
-        const localProcedureUpdates = await Procedure
-          .find({ period, type }, { procedureId: 1, lastUpdateDate: 1 });
-        // Compare
-        procedureUpdates.map((pu) => {
-          const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
-          if (!localData || new Date(localData.lastUpdateDate) < new Date(pu.updatedAt)) {
-            update.push(pu.procedureId);
-          }
-          return null;
-        });
-      }
-    }));
-    // Update
-    const updated = await importProcedures(update);
+    const updated = await webhook(data);
     res.send({
       updated,
       succeeded: true,
