@@ -12,7 +12,7 @@ import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
-import importProcedures from './scripts/import';
+import webhook from './scripts/webhook';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -57,13 +57,16 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
 });
 
 app.post('/webhooks/bundestagio/update', async (req, res) => {
-  const { procedureIds } = req.body;
+  const { data } = req.body;
   try {
+    const updated = await webhook(data);
     res.send({
-      updated: await importProcedures(procedureIds),
+      updated,
       succeeded: true,
     });
+    console.log(`Updated: ${updated}`);
   } catch (error) {
+    console.log(error);
     res.send({
       error,
       succeeded: false,
