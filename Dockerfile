@@ -5,8 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN yarn install
-RUN npm install nodemon@latest -g 
+#RUN npm install nodemon@latest -g 
 
 COPY . .
 
-ENTRYPOINT [ "nodemon", "-L", "--exec", "babel-node", "src/index.js" ]
+ENTRYPOINT [ "yarn", "start" ]
