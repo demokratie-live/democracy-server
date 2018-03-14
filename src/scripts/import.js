@@ -5,13 +5,11 @@ import client from '../graphql/client';
 import Procedure from '../models/Procedure';
 import getProcedures from '../graphql/queries/getProcedures';
 
-const PAGE_SIZE = 20;
-
 export default async (procedureIds) => {
   // Start Importing
   const { data: { procedures } } = await client.query({
     query: getProcedures,
-    variables: { pageSize: PAGE_SIZE, IDs: procedureIds },
+    variables: { IDs: procedureIds },
   });
   // Start Inserting
   const promises = await procedures.map(async (bIoProcedure) => {
