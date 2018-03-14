@@ -1,14 +1,12 @@
-FROM node:carbon
+FROM node:latest
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN yarn
+RUN yarn install
+RUN npm install nodemon@latest -g 
 
-# Bundle app source
 COPY . .
 
-# EXPOSE 8080
-
-CMD [ "yarn", "start" ]
+ENTRYPOINT [ "nodemon", "-L", "--exec", "babel-node", "src/index.js" ]
