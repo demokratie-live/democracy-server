@@ -1,25 +1,30 @@
-import ProgressBar from 'cli-progress'; // eslint-disable-line
-import program from 'commander'; // eslint-disable-line
+import ProgressBar from "cli-progress"; // eslint-disable-line
+import program from "commander"; // eslint-disable-line
 
-import client from '../graphql/client';
-import Procedure from '../models/Procedure';
-import getProcedures from '../graphql/queries/getProcedures';
+import createClient from "../graphql/client";
+import Procedure from "../models/Procedure";
+import getProcedures from "../graphql/queries/getProcedures";
 
-export default async (procedureIds) => {
+export default async procedureIds => {
+  const client = createClient();
   // Start Importing
   const { data: { procedures } } = await client.query({
     query: getProcedures,
     variables: { IDs: procedureIds },
+    fetchPolicy: "network-only"
   });
   // Start Inserting
-  const promises = await procedures.map(async (bIoProcedure) => {
+  const promises = await procedures.map(async bIoProcedure => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const [lastHistory] = newBIoProcedure.history.slice(-1);
-      const btWithDecisions = bIoProcedure.history.filter(({ assignment, initiator }) => assignment === 'BT' && initiator === '2. Beratung');
+      const btWithDecisions = bIoProcedure.history.filter(
+        ({ assignment, initiator }) =>
+          assignment === "BT" && initiator === "2. Beratung"
+      );
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-      } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
+      } else if (newBIoProcedure.currentStatus === "Zurückgezogen") {
         newBIoProcedure.voteDate = lastHistory.date;
       }
 
@@ -31,8 +36,8 @@ export default async (procedureIds) => {
       { procedureId: newBIoProcedure.procedureId },
       newBIoProcedure,
       {
-        upsert: true,
-      },
+        upsert: true
+      }
     );
   });
   const result = await Promise.all(promises);
