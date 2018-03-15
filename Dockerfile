@@ -1,14 +1,9 @@
-FROM node:carbon
+FROM node:latest
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN yarn
-
-# Bundle app source
 COPY . .
 
-# EXPOSE 8080
+RUN yarn install
 
-CMD [ "yarn", "start" ]
+ENTRYPOINT [ "yarn", "start" ]

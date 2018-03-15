@@ -4,7 +4,8 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import fetch from 'node-fetch';
 import CONSTANTS from '../config/constants';
 
-const client = new ApolloClient({
+
+const createClient = () => new ApolloClient({
   link: new HttpLink({
     // ssrMode: true,
     uri: CONSTANTS.BUNDESTAGIO_SERVER_URL,
@@ -12,4 +13,4 @@ const client = new ApolloClient({
   }),
   cache: new InMemoryCache(),
 });
-export default client;
+export default createClient;

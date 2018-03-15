@@ -1,15 +1,17 @@
 import ProgressBar from 'cli-progress'; // eslint-disable-line
 import program from 'commander'; // eslint-disable-line
 
-import client from '../graphql/client';
+import createClient from '../graphql/client';
 import Procedure from '../models/Procedure';
 import getProcedures from '../graphql/queries/getProcedures';
 
 export default async (procedureIds) => {
+  const client = createClient();
   // Start Importing
   const { data: { procedures } } = await client.query({
     query: getProcedures,
     variables: { IDs: procedureIds },
+    fetchPolicy: 'network-only',
   });
   // Start Inserting
   const promises = await procedures.map(async (bIoProcedure) => {
