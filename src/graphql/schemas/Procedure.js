@@ -1,3 +1,4 @@
+export default `
 enum ProcedureType {
   PREPARATION
   VOTING
@@ -24,3 +25,4 @@ type Query {
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
   searchProcedures(term: String!): [Procedure]
 }
+`;
