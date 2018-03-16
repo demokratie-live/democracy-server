@@ -1,6 +1,3 @@
-import ProgressBar from 'cli-progress'; // eslint-disable-line
-import program from 'commander'; // eslint-disable-line
-
 import createClient from '../graphql/client';
 import Procedure from '../models/Procedure';
 import getProcedures from '../graphql/queries/getProcedures';
