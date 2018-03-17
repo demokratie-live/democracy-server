@@ -17,6 +17,9 @@ export default {
 
       rsa.setPrivateString(process.env.SECRET_KEY);
       const deviceHash = rsa.decrypt(deviceHashEncrypted);
+      if (!deviceHash) {
+        throw new Error('invalid deviceHash');
+      }
       const user = await UserModel.create({ deviceHash });
 
       return { token: user.createToken() };

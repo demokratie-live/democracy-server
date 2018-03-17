@@ -19,6 +19,7 @@ import auth from './express/auth';
 // Models
 import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
+import ActivityModel from './models/Activity';
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       // Models
       ProcedureModel,
       UserModel,
+      ActivityModel,
     },
     tracing: true,
     cacheControl: true,

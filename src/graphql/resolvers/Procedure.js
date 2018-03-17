@@ -1,7 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 export default {
   Query: {
-    procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
+    procedures: async (parent, { type, offset, pageSize }, { ProcedureModel, ActivityModel }) => {
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
@@ -58,7 +58,12 @@ export default {
         return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
           .sort(sort)
           .skip(offset)
-          .limit(pageSize);
+          .limit(pageSize)
+          .then(results =>
+            results.map(async (procedure) => {
+              const activityIndex = await ActivityModel.find({ procedure }).count();
+              return { ...procedure.toObject(), activityIndex };
+            }));
       }
 
       const activeVotings = await ProcedureModel.find({
@@ -78,15 +83,28 @@ export default {
         .sort(sort)
         .skip(offset - activeVotings.length > 0 ? offset - activeVotings.length : 0)
         .limit(pageSize - activeVotings.length)
-        .then(finishedVotings => [...activeVotings, ...finishedVotings]);
+        .then(finishedVotings => [...activeVotings, ...finishedVotings])
+        .then(results =>
+          results.map(async (procedure) => {
+            const activityIndex = await ActivityModel.find({ procedure }).count();
+            return { ...procedure.toObject(), activityIndex };
+          }));
     },
-    procedure: async (parent, { id }, { ProcedureModel }) =>
-      ProcedureModel.findOne({ procedureId: id }),
-
-    searchProcedures: (parent, { term }, { ProcedureModel }) =>
+    procedure: async (parent, { id }, { ProcedureModel, ActivityModel }) =>
+      ProcedureModel.findOne({ procedureId: id }).then(async (procedure) => {
+        const activityIndex = await ActivityModel.find({ procedure }).count();
+        return { ...procedure.toObject(), activityIndex };
+      }),
+    searchProcedures: (parent, { term }, { ProcedureModel, ActivityModel }) =>
       ProcedureModel.find(
         { $text: { $search: term }, period: 19 },
         { score: { $meta: 'textScore' } },
-      ).sort({ score: { $meta: 'textScore' } }),
+      )
+        .sort({ score: { $meta: 'textScore' } })
+        .then(results =>
+          results.map(async (procedure) => {
+            const activityIndex = await ActivityModel.find({ procedure }).count();
+            return { ...procedure.toObject(), activityIndex };
+          })),
   },
 };

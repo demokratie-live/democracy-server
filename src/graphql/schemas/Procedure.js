@@ -17,6 +17,7 @@ type Procedure {
   voteDate: Date
   subjectGroups: [String]
   submissionDate: Date
+  activityIndex: Int
   importantDocuments: [Document]
 }
 
