@@ -8,7 +8,7 @@ enum ProcedureType {
 type Procedure {
   _id: ID!
   title: String!
-  procedureId: String
+  procedureId: String!
   type: String
   period: Int
   currentStatus: String

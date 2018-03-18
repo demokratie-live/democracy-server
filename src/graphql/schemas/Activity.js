@@ -1,14 +1,14 @@
 export default `
 
 type ActivityIndex {
-  index: Int
+  activityIndex: Int
 }
 
 type Query {
-  activityIndex(procedureId: Int!): ActivityIndex
+  activityIndex(procedureId: String!): ActivityIndex
 }
  
 type Mutation {
-  increaseActivity(procedureId: Int!): Procedure
+  increaseActivity(procedureId: String!): ActivityIndex
 }
 `;

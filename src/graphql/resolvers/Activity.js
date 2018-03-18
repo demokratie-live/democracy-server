@@ -9,7 +9,7 @@ export default {
       const procedure = await ProcedureModel.findOne({ procedureId });
       const activityIndex = await ActivityModel.find({ procedure }).count();
       return {
-        index: activityIndex,
+        activityIndex,
       };
     },
   },
@@ -31,8 +31,7 @@ export default {
         await ActivityModel.create({ user, procedure });
       }
       const activityIndex = await ActivityModel.find({ procedure }).count();
-      console.log(activityIndex);
-      return { ...procedure.toObject(), activityIndex };
+      return { activityIndex };
     },
   },
 };
