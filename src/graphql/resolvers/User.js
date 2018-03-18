@@ -1,4 +1,4 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import RSAKey from 'react-native-rsa';
 
 export default {

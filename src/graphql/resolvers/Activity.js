@@ -1,11 +1,21 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
 export default {
-  Query: {},
+  Query: {
+    activityIndex: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
+      if (!user) {
+        throw new Error('No auth');
+      }
+      const procedure = await ProcedureModel.findOne({ procedureId });
+      const activityIndex = await ActivityModel.find({ procedure }).count();
+      return {
+        index: activityIndex,
+      };
+    },
+  },
 
   Mutation: {
     increaseActivity: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
-      console.log('########### increaseActivity', user);
       if (!user) {
         throw new Error('No auth');
       }
@@ -21,6 +31,7 @@ export default {
         await ActivityModel.create({ user, procedure });
       }
       const activityIndex = await ActivityModel.find({ procedure }).count();
+      console.log(activityIndex);
       return { ...procedure.toObject(), activityIndex };
     },
   },
