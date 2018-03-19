@@ -10,6 +10,8 @@ matrix:
             language: node_js
             node_js:
                 - 8
+            before_install: 
+                - openssl aes-256-cbc -K $encrypted_6b5319f7171a_key -iv $encrypted_6b5319f7171a_iv -in .env.enc -out .env -d
             install:
                 - yarn --version
                 - yarn install
