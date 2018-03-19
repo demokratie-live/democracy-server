@@ -3,9 +3,6 @@
 export default {
   Query: {
     activityIndex: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
-      if (!user) {
-        throw new Error('No auth');
-      }
       const procedure = await ProcedureModel.findOne({ procedureId });
       const activityIndex = await ActivityModel.find({ procedure }).count();
       const active = await ActivityModel.findOne({
