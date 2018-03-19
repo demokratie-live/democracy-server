@@ -8,7 +8,7 @@ enum ProcedureType {
 type Procedure {
   _id: ID!
   title: String!
-  procedureId: String
+  procedureId: String!
   type: String
   period: Int
   currentStatus: String
@@ -17,6 +17,7 @@ type Procedure {
   voteDate: Date
   subjectGroups: [String]
   submissionDate: Date
+  activityIndex: ActivityIndex
   importantDocuments: [Document]
 }
 

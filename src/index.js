@@ -14,8 +14,12 @@ import resolvers from './graphql/resolvers';
 
 import webhook from './scripts/webhook';
 
+import auth from './express/auth';
+
 // Models
 import ProcedureModel from './models/Procedure';
+import UserModel from './models/User';
+import ActivityModel from './models/Activity';
 
 const app = express();
 
@@ -35,6 +39,8 @@ if (process.env.ENGINE_API_KEY) {
 
 app.use(bodyParser.json());
 
+auth(app);
+
 if (process.env.ENVIRONMENT !== 'production') {
   app.use(
     constants.GRAPHIQL_PATH,
@@ -48,8 +54,11 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   graphqlExpress({
     schema,
     context: {
+      user: req.user,
       // Models
       ProcedureModel,
+      UserModel,
+      ActivityModel,
     },
     tracing: true,
     cacheControl: true,
