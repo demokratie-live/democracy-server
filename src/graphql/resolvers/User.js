@@ -20,7 +20,11 @@ export default {
       if (!deviceHash) {
         throw new Error('invalid deviceHash');
       }
-      const user = await UserModel.create({ deviceHash });
+      let user;
+      user = await UserModel.findOne({ deviceHash });
+      if (!user) {
+        user = await UserModel.create({ deviceHash });
+      }
 
       return { token: user.createToken() };
     },
