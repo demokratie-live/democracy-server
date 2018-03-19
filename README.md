@@ -43,6 +43,27 @@ yarn imp
 yarn lint
 ```
 
+## Diagrams
+
+All sorts of visual Documentation.
+
+### Server <-> Bundestag.io
+
+![](https://github.com/demokratie-live/democracy-assets/blob/master/docu/Communication_bundestagio_democracyserver.png)
+
+### Database Model Prototyp
+
+![](https://github.com/demokratie-live/democracy-assets/blob/master/docu/Datenbank%20Model.png)
+![](https://github.com/demokratie-live/democracy-assets/blob/master/docu/ServerDatabase.png)
+
+### Client -> Server: Increase Activity
+
+![](https://github.com/demokratie-live/democracy-assets/blob/master/docu/activity.png)
+
+### Client -> Server: Authentification
+
+![](https://github.com/demokratie-live/democracy-assets/blob/master/docu/auth.png)
+
 ## Contributing
 
 Anyone and everyone is welcome to [contribute](CONTRIBUTING.md). Start by checking out the list of
