@@ -8,8 +8,13 @@ export default {
       }
       const procedure = await ProcedureModel.findOne({ procedureId });
       const activityIndex = await ActivityModel.find({ procedure }).count();
+      const active = await ActivityModel.findOne({
+        user,
+        procedure,
+      });
       return {
         activityIndex,
+        active: !!active,
       };
     },
   },
@@ -23,15 +28,15 @@ export default {
       if (!procedure) {
         throw new Error('Procedure not found');
       }
-      const activity = await ActivityModel.findOne({
+      let active = await ActivityModel.findOne({
         user,
         procedure,
       });
-      if (!activity) {
-        await ActivityModel.create({ user, procedure });
+      if (!active) {
+        active = await ActivityModel.create({ user, procedure });
       }
       const activityIndex = await ActivityModel.find({ procedure }).count();
-      return { activityIndex };
+      return { activityIndex, active };
     },
   },
 };

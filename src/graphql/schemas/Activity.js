@@ -2,6 +2,7 @@ export default `
 
 type ActivityIndex {
   activityIndex: Int
+  active: Boolean
 }
 
 type Query {

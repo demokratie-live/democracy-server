@@ -80,12 +80,28 @@ export default {
         .limit(pageSize - activeVotings.length)
         .then(finishedVotings => [...activeVotings, ...finishedVotings]);
     },
+
     procedure: async (parent, { id }, { ProcedureModel }) =>
       ProcedureModel.findOne({ procedureId: id }),
+
     searchProcedures: (parent, { term }, { ProcedureModel }) =>
       ProcedureModel.find(
         { $text: { $search: term }, period: 19 },
         { score: { $meta: 'textScore' } },
       ).sort({ score: { $meta: 'textScore' } }),
+  },
+
+  Procedure: {
+    activityIndex: async (procedure, args, { ActivityModel, user }) => {
+      const activityIndex = await ActivityModel.find({ procedure }).count();
+      const active = await ActivityModel.findOne({
+        user,
+        procedure,
+      });
+      return {
+        activityIndex,
+        active: !!active,
+      };
+    },
   },
 };
