@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import createClient from '../graphql/client';
 import Procedure from '../models/Procedure';
-import getProcedures from '../graphql/queries/getProcedures';
+import getAllProcedures from '../graphql/queries/getAllProcedures';
 
 const deputiesNumber = {
   8: 518,
@@ -19,16 +19,17 @@ const deputiesNumber = {
   19: 709,
 };
 
-export default async (procedureIds) => {
+export default async () => {
   const client = createClient();
-  // Start Importing
-  const { data: { procedures } } = await client.query({
-    query: getProcedures,
-    variables: { IDs: procedureIds },
-    fetchPolicy: 'network-only',
+  console.log('Start Importing');
+  const { data: { allProcedures } } = await client.query({
+    query: getAllProcedures,
+    // variables: {},
   });
+  console.log(allProcedures.map(({ procedureId }) => procedureId));
+  console.log('Start Inserting');
   // Start Inserting
-  const promises = await procedures.map(async (bIoProcedure) => {
+  await allProcedures.forEach(async (bIoProcedure) => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const [lastHistory] = newBIoProcedure.history.slice(-1);
@@ -60,13 +61,15 @@ export default async (procedureIds) => {
         }
         return false;
       });
+
       newBIoProcedure.voteResults = voteResults;
 
       newBIoProcedure.lastUpdateDate = lastHistory.date;
 
       newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
     }
-    return Procedure.findOneAndUpdate(
+
+    await Procedure.findOneAndUpdate(
       { procedureId: newBIoProcedure.procedureId },
       _(newBIoProcedure)
         .omitBy(x => _.isNull(x) || _.isUndefined(x))
@@ -76,8 +79,5 @@ export default async (procedureIds) => {
       },
     );
   });
-  const result = await Promise.all(promises);
-
-  return result.length;
-  // Imported everything!
+  console.log('Imported everything!'); // eslint-disable-line
 };

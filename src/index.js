@@ -13,6 +13,7 @@ import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
 import webhook from './scripts/webhook';
+// import importAll from './scripts/importAll';
 
 import auth from './express/auth';
 
@@ -82,6 +83,9 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
     });
   }
 });
+
+// Darf in Production nicht ausführbar sein!
+// app.get('/webhooks/bundestagio/import-all', importAll);
 
 const graphqlServer = createServer(app);
 

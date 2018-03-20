@@ -5,6 +5,13 @@ enum ProcedureType {
   HOT
 }
 
+type VoteResult {
+  yes: Int
+  no: Int
+  abstination: Int
+  notVote: Int
+}
+
 type Procedure {
   _id: ID!
   title: String!
@@ -19,6 +26,7 @@ type Procedure {
   submissionDate: Date
   activityIndex: ActivityIndex
   importantDocuments: [Document]
+  voteResults: VoteResult
 }
 
 type Query {
