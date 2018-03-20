@@ -39,7 +39,7 @@ export default async (procedureIds) => {
         newBIoProcedure.voteDate = lastHistory.date;
       }
       let voteResults;
-      procedures.history.some((h) => {
+      bIoProcedure.history.some((h) => {
         if (h.decision) {
           return h.decision.some((decision) => {
             if (decision.type === 'Namentliche Abstimmung') {
