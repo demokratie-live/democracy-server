@@ -60,6 +60,48 @@ export default {
           .skip(offset)
           .limit(pageSize);
       }
+      if (type === 'HOT') {
+        const oneWeekAgo = new Date();
+        period = { $gte: 19 };
+        sort = {};
+        const schemaProps = Object.keys(ProcedureModel.schema.obj).reduce(
+          (obj, prop) => ({ ...obj, [prop]: { $first: `$${prop}` } }),
+          {},
+        );
+        const hotProcedures = await ProcedureModel.aggregate([
+          {
+            $match: {
+              period,
+              $or: [
+                { voteDate: { $gt: oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) } },
+                { voteDate: null },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: 'activities',
+              localField: '_id',
+              foreignField: 'procedure',
+              as: 'activityIndex',
+            },
+          },
+          { $unwind: '$activityIndex' },
+          {
+            $group: {
+              _id: '$_id',
+              ...schemaProps,
+              activities: { $sum: 1 },
+            },
+          },
+          { $sort: { activities: -1 } },
+
+          { $skip: offset },
+          { $limit: pageSize },
+        ]);
+
+        return hotProcedures;
+      }
 
       const activeVotings = await ProcedureModel.find({
         voteDate: { $exists: false },
