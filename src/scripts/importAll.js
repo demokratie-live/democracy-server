@@ -44,7 +44,8 @@ export default async () => {
         if (h.decision) {
           return h.decision.some((decision) => {
             if (decision.type === 'Namentliche Abstimmung') {
-              const vResults = decision.comment.split(':');
+              const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
+              const vResults = decision.comment.match(voteResultsRegEx)[0].split(':');
               voteResults = {
                 yes: vResults[0],
                 no: vResults[1],
