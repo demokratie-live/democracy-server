@@ -21,6 +21,20 @@ export default async (procedureIds) => {
       } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
         newBIoProcedure.voteDate = lastHistory.date;
       }
+      let voteResults = false;
+      procedures.history.forEach((h) => {
+        if (h.decision) {
+          return h.decision.forEach((decision) => {
+            if (decision.type === 'Namentliche Abstimmung') {
+              return (voteResults = {
+                yes: decision.comment,
+                no: decision.comment,
+                abstination: decision.comment,
+              });
+            }
+          });
+        }
+      });
 
       newBIoProcedure.lastUpdateDate = lastHistory.date;
 
