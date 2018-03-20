@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query allProcedures() {
-    allProcedures() {
+  query allProcedures {
+    allProcedures {
       title
       procedureId
       type
@@ -16,6 +16,8 @@ export default gql`
         initiator
         decision {
           tenor
+          type
+          comment
         }
         date
       }

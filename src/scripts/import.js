@@ -22,19 +22,24 @@ export default async (procedureIds) => {
         newBIoProcedure.voteDate = lastHistory.date;
       }
       let voteResults = false;
-      procedures.history.forEach((h) => {
+      procedures.history.some((h) => {
         if (h.decision) {
-          return h.decision.forEach((decision) => {
+          return h.decision.some((decision) => {
             if (decision.type === 'Namentliche Abstimmung') {
-              return (voteResults = {
-                yes: decision.comment,
-                no: decision.comment,
-                abstination: decision.comment,
-              });
+              const vResults = decision.comment.split(':');
+              voteResults = {
+                yes: vResults[0],
+                no: vResults[1],
+                abstination: vResults[2],
+              };
+              return true;
             }
+            return false;
           });
         }
+        return false;
       });
+      newBIoProcedure.voteResults = voteResults;
 
       newBIoProcedure.lastUpdateDate = lastHistory.date;
 
