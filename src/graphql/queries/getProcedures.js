@@ -16,6 +16,8 @@ export default gql`
         initiator
         decision {
           tenor
+          type
+          comment
         }
         date
       }
