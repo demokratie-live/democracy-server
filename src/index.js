@@ -13,7 +13,7 @@ import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
 import webhook from './scripts/webhook';
-import importAll from './scripts/importAll';
+// import importAll from './scripts/importAll';
 
 import auth from './express/auth';
 
