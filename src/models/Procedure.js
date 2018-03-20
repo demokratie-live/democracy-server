@@ -25,6 +25,7 @@ const ProcedureSchema = new Schema(
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
+      notVote: { type: Number, required: true },
     },
   },
   { timestamps: true },
