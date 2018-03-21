@@ -2,7 +2,12 @@
 import mongoose, { Schema } from 'mongoose';
 
 const VoteSchema = new Schema({
-  procedure: { type: Schema.Types.ObjectId, ref: 'Procedure', required: true },
+  procedure: {
+    type: Schema.Types.ObjectId,
+    ref: 'Procedure',
+    required: true,
+    index: { unique: true },
+  },
   users: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
   voteResults: {
     yes: { type: Number, default: 0 },
