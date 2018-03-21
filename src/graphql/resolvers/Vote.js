@@ -8,6 +8,7 @@ export default {
 
   Mutation: {
     vote: async (parent, { procedure, selection }, { VoteModel, user }) => {
+      // TODO check if procedure is votable
       let vote = await VoteModel.findOne({ procedure });
       if (!vote) {
         console.log('### Create new Vote Instance');
