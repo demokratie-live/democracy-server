@@ -20,10 +20,10 @@ export default `
   }
   
   type Mutation {
-    vote(procedure: ID!, selection: VoteSelection!): VoteResult
+    vote(procedure: ID!, selection: VoteSelection!): Vote
   }
   
   type Query {
-    votes(procedure: ID!): VoteResult
+    votes(procedure: ID!): Vote
   }
   `;

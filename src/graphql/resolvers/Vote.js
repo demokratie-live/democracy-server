@@ -16,17 +16,32 @@ const statesCompleted = [
 
 export default {
   Query: {
-    votes: (parent, { procedure }, { VoteModel }) => VoteModel.aggregate([
-      { $match: { procedure: Types.ObjectId(procedure) } },
-      {
-        $group: {
-          _id: '$procedure',
-          yes: { $sum: '$voteResults.yes' },
-          no: { $sum: '$voteResults.no' },
-          abstination: { $sum: '$voteResults.abstination' },
+    votes: (parent, { procedure }, { VoteModel, user }) =>
+      VoteModel.aggregate([
+        { $match: { procedure: Types.ObjectId(procedure) } },
+        { $addFields: { voted: { $in: [user._id, '$users'] } } },
+        {
+          $group: {
+            _id: '$procedure',
+            yes: { $sum: '$voteResults.yes' },
+            no: { $sum: '$voteResults.no' },
+            abstination: { $sum: '$voteResults.abstination' },
+            voted: { $first: '$voted' },
+          },
         },
-      },
-    ]).then(result => result[0] || { yes: null, no: null, abstination: null }),
+        {
+          $project: {
+            _id: 1,
+            voted: 1,
+            voteResults: {
+              yes: '$yes',
+              no: '$no',
+              abstination: '$abstination',
+            },
+          },
+        },
+      ]).then(result =>
+        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } }),
   },
 
   Mutation: {
@@ -35,6 +50,9 @@ export default {
       { procedure: procedureId, selection },
       { VoteModel, ProcedureModel, user },
     ) => {
+      if (!user) {
+        throw new Error('No Auth!');
+      }
       // TODO check if procedure is votable
       const procedure = await ProcedureModel.findById(procedureId);
       let state;
@@ -69,15 +87,29 @@ export default {
       }
       return VoteModel.aggregate([
         { $match: { procedure: procedure._id } },
+        { $addFields: { voted: { $in: [user._id, '$users'] } } },
         {
           $group: {
             _id: '$procedure',
             yes: { $sum: '$voteResults.yes' },
             no: { $sum: '$voteResults.no' },
             abstination: { $sum: '$voteResults.abstination' },
+            voted: { $first: '$voted' },
           },
         },
-      ]).then(result => result[0] || { yes: null, no: null, abstination: null });
+        {
+          $project: {
+            _id: 1,
+            voted: 1,
+            voteResults: {
+              yes: '$yes',
+              no: '$no',
+              abstination: '$abstination',
+            },
+          },
+        },
+      ]).then(result =>
+        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } });
     },
   },
 };
