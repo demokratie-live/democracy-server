@@ -6,14 +6,16 @@ const VoteSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Procedure',
     required: true,
-    index: { unique: true },
   },
-  users: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
+  state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
+  users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   voteResults: {
     yes: { type: Number, default: 0 },
     no: { type: Number, default: 0 },
     abstination: { type: Number, default: 0 },
   },
 });
+
+VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
 
 export default mongoose.model('Vote', VoteSchema);
