@@ -16,23 +16,17 @@ const statesCompleted = [
 
 export default {
   Query: {
-    votes: (parent, { procedure }, { VoteModel }) => {
-      console.log('### procedure query', procedure);
-      return VoteModel.aggregate([
-        { $match: { procedure: Types.ObjectId(procedure) } },
-        {
-          $group: {
-            _id: '$procedure',
-            yes: { $sum: '$voteResults.yes' },
-            no: { $sum: '$voteResults.no' },
-            abstination: { $sum: '$voteResults.abstination' },
-          },
+    votes: (parent, { procedure }, { VoteModel }) => VoteModel.aggregate([
+      { $match: { procedure: Types.ObjectId(procedure) } },
+      {
+        $group: {
+          _id: '$procedure',
+          yes: { $sum: '$voteResults.yes' },
+          no: { $sum: '$voteResults.no' },
+          abstination: { $sum: '$voteResults.abstination' },
         },
-      ]).then((result) => {
-        console.log('### procedure result', result);
-        return result[0] || { yes: null, no: null, abstination: null };
-      });
-    },
+      },
+    ]).then(result => result[0] || { yes: null, no: null, abstination: null }),
   },
 
   Mutation: {
