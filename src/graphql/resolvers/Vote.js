@@ -12,6 +12,7 @@ const statesCompleted = [
   'Verkündet',
   'Verabschiedet',
   'Zusammengeführt mit... (siehe Vorgangsablauf)',
+  'Bundesrat hat Vermittlungsausschuss nicht angerufen',
 ];
 
 export default {
