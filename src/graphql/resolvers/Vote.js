@@ -1,6 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
 
+import Activity from './Activity';
+
 const statesVoting = ['Beschlussempfehlung liegt vor'];
 const statesCompleted = [
   'Zurückgezogen',
@@ -49,7 +51,9 @@ export default {
     vote: async (
       parent,
       { procedure: procedureId, selection },
-      { VoteModel, ProcedureModel, user },
+      {
+        VoteModel, ProcedureModel, ActivityModel, user,
+      },
     ) => {
       if (!user) {
         throw new Error('No Auth!');
@@ -86,6 +90,11 @@ export default {
         }
         await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
       }
+      await Activity.Mutation.increaseActivity(
+        parent,
+        { procedureId },
+        { ProcedureModel, ActivityModel, user },
+      );
       return VoteModel.aggregate([
         { $match: { procedure: procedure._id } },
         { $addFields: { voted: { $in: [user._id, '$users'] } } },
