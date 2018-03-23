@@ -1,4 +1,4 @@
 module.exports = {
-    extends: 'airbnb-base',
-  };
-  
+  extends: "airbnb-base",
+  rules: { "newline-per-chained-call": [2] }
+};

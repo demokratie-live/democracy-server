@@ -1,4 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+import { Types } from 'mongoose';
 
 export default {
   Query: {
@@ -21,7 +22,13 @@ export default {
       if (!user) {
         throw new Error('No auth');
       }
-      const procedure = await ProcedureModel.findOne({ procedureId });
+      let searchQuery;
+      if (Types.ObjectId.isValid(procedureId)) {
+        searchQuery = { _id: Types.ObjectId(procedureId) };
+      } else {
+        searchQuery = { procedureId };
+      }
+      const procedure = await ProcedureModel.findOne(searchQuery);
       if (!procedure) {
         throw new Error('Procedure not found');
       }
