@@ -19,7 +19,7 @@ export default {
     votes: (parent, { procedure }, { VoteModel, user }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: { $in: [user._id, '$users'] } } },
+        { $addFields: { voted: { $in: [user ? user._id : false, '$users'] } } },
         {
           $group: {
             _id: '$procedure',
