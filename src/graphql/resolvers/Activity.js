@@ -23,7 +23,7 @@ export default {
         throw new Error('No auth');
       }
       let searchQuery;
-      if (Types.ObjectId.isValid('procedureId')) {
+      if (Types.ObjectId.isValid(procedureId)) {
         searchQuery = { _id: Types.ObjectId(procedureId) };
       } else {
         searchQuery = { procedureId };
