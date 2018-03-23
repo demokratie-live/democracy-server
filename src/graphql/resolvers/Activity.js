@@ -22,9 +22,13 @@ export default {
       if (!user) {
         throw new Error('No auth');
       }
-      const procedure = await ProcedureModel.findOne({
-        $or: [{ procedureId }, { _id: Types.ObjectId(procedureId) }],
-      });
+      let searchQuery;
+      if (Types.ObjectId.isValid('procedureId')) {
+        searchQuery = { _id: Types.ObjectId(procedureId) };
+      } else {
+        searchQuery = { procedureId };
+      }
+      const procedure = await ProcedureModel.findOne(searchQuery);
       if (!procedure) {
         throw new Error('Procedure not found');
       }
