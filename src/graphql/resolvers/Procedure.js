@@ -130,11 +130,11 @@ export default {
       ProcedureModel.find(
         {
           $or: [
-            { procedureId: { $regex: term } },
-            { title: { $regex: term } },
-            { abstract: { $regex: term } },
-            { tags: { $regex: term } },
-            { subjectGroups: { $regex: term } },
+            { procedureId: { $regex: term, $options: 'i' } },
+            { title: { $regex: term, $options: 'i' } },
+            { abstract: { $regex: term, $options: 'i' } },
+            { tags: { $regex: term, $options: 'i' } },
+            { subjectGroups: { $regex: term, $options: 'i' } },
           ],
           period: 19,
         },
