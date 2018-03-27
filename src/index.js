@@ -16,6 +16,7 @@ import webhook from './scripts/webhook';
 // import importAll from './scripts/importAll';
 
 import auth from './express/auth';
+import './services/notifications/apn';
 
 // Models
 import ProcedureModel from './models/Procedure';

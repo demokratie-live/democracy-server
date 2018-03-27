@@ -13,6 +13,7 @@
     "serve": "node dist/index.js"
   },
   "dependencies": {
+    "apn": "^2.2.0",
     "apollo-cache-inmemory": "^1.1.7",
     "apollo-client": "^2.2.3",
     "apollo-engine": "^0.8.8",
