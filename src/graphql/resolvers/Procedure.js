@@ -128,7 +128,16 @@ export default {
 
     searchProcedures: (parent, { term }, { ProcedureModel }) =>
       ProcedureModel.find(
-        { $text: { $search: term }, period: 19 },
+        {
+          $or: [
+            { procedureId: { $regex: term, $options: 'i' } },
+            { title: { $regex: term, $options: 'i' } },
+            { abstract: { $regex: term, $options: 'i' } },
+            { tags: { $regex: term, $options: 'i' } },
+            { subjectGroups: { $regex: term, $options: 'i' } },
+          ],
+          period: 19,
+        },
         { score: { $meta: 'textScore' } },
       ).sort({ score: { $meta: 'textScore' } }),
   },
