@@ -5,7 +5,9 @@ export default `
   }
 
   type NotificationSettings {
-    disableAll: Boolean
+    enabled: Boolean
+    newVote: Boolean
+    newPreperation: Boolean
     disableUntil: Date
     procedures: [String]
     tags: [String]
@@ -17,7 +19,14 @@ export default `
 
   type Mutation {
     addToken(token: String!, os: String!): TokenResult
-    updateNotificationSettings(disableAll: String, disableUntil: Date, procedures: [String], tags: [String]): NotificationSettings
+    updateNotificationSettings(
+      enabled: Boolean,
+      newVote: Boolean,
+      newPreperation: Boolean, 
+      disableUntil: Date, 
+      procedures: [String], 
+      tags: [String]
+    ): NotificationSettings
   }
 
   `;

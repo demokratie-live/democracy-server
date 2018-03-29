@@ -27,7 +27,7 @@ export default {
     updateNotificationSettings: async (
       parent,
       {
-        disableAll, disableUntil, procedures, tags,
+        enabled, disableUntil, procedures, tags, newVote, newPreperation,
       },
       { user },
     ) => {
@@ -35,14 +35,28 @@ export default {
         ...user.notificationSettings,
         ..._.omitBy(
           {
-            disableAll,
+            enabled,
             disableUntil,
             procedures,
             tags,
+            newVote,
+            newPreperation,
           },
           _.isNil,
         ),
       };
+      console.log(_.omitBy(
+        {
+          enabled,
+          disableUntil,
+          procedures,
+          tags,
+          newVote,
+          newPreperation,
+        },
+        _.isNil,
+      ));
+      console.log(user);
       await user.save();
       return user.notificationSettings;
     },
