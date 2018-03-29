@@ -2,8 +2,10 @@
 
 import _ from 'lodash';
 import apn from 'apn';
+import gcm from 'node-gcm';
 
 import apnProvider from './apn';
+import gcmProvider from './gcm';
 import UserModel from '../../models/User';
 
 export default async ({ message, user }) => {
@@ -13,6 +15,7 @@ export default async ({ message, user }) => {
   }
   const userObj = await UserModel.findById(userId);
   if (userObj) {
+    const androidNotificationTokens = [];
     userObj.pushTokens.forEach(({ token, os }) => {
       switch (os) {
         case 'ios':
@@ -29,15 +32,30 @@ export default async ({ message, user }) => {
           }
           break;
 
-        // Hier android und checken ob der case identifier korrekt ist.
         case 'android':
-          // gcm
-
+          // Prepare android notifications
+          androidNotificationTokens.push(token);
           break;
 
         default:
           break;
       }
     });
+    // send bulk send android notifications
+    if (androidNotificationTokens.length > 0) {
+      const gcmMessage = new gcm.Message({
+        notification: {
+          body: message,
+        },
+      });
+      gcmProvider.send(
+        gcmMessage,
+        { registrationTokens: androidNotificationTokens },
+        (err, response) => {
+          if (err) console.error('gcmProvider', err);
+          else console.log('gcmProvider', response);
+        },
+      );
+    }
   }
 };
