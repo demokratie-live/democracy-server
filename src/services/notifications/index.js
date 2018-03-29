@@ -4,7 +4,6 @@ import _ from 'lodash';
 import apn from 'apn';
 
 import apnProvider from './apn';
-import gcmProvicer from './gcm';
 import UserModel from '../../models/User';
 
 export default async ({ message, user }) => {
