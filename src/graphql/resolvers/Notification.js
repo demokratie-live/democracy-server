@@ -43,7 +43,6 @@ export default {
           _.isNil,
         ),
       };
-      console.log(user);
       await user.save();
       return user.notificationSettings;
     },
