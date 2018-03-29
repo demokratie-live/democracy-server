@@ -19,6 +19,7 @@ export default `
 
   type Mutation {
     addToken(token: String!, os: String!): TokenResult
+    
     updateNotificationSettings(
       enabled: Boolean,
       newVote: Boolean,
@@ -27,6 +28,8 @@ export default `
       procedures: [String], 
       tags: [String]
     ): NotificationSettings
+
+    toggleNotification(procedureId: String!): Procedure
   }
 
   `;
