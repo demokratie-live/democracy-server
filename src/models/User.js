@@ -13,10 +13,9 @@ const UserSchema = new Schema(
     ],
     notificationSettings: {
       disableAll: { type: Boolean, default: false },
-      disableTime: { type: Number, default: 0 },
+      disableUntil: { type: Date },
       procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
       tags: [],
-      terms: [],
     },
   },
   { timestamps: true },
