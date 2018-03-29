@@ -11,6 +11,13 @@ const UserSchema = new Schema(
         os: String,
       },
     ],
+    notificationSettings: {
+      disableAll: { type: Boolean, default: false },
+      disableTime: { type: Number, default: 0 },
+      procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
+      tags: [],
+      terms: [],
+    },
   },
   { timestamps: true },
 );
