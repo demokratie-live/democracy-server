@@ -5,9 +5,13 @@ export default {
 
   Mutation: {
     addToken: async (parent, { token, os }, { user }) => {
-      console.log('x');
-      console.log(` ### addToken ### , Token: "${token}, os: "${os}"`);
-      console.log('y');
+      if (!user.pushTokens.some(t => t.token === token)) {
+        user.pushTokens.push({ token, os });
+        user.save();
+      }
+      return {
+        succeeded: true,
+      };
     },
   },
 };

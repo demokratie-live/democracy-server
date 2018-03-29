@@ -5,6 +5,12 @@ import jwt from 'jsonwebtoken';
 const UserSchema = new Schema(
   {
     deviceHash: { type: String, required: true, unique: true },
+    pushTokens: [
+      {
+        token: String,
+        os: String,
+      },
+    ],
   },
   { timestamps: true },
 );
