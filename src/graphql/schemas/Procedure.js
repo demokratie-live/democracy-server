@@ -26,6 +26,7 @@ type Procedure {
 type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
+  notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure]
 }
 `;

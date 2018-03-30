@@ -145,6 +145,20 @@ export default {
         },
         { score: { $meta: 'textScore' } },
       ).sort({ score: { $meta: 'textScore' } }),
+
+    notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
+      if (!user) {
+        throw new Error('no Auth');
+      }
+      const procedures = await ProcedureModel.find({
+        _id: { $in: user.notificationSettings.procedures },
+      });
+
+      return procedures.map(procedure => ({
+        ...procedure.toObject(),
+        notify: true,
+      }));
+    },
   },
 
   Procedure: {
