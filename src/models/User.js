@@ -12,7 +12,7 @@ const UserSchema = new Schema(
       },
     ],
     notificationSettings: {
-      enabled: { type: Boolean, default: false },
+      enabled: { type: Boolean, default: true },
       disableUntil: Date,
       newVote: { type: Boolean, default: true },
       newPreperation: { type: Boolean, default: false },
