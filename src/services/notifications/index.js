@@ -126,7 +126,9 @@ export default async ({ message, user }) => {
     if (androidNotificationTokens.length > 0) {
       const gcmMessage = new gcm.Message({
         notification: {
+          title: 'DEMOCRACY',
           body: message,
+          icon: 'ic_launcher',
         },
       });
       gcmProvider.send(
