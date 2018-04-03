@@ -128,7 +128,7 @@ export default async ({ message, user }) => {
         notification: {
           title: 'DEMOCRACY',
           body: message,
-          icon: 'ic_launcher',
+          icon: 'ic_notification',
         },
       });
       gcmProvider.send(
