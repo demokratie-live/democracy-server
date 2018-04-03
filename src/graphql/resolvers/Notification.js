@@ -2,6 +2,7 @@
 /* eslint no-param-reassign: 0 */
 
 import _ from 'lodash';
+import Activity from './Activity';
 
 export default {
   Query: {
@@ -55,11 +56,16 @@ export default {
       return user.notificationSettings;
     },
 
-    toggleNotification: async (parent, { procedureId }, { user, ProcedureModel }) => {
+    toggleNotification: async (parent, { procedureId }, { user, ProcedureModel, ActivityModel }) => {
       if (!user) {
         throw new Error('no Auth');
       }
       const procedure = await ProcedureModel.findOne({ procedureId });
+      await Activity.Mutation.increaseActivity(
+        parent,
+        { procedureId },
+        { ProcedureModel, ActivityModel, user },
+      );
 
       const index = user.notificationSettings.procedures.indexOf(procedure._id);
       let notify;
