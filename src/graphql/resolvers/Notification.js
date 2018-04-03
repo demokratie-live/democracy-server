@@ -56,7 +56,11 @@ export default {
       return user.notificationSettings;
     },
 
-    toggleNotification: async (parent, { procedureId }, { user, ProcedureModel, ActivityModel }) => {
+    toggleNotification: async (
+      parent,
+      { procedureId },
+      { user, ProcedureModel, ActivityModel },
+    ) => {
       if (!user) {
         throw new Error('no Auth');
       }
