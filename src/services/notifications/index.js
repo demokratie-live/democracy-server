@@ -40,7 +40,10 @@ const sendNotifications = ({ tokenObjects, message }) => {
   if (androidNotificationTokens.length > 0) {
     const gcmMessage = new gcm.Message({
       notification: {
+        title: 'DEMOCRACY',
         body: message,
+        icon: 'ic_notification',
+        color: '#4f81bd',
       },
     });
     gcmProvider.send(
@@ -129,6 +132,7 @@ export default async ({ message, user }) => {
           title: 'DEMOCRACY',
           body: message,
           icon: 'ic_notification',
+          color: '#4f81bd',
         },
       });
       gcmProvider.send(
