@@ -123,8 +123,13 @@ export default {
         .then(finishedVotings => [...activeVotings, ...finishedVotings]);
     },
 
-    procedure: async (parent, { id }, { ProcedureModel }) =>
-      ProcedureModel.findOne({ procedureId: id }),
+    procedure: async (parent, { id }, { user, ProcedureModel }) => {
+      const procedure = await ProcedureModel.findOne({ procedureId: id });
+      return {
+        ...procedure.toObject(),
+        notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
+      };
+    },
 
     searchProcedures: (parent, { term }, { ProcedureModel }) =>
       ProcedureModel.find(
@@ -140,6 +145,20 @@ export default {
         },
         { score: { $meta: 'textScore' } },
       ).sort({ score: { $meta: 'textScore' } }),
+
+    notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
+      if (!user) {
+        throw new Error('no Auth');
+      }
+      const procedures = await ProcedureModel.find({
+        _id: { $in: user.notificationSettings.procedures },
+      });
+
+      return procedures.map(procedure => ({
+        ...procedure.toObject(),
+        notify: true,
+      }));
+    },
   },
 
   Procedure: {

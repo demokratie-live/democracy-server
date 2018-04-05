@@ -10,6 +10,7 @@ export default gql`
       currentStatus
       abstract
       tags
+      bioUpdateAt
       subjectGroups
       history {
         assignment

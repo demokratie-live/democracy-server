@@ -4,6 +4,8 @@ import createClient from '../graphql/client';
 import Procedure from '../models/Procedure';
 import getProcedures from '../graphql/queries/getProcedures';
 
+import { procedureUpdate, newPreperation, newVote } from '../services/notifications/index';
+
 const deputiesNumber = {
   8: 518,
   9: 519,
@@ -67,6 +69,12 @@ export default async (procedureIds) => {
 
       newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
     }
+
+    const oldProcedure = await Procedure.find(
+      { procedureId: newBIoProcedure.procedureId },
+      { _id: 1 },
+    ).limit(1);
+
     return Procedure.findOneAndUpdate(
       { procedureId: newBIoProcedure.procedureId },
       _(newBIoProcedure)
@@ -75,8 +83,24 @@ export default async (procedureIds) => {
       {
         upsert: true,
       },
-    );
+    ).then(() => {
+      /**
+       * PUSH NOTIFICATIONS
+       */
+      // New Procedures
+      if (!oldProcedure.length) {
+        newPreperation({ procedureId: newBIoProcedure.procedureId });
+      } else {
+        // Updated Procedures
+        procedureUpdate({ procedureId: newBIoProcedure.procedureId });
+        if (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor') {
+          // moved to Vote Procedures
+          newVote({ procedureId: newBIoProcedure.procedureId });
+        }
+      }
+    });
   });
+
   const result = await Promise.all(promises);
 
   return result.length;

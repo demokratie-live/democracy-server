@@ -46,12 +46,16 @@ export default async (data) => {
         // Find local Procedure Updates
       const localProcedureUpdates = await ProcedureModel.find(
         { period, type },
-        { procedureId: 1, lastUpdateDate: 1 },
+        { procedureId: 1, bioUpdateAt: 1 },
       );
         // Compare
       procedureUpdates.forEach((pu) => {
         const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
-        if (!localData || new Date(localData.lastUpdateDate) < new Date(pu.updatedAt)) {
+        if (
+          !localData ||
+            (pu.bioUpdateAt &&
+              new Date(localData.bioUpdateAt).getTime() !== new Date(pu.bioUpdateAt).getTime())
+        ) {
           update.push(pu.procedureId);
         }
       });

@@ -19,12 +19,14 @@ type Procedure {
   submissionDate: Date
   activityIndex: ActivityIndex
   importantDocuments: [Document]
-  voteResults: VoteResult
+  voteResults: VoteResult,
+  notify: Boolean
 }
 
 type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
+  notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure]
 }
 `;

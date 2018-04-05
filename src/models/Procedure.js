@@ -18,7 +18,8 @@ const ProcedureSchema = new Schema(
     },
     voteDate: Date,
     submissionDate: Date,
-    lastUpdateDate: Date,
+    lastUpdateDate: Date, // date of last dip21 history element for sorting in App
+    bioUpdateAt: Date, // Date of last dip21 changes on bundestag.io
     subjectGroups: [String],
     importantDocuments: [Document],
     voteResults: {
