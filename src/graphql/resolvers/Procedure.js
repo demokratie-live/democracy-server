@@ -1,46 +1,52 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+
+const availableStates = {
+  PREPARATION: [
+    'Dem Bundesrat zugeleitet - Noch nicht beraten',
+    'Dem Bundestag zugeleitet - Noch nicht beraten',
+    'Den Ausschüssen zugewiesen',
+    'Einbringung abgelehnt',
+    '1. Durchgang im Bundesrat abgeschlossen',
+    'Überwiesen',
+    'Noch nicht beraten',
+    'Keine parlamentarische Behandlung',
+    'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
+  ],
+  VOTING: [
+    'Beschlussempfehlung liegt vor',
+    // Unterhalb keys für Vergangen
+    'Erledigt durch Ablauf der Wahlperiode',
+    'Zurückgezogen',
+    'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
+    'Für nichtig erklärt',
+    'Verkündet',
+    'Zusammengeführt mit... (siehe Vorgangsablauf)',
+    'Für erledigt erklärt',
+    'Verabschiedet',
+    'Bundesrat hat zugestimmt',
+    'Bundesrat hat Einspruch eingelegt',
+    'Bundesrat hat Zustimmung versagt',
+    'Bundesrat hat Vermittlungsausschuss nicht angerufen',
+    'Im Vermittlungsverfahren',
+    'Vermittlungsvorschlag liegt vor',
+    'Für mit dem Grundgesetz unvereinbar erklärt',
+    'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
+    'Zustimmung versagt',
+    'Teile des Gesetzes für nichtig erklärt',
+    'Für gegenstandslos erklärt',
+  ],
+};
+
 export default {
   Query: {
     procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
-          currentStates = [
-            'Dem Bundesrat zugeleitet - Noch nicht beraten',
-            'Dem Bundestag zugeleitet - Noch nicht beraten',
-            'Den Ausschüssen zugewiesen',
-            'Einbringung abgelehnt',
-            '1. Durchgang im Bundesrat abgeschlossen',
-            'Überwiesen',
-            'Noch nicht beraten',
-            'Keine parlamentarische Behandlung',
-            'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
-          ];
+          currentStates = availableStates.PREPARATION;
           break;
         case 'VOTING':
-          currentStates = [
-            'Beschlussempfehlung liegt vor',
-            // Unterhalb keys für Vergangen
-            'Erledigt durch Ablauf der Wahlperiode',
-            'Zurückgezogen',
-            'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
-            'Für nichtig erklärt',
-            'Verkündet',
-            'Zusammengeführt mit... (siehe Vorgangsablauf)',
-            'Für erledigt erklärt',
-            'Verabschiedet',
-            'Bundesrat hat zugestimmt',
-            'Bundesrat hat Einspruch eingelegt',
-            'Bundesrat hat Zustimmung versagt',
-            'Bundesrat hat Vermittlungsausschuss nicht angerufen',
-            'Im Vermittlungsverfahren',
-            'Vermittlungsvorschlag liegt vor',
-            'Für mit dem Grundgesetz unvereinbar erklärt',
-            'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
-            'Zustimmung versagt',
-            'Teile des Gesetzes für nichtig erklärt',
-            'Für gegenstandslos erklärt',
-          ];
+          currentStates = availableStates.VOTING;
           break;
         case 'HOT':
           currentStates = [];
@@ -95,6 +101,17 @@ export default {
             },
           },
           { $sort: { activities: -1 } },
+          {
+            $addFields: {
+              listType: {
+                $cond: {
+                  if: { $in: ['$currentStatus', availableStates.VOTING] },
+                  then: 'VOTING',
+                  else: 'PREPARATION',
+                },
+              },
+            },
+          },
 
           { $skip: offset },
           { $limit: pageSize },
@@ -125,8 +142,12 @@ export default {
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
+      const listType = availableStates.VOTING.some(status => procedure.currentStatus === status)
+        ? 'VOTING'
+        : 'PREPARATION';
       return {
         ...procedure.toObject(),
+        listType,
         notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
       };
     },
