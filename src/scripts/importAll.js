@@ -19,7 +19,9 @@ const deputiesNumber = {
   19: 709,
 };
 
-export default async () => {
+const pastStatus = ['Zurückgezogen', 'Abgelehnt', 'Angenommen'];
+
+export default async (req, res) => {
   const client = createClient();
   console.log('Start Importing');
   const { data: { allProcedures } } = await client.query({
@@ -36,7 +38,7 @@ export default async () => {
       const btWithDecisions = bIoProcedure.history.filter(({ assignment, initiator }) => assignment === 'BT' && initiator === '2. Beratung');
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-      } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
+      } else if (pastStatus.some(status => status === newBIoProcedure.currentStatus)) {
         newBIoProcedure.voteDate = lastHistory.date;
       }
       let voteResults;
@@ -80,4 +82,5 @@ export default async () => {
     );
   });
   console.log('Imported everything!'); // eslint-disable-line
+  res.send('Imported everything!');
 };
