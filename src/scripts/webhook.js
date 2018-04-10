@@ -31,7 +31,7 @@ export default async (data) => {
   const update = [];
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
-    const { type, countBefore, changedIds } = d.types.find(t => { return t.type === 'Gesetzgebung' || t.type === 'Antrag'; });
+    const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung' || t.type === 'Antrag');
     const group = groups.find(c => c.period === period);
     const localGroup = group ? group.types.find(ct => ct.type === type) : null;
     const localCount = localGroup ? localGroup.count : 0;
@@ -44,18 +44,18 @@ export default async (data) => {
         query: getProcedureUpdates,
         variables: { period, type },
       });
-        // Find local Procedure Updates
+      // Find local Procedure Updates
       const localProcedureUpdates = await ProcedureModel.find(
         { period, type },
         { procedureId: 1, bioUpdateAt: 1 },
       );
-        // Compare
+      // Compare
       procedureUpdates.forEach((pu) => {
         const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
         if (
           !localData ||
-            (pu.bioUpdateAt &&
-              new Date(localData.bioUpdateAt).getTime() !== new Date(pu.bioUpdateAt).getTime())
+          (pu.bioUpdateAt &&
+            new Date(localData.bioUpdateAt).getTime() !== new Date(pu.bioUpdateAt).getTime())
         ) {
           update.push(pu.procedureId);
         }
