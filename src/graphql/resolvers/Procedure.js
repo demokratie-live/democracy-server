@@ -142,8 +142,12 @@ export default {
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
+      const listType = availableStates.VOTING.some(status => procedure.currentStatus === status)
+        ? 'VOTING'
+        : 'PREPARATION';
       return {
         ...procedure.toObject(),
+        listType,
         notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
       };
     },
