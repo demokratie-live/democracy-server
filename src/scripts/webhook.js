@@ -31,11 +31,10 @@ export default async (data) => {
   const update = [];
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
-    const { type, countBefore, changedIds } = d.types.find(t => { return t.type === 'Gesetzgebung' || t.type === 'Antrag';});
+    const { type, countBefore, changedIds } = d.types.find(t => { return t.type === 'Gesetzgebung' || t.type === 'Antrag'; });
     const group = groups.find(c => c.period === period);
-	const localGroup = group ? group.types.find(ct => ct.type === type) : null;
+    const localGroup = group ? group.types.find(ct => ct.type === type) : null;
     const localCount = localGroup ? localGroup.count : 0;
-	console.log({ type, countBefore, changedIds, group, localCount })
     // Append Changed IDs
     update.concat(changedIds);
     // Compare Counts Remote & Local
