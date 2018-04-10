@@ -19,8 +19,9 @@ type Procedure {
   submissionDate: Date
   activityIndex: ActivityIndex
   importantDocuments: [Document]
-  voteResults: VoteResult,
+  voteResults: VoteResult
   notify: Boolean
+  listType: ProcedureType
 }
 
 type Query {
