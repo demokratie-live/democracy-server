@@ -31,7 +31,7 @@ export default async (data) => {
   const update = [];
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
-    const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung');
+    const { type, countBefore, changedIds } = d.types.find(t => t.type === 'Gesetzgebung', 'Antrag');
     const group = groups.find(c => c.period === period);
     const localCount = group ? group.types.find(ct => ct.type === type).count : 0;
     // Append Changed IDs
