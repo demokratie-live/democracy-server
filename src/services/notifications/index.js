@@ -75,7 +75,19 @@ const newPreperation = async ({ procedureId }) => {
     'notificationSettings.newPreperation': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  sendNotifications({ tokenObjects, message: `Neue Gesetzesinitiative!\n${procedure.title}` });
+  let message;
+  switch (procedure.type) {
+    case 'Gesetzgebung':
+      message = `Neue Gesetzesinitiative!\n${procedure.title}`;
+      break;
+    case 'Antrag':
+      message = `Neuer Antrag!\n${procedure.title}`;
+      break;
+    default:
+      message = `Neu!\n${procedure.title}`;
+      break;
+  }
+  sendNotifications({ tokenObjects, message });
 };
 // newPreperation({ procedureId: 231079 });
 
