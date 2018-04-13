@@ -28,9 +28,11 @@ cd democracy-server
 yarn install
 ```
 
+Rename the ```.env.example``` file to ```.env``` (Windows: ```.env.```)
+
 ### Compile and start
 ```
-yarn ~~start~~ dev
+yarn dev
 ```
 
 ### Import Data from local Bundestag.io Server
