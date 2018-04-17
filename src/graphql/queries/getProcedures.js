@@ -28,6 +28,13 @@ export default gql`
         url
         number
       }
+      customData {
+        voteResults {
+          yes
+          no
+          abstination
+        }
+      }
     }
   }
 `;
