@@ -28,7 +28,7 @@ export default async (data) => {
     },
   ]);
 
-  const update = [];
+  let update = [];
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
     const types = d.types.filter(t => t.type === 'Gesetzgebung' || t.type === 'Antrag');
@@ -38,9 +38,9 @@ export default async (data) => {
       const localGroup = group ? group.types.find(ct => ct.type === type) : null;
       const localCount = localGroup ? localGroup.count : 0;
       // Append Changed IDs
-      update.concat(changedIds);
+      update = update.concat(changedIds);
       // Compare Counts Remote & Local
-      if (countBefore > localCount) {
+      if (countBefore > localCount && countBefore >= 0) {
         // Find remote Procedure Updates
         const { data: { procedureUpdates } } = await client.query({
           query: getProcedureUpdates,
