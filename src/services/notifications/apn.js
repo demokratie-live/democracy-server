@@ -10,7 +10,7 @@ if (!apnProvider) {
       keyId: process.env.APPLE_APN_KEY_ID,
       teamId: process.env.APPLE_TEAMID,
     },
-    production: false, // TODO: handle APLPHA/BETA/PRODUCTION
+    production: process.env.NODE_ENV === 'production', // TODO: handle APLPHA/BETA/PRODUCTION
   };
 
   if (_.filter(options.token, option => !option).length > 0) {
