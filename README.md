@@ -36,9 +36,11 @@ yarn dev
 ```
 
 ### Import Data from local Bundestag.io Server
-```
-yarn imp
-```
+A local bundestag.io server will automagically scrape the latest procedures and
+update the democracy-server database.
+Run a local bundestag.io server according to its
+[README](https://github.com/demokratie-live/bundestag.io) and wait for the cron
+job to finish.
 
 ### Test Project
 ```
