@@ -40,29 +40,45 @@ export default async (procedureIds) => {
       } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
         newBIoProcedure.voteDate = lastHistory.date;
       }
+
+      // check vote results
       let voteResults;
-      bIoProcedure.history.some((h) => {
-        if (h.decision) {
-          return h.decision.some((decision) => {
-            if (decision.type === 'Namentliche Abstimmung') {
-              const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
-              const voteResultsProto = decision.comment.match(voteResultsRegEx);
-              const vResults = voteResultsProto ? voteResultsProto[0].split(':') : null;
-              voteResults = {
-                yes: vResults ? vResults[0] : null,
-                no: vResults ? vResults[1] : null,
-                abstination: vResults ? vResults[2] : null,
-                notVote:
-                  deputiesNumber[bIoProcedure.period] -
-                  (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
-              };
-              return true;
-            }
-            return false;
-          });
-        }
-        return false;
-      });
+      if (
+        bIoProcedure.customData &&
+        bIoProcedure.customData.voteResults &&
+        (bIoProcedure.customData.voteResults.yes ||
+          bIoProcedure.customData.voteResults.abstination ||
+          bIoProcedure.customData.voteResults.no)
+      ) {
+        voteResults = {
+          yes: bIoProcedure.customData.voteResults.yes,
+          abstination: bIoProcedure.customData.voteResults.abstination,
+          no: bIoProcedure.customData.voteResults.no,
+        };
+      } else {
+        bIoProcedure.history.some((h) => {
+          if (h.decision) {
+            return h.decision.some((decision) => {
+              if (decision.type === 'Namentliche Abstimmung') {
+                const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
+                const voteResultsProto = decision.comment.match(voteResultsRegEx);
+                const vResults = voteResultsProto ? voteResultsProto[0].split(':') : null;
+                voteResults = {
+                  yes: vResults ? vResults[0] : null,
+                  no: vResults ? vResults[1] : null,
+                  abstination: vResults ? vResults[2] : null,
+                  notVote:
+                    deputiesNumber[bIoProcedure.period] -
+                    (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
+                };
+                return true;
+              }
+              return false;
+            });
+          }
+          return false;
+        });
+      }
       newBIoProcedure.voteResults = voteResults;
 
       newBIoProcedure.lastUpdateDate = lastHistory.date;

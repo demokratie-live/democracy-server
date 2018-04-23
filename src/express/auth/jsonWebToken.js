@@ -29,7 +29,6 @@ export default (app) => {
 
   app.use((req, res, next) => {
     passport.authenticate('jwt', { session: true }, (err, user) => {
-      // console.log(info);
       if (user) {
         req.user = user;
       }
