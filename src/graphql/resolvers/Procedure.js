@@ -194,5 +194,13 @@ export default {
         active: !!active,
       };
     },
+    voted: async (procedure, args, { VoteModel, user }) => {
+      const voted = await VoteModel.findOne({ procedure, users: user });
+      return !!voted;
+    },
+    votedGoverment: procedure => (
+      procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+    ),
   },
 };

@@ -20,6 +20,8 @@ type Procedure {
   activityIndex: ActivityIndex
   importantDocuments: [Document]
   voteResults: VoteResult
+  voted: Boolean
+  votedGoverment: Boolean
   notify: Boolean
   listType: ProcedureType
 }
