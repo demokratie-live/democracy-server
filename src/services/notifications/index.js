@@ -3,11 +3,13 @@
 import _ from 'lodash';
 import apn from 'apn';
 import gcm from 'node-gcm';
+import util from 'util';
 
 import apnProvider from './apn';
 import gcmProvider from './gcm';
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
+import CONFIG from '../../config/constants';
 
 const sendNotifications = ({ tokenObjects, message }) => {
   const androidNotificationTokens = [];
@@ -19,7 +21,7 @@ const sendNotifications = ({ tokenObjects, message }) => {
 
           note.alert = message;
           // note.payload = { messageFrom: 'John Appleseed' };
-          note.topic = 'de.democracy-deutschland.clientapp';
+          note.topic = CONFIG.APN_TOPIC;
 
           apnProvider.send(note, token).then((result) => {
             console.log('apnProvider.send', result);
@@ -120,10 +122,10 @@ export default async ({ message, user }) => {
 
             note.alert = message;
             // note.payload = { messageFrom: 'John Appleseed' };
-            note.topic = 'de.democracy-deutschland.clientapp';
+            note.topic = CONFIG.APN_TOPIC;
 
             apnProvider.send(note, token).then((result) => {
-              console.log('apnProvider.send', result);
+              console.log('apnProvider.send', util.inspect(result, false, null));
             });
           }
           break;
