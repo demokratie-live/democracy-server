@@ -57,7 +57,7 @@ export default {
       }
 
       let period = { $gte: 19 };
-      let sort = { voteDate: -1 };
+      let sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
         period = { $gte: 19 };
         sort = { lastUpdateDate: -1 };
@@ -198,9 +198,8 @@ export default {
       const voted = await VoteModel.findOne({ procedure, users: user });
       return !!voted;
     },
-    votedGoverment: procedure => (
+    votedGoverment: procedure =>
       procedure.voteResults &&
-        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
-    ),
+      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
   },
 };
