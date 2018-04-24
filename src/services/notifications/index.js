@@ -12,7 +12,7 @@ import ProcedureModel from '../../models/Procedure';
 import CONFIG from '../../config/constants';
 
 const sendNotifications = ({
-  tokenObjects, status, title,
+  tokenObjects, status, title, payload,
 }) => {
   const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
@@ -20,10 +20,12 @@ const sendNotifications = ({
       case 'ios':
         {
           const note = new apn.Notification();
-                       
+
           note.alert = `${status}\n${title}`;
 
           note.topic = CONFIG.APN_TOPIC;
+
+          note.payload = payload;
 
           apnProvider.send(note, token).then((result) => {
             console.log('apnProvider.send', result);
@@ -68,7 +70,12 @@ const newVote = async ({ procedureId }) => {
     'notificationSettings.newVote': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  sendNotifications({ tokenObjects, status: 'Jetzt Abstimmen!', title: procedure.title });
+  sendNotifications({
+    tokenObjects,
+    status: 'Jetzt Abstimmen!',
+    title: procedure.title,
+    payload: { procedureId },
+  });
 };
 // newVote({ procedureId: 231079 });
 
@@ -91,7 +98,12 @@ const newPreperation = async ({ procedureId }) => {
       status = 'Neu!';
       break;
   }
-  sendNotifications({ tokenObjects, status, title: procedure.title });
+  sendNotifications({
+    tokenObjects,
+    status,
+    title: procedure.title,
+    payload: { procedureId },
+  });
 };
 // newPreperation({ procedureId: 231079 });
 
@@ -102,13 +114,20 @@ const procedureUpdate = async ({ procedureId }) => {
     'notificationSettings.procedures': procedure._id,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  sendNotifications({ tokenObjects, status: 'Update!', title: procedure.title });
+  sendNotifications({
+    tokenObjects,
+    status: 'Update!',
+    title: procedure.title,
+    payload: { procedureId },
+  });
 };
 // procedureUpdate({ procedureId: 231079 });
 
 export { procedureUpdate, newVote, newPreperation };
 
-export default async ({ status, message, user }) => {
+export default async ({
+  status, message, user, payload,
+}) => {
   let userId;
   if (_.isObject(user)) {
     userId = user._id;
@@ -125,6 +144,8 @@ export default async ({ status, message, user }) => {
             note.alert = message;
 
             note.topic = CONFIG.APN_TOPIC;
+
+            note.payload = payload;
 
             apnProvider.send(note, token).then((result) => {
               console.log('apnProvider.send', util.inspect(result, false, null));
