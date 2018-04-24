@@ -105,12 +105,15 @@ export default async (procedureIds) => {
        */
       // New Procedures
       if (!oldProcedure.length) {
+        console.log('PUSH NOTIFICATIONS', 'new Procedure', newBIoProcedure.procedureId);
         newPreperation({ procedureId: newBIoProcedure.procedureId });
       } else {
         // Updated Procedures
+        console.log('PUSH NOTIFICATIONS', 'updated Procedure', newBIoProcedure.procedureId);
         procedureUpdate({ procedureId: newBIoProcedure.procedureId });
         if (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor') {
           // moved to Vote Procedures
+          console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
           newVote({ procedureId: newBIoProcedure.procedureId });
         }
       }

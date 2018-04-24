@@ -9,7 +9,9 @@ import gcmProvider from './gcm';
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
 
-const sendNotifications = ({ tokenObjects, message }) => {
+const sendNotifications = ({
+  tokenObjects, status, title,
+}) => {
   const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
     switch (os) {
@@ -17,8 +19,8 @@ const sendNotifications = ({ tokenObjects, message }) => {
         {
           const note = new apn.Notification();
 
-          note.alert = message;
-          // note.payload = { messageFrom: 'John Appleseed' };
+          note.alert = `${status}\n${title}`;
+
           note.topic = 'de.democracy-deutschland.clientapp';
 
           apnProvider.send(note, token).then((result) => {
@@ -40,8 +42,8 @@ const sendNotifications = ({ tokenObjects, message }) => {
   if (androidNotificationTokens.length > 0) {
     const gcmMessage = new gcm.Message({
       notification: {
-        title: 'DEMOCRACY',
-        body: message,
+        title: status,
+        body: title,
         icon: 'ic_notification',
         color: '#4f81bd',
       },
@@ -64,7 +66,7 @@ const newVote = async ({ procedureId }) => {
     'notificationSettings.newVote': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  sendNotifications({ tokenObjects, message: `Jetzt Abstimmen!\n${procedure.title}` });
+  sendNotifications({ tokenObjects, status: 'Jetzt Abstimmen!', title: procedure.title });
 };
 // newVote({ procedureId: 231079 });
 
@@ -75,19 +77,19 @@ const newPreperation = async ({ procedureId }) => {
     'notificationSettings.newPreperation': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  let message;
+  let status;
   switch (procedure.type) {
     case 'Gesetzgebung':
-      message = `Neue Gesetzesinitiative!\n${procedure.title}`;
+      status = 'Neue Gesetzesinitiative!';
       break;
     case 'Antrag':
-      message = `Neuer Antrag!\n${procedure.title}`;
+      status = 'Neuer Antrag!';
       break;
     default:
-      message = `Neu!\n${procedure.title}`;
+      status = 'Neu!';
       break;
   }
-  sendNotifications({ tokenObjects, message });
+  sendNotifications({ tokenObjects, status, title: procedure.title });
 };
 // newPreperation({ procedureId: 231079 });
 
@@ -98,13 +100,13 @@ const procedureUpdate = async ({ procedureId }) => {
     'notificationSettings.procedures': procedure._id,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  sendNotifications({ tokenObjects, message: `Update!\n${procedure.title}` });
+  sendNotifications({ tokenObjects, status: 'Update!', title: procedure.title });
 };
 // procedureUpdate({ procedureId: 231079 });
 
 export { procedureUpdate, newVote, newPreperation };
 
-export default async ({ message, user }) => {
+export default async ({ status, message, user }) => {
   let userId;
   if (_.isObject(user)) {
     userId = user._id;
@@ -119,7 +121,7 @@ export default async ({ message, user }) => {
             const note = new apn.Notification();
 
             note.alert = message;
-            // note.payload = { messageFrom: 'John Appleseed' };
+
             note.topic = 'de.democracy-deutschland.clientapp';
 
             apnProvider.send(note, token).then((result) => {
@@ -141,7 +143,7 @@ export default async ({ message, user }) => {
     if (androidNotificationTokens.length > 0) {
       const gcmMessage = new gcm.Message({
         notification: {
-          title: 'DEMOCRACY',
+          title: status,
           body: message,
           icon: 'ic_notification',
           color: '#4f81bd',
