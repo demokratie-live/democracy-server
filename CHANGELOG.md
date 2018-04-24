@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.0.x
+### 0.1.1
 
 * graphQL
   * Procedure resolver: procedures
