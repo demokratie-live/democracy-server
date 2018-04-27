@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.5
+
+* pushNotifications
+  * Disabled pushNotifications due to non-functionality
+
 ### 0.1.4
 
 * graphQL
