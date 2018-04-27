@@ -50,6 +50,7 @@ const sendNotifications = ({
         body: title,
         icon: 'ic_notification',
         color: '#4f81bd',
+        payload,
       },
     });
     gcmProvider.send(
@@ -70,11 +71,17 @@ const newVote = async ({ procedureId }) => {
     'notificationSettings.newVote': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const status = 'Jetzt Abstimmen!';
   sendNotifications({
     tokenObjects,
-    status: 'Jetzt Abstimmen!',
+    status,
     title: procedure.title,
-    payload: { procedureId },
+    payload: {
+      procedureId,
+      action: 'procedureDetails',
+      title: status,
+      message: procedure.title,
+    },
   });
 };
 // newVote({ procedureId: 231079 });
@@ -102,7 +109,12 @@ const newPreperation = async ({ procedureId }) => {
     tokenObjects,
     status,
     title: procedure.title,
-    payload: { procedureId },
+    payload: {
+      procedureId,
+      action: 'procedureDetails',
+      title: status,
+      message: procedure.title,
+    },
   });
 };
 // newPreperation({ procedureId: 231079 });
@@ -114,11 +126,17 @@ const procedureUpdate = async ({ procedureId }) => {
     'notificationSettings.procedures': procedure._id,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const status = 'Update!';
   sendNotifications({
     tokenObjects,
-    status: 'Update!',
+    status,
     title: procedure.title,
-    payload: { procedureId },
+    payload: {
+      procedureId,
+      action: 'procedureDetails',
+      title: status,
+      message: procedure.title,
+    },
   });
 };
 // procedureUpdate({ procedureId: 231079 });
@@ -170,6 +188,7 @@ export default async ({
           body: message,
           icon: 'ic_notification',
           color: '#4f81bd',
+          payload,
         },
       });
       gcmProvider.send(
