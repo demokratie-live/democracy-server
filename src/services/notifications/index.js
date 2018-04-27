@@ -12,6 +12,8 @@ import ProcedureModel from '../../models/Procedure';
 import CONFIG from '../../config/constants';
 
 const sendNotifications = ({ tokenObjects, message }) => {
+  // Disable Push Notifications
+  return;
   const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
     switch (os) {
@@ -107,6 +109,10 @@ const procedureUpdate = async ({ procedureId }) => {
 export { procedureUpdate, newVote, newPreperation };
 
 export default async ({ message, user }) => {
+  // Disable Push Notifications
+  return;
+  // This function seems to be (partly) a duplicate of the sendNotifications function
+  // refactor?
   let userId;
   if (_.isObject(user)) {
     userId = user._id;
