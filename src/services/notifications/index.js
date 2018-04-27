@@ -1,19 +1,20 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
-import _ from 'lodash';
-import apn from 'apn';
-import gcm from 'node-gcm';
-import util from 'util';
+// import _ from 'lodash';
+// import apn from 'apn';
+// import gcm from 'node-gcm';
+// import util from 'util';
 
-import apnProvider from './apn';
-import gcmProvider from './gcm';
+// import apnProvider from './apn';
+// import gcmProvider from './gcm';
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
-import CONFIG from '../../config/constants';
+// import CONFIG from '../../config/constants';
 
-const sendNotifications = ({ tokenObjects, message }) => {
+// TODO: remove both eslint-disable-line
+const sendNotifications = ({ tokenObjects, message }) => { // eslint-disable-line
   // Disable Push Notifications
-  return;
+  return; // eslint-disable-line
   /* const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
     switch (os) {
@@ -108,9 +109,10 @@ const procedureUpdate = async ({ procedureId }) => {
 
 export { procedureUpdate, newVote, newPreperation };
 
-export default async ({ message, user }) => {
+// TODO: remove both eslint-disable-line
+export default async ({ message, user }) => { // eslint-disable-line
   // Disable Push Notifications
-  return;
+  return; // eslint-disable-line
   // This function seems to be (partly) a duplicate of the sendNotifications function
   // refactor?
   /* let userId;
