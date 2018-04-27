@@ -14,7 +14,7 @@ import CONFIG from '../../config/constants';
 const sendNotifications = ({ tokenObjects, message }) => {
   // Disable Push Notifications
   return;
-  const androidNotificationTokens = [];
+  /* const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
     switch (os) {
       case 'ios':
@@ -58,7 +58,7 @@ const sendNotifications = ({ tokenObjects, message }) => {
         else console.log('gcmProvider', response);
       },
     );
-  }
+  } */
 };
 
 const newVote = async ({ procedureId }) => {
@@ -113,7 +113,7 @@ export default async ({ message, user }) => {
   return;
   // This function seems to be (partly) a duplicate of the sendNotifications function
   // refactor?
-  let userId;
+  /* let userId;
   if (_.isObject(user)) {
     userId = user._id;
   }
@@ -164,5 +164,5 @@ export default async ({ message, user }) => {
         },
       );
     }
-  }
+  } */
 };
