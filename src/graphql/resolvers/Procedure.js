@@ -203,6 +203,7 @@ export default {
     votedGovernment: procedure =>
       (procedure.voteResults && (procedure.voteResults.yes ||
         procedure.voteResults.abstination || procedure.voteResults.no)) ||
-      procedure.currentStatus === 'Angenommen' || procedure.currentStatus === 'Abgelehnt',
+      procedure.currentStatus === 'Angenommen' || procedure.currentStatus === 'Abgelehnt' ||
+      procedure.currentStatus === 'Zurückgezogen',
   },
 };
