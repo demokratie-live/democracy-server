@@ -3,8 +3,7 @@
 ### 0.1.x
 
 * graphQL
-  * set votedGovernment on "Abgelehnt" and "Angenommen"
-  * Include "Abgelehnt" and "Angenommen" in Voting-List [#306](https://github.com/demokratie-live/democracy-client/issues/306)
+  * Include "Abgelehnt" and "Angenommen" in Voting-List & unified procedureState definition [#306](https://github.com/demokratie-live/democracy-client/issues/306)
 
 ### 0.1.5
 

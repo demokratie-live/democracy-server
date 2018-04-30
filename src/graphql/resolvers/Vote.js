@@ -2,20 +2,7 @@
 import { Types } from 'mongoose';
 
 import Activity from './Activity';
-
-const statesVoting = ['Beschlussempfehlung liegt vor'];
-const statesCompleted = [
-  'Zurückgezogen',
-  'Erledigt durch Ablauf der Wahlperiode',
-  'Einbringung abgelehnt',
-  'Für erledigt erklärt',
-  'Bundesrat hat zugestimmt',
-  'Abgelehnt',
-  'Verkündet',
-  'Verabschiedet',
-  'Zusammengeführt mit... (siehe Vorgangsablauf)',
-  'Bundesrat hat Vermittlungsausschuss nicht angerufen',
-];
+import procedureStates from '../../config/procedureStates';
 
 export default {
   Query: {
@@ -61,9 +48,9 @@ export default {
       // TODO check if procedure is votable
       const procedure = await ProcedureModel.findById(procedureId);
       let state;
-      if (statesVoting.some(s => s === procedure.currentStatus)) {
+      if (procedureStates.VOTING.some(s => s === procedure.currentStatus)) {
         state = 'VOTING';
-      } else if (statesCompleted.some(s => s === procedure.currentStatus)) {
+      } else if (procedureStates.COMPLETED.some(s => s === procedure.currentStatus)) {
         state = 'COMPLETED';
       }
 

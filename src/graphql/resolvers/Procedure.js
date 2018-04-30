@@ -1,43 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
-const availableStates = {
-  PREPARATION: [
-    'Dem Bundesrat zugeleitet - Noch nicht beraten',
-    'Dem Bundestag zugeleitet - Noch nicht beraten',
-    'Den Ausschüssen zugewiesen',
-    'Einbringung abgelehnt',
-    '1. Durchgang im Bundesrat abgeschlossen',
-    'Überwiesen',
-    'Noch nicht beraten',
-    'Keine parlamentarische Behandlung',
-    'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
-  ],
-  VOTING: [
-    'Beschlussempfehlung liegt vor',
-    // Unterhalb keys für Vergangen
-    'Erledigt durch Ablauf der Wahlperiode',
-    'Zurückgezogen',
-    'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
-    'Für nichtig erklärt',
-    'Verkündet',
-    'Zusammengeführt mit... (siehe Vorgangsablauf)',
-    'Für erledigt erklärt',
-    'Verabschiedet',
-    'Bundesrat hat zugestimmt',
-    'Bundesrat hat Einspruch eingelegt',
-    'Bundesrat hat Zustimmung versagt',
-    'Bundesrat hat Vermittlungsausschuss nicht angerufen',
-    'Im Vermittlungsverfahren',
-    'Vermittlungsvorschlag liegt vor',
-    'Für mit dem Grundgesetz unvereinbar erklärt',
-    'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
-    'Zustimmung versagt',
-    'Teile des Gesetzes für nichtig erklärt',
-    'Für gegenstandslos erklärt',
-    'Angenommen',
-    'Abgelehnt',
-  ],
-};
+import procedureStates from '../../config/procedureStates';
 
 export default {
   Query: {
@@ -45,10 +8,10 @@ export default {
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
-          currentStates = availableStates.PREPARATION;
+          currentStates = procedureStates.PREPARATION;
           break;
         case 'VOTING':
-          currentStates = availableStates.VOTING;
+          currentStates = procedureStates.VOTING.concat(procedureStates.COMPLETED);
           break;
         case 'HOT':
           currentStates = [];
@@ -107,7 +70,7 @@ export default {
             $addFields: {
               listType: {
                 $cond: {
-                  if: { $in: ['$currentStatus', availableStates.VOTING] },
+                  if: { $in: ['$currentStatus', procedureStates.VOTING.concat(procedureStates.COMPLETED)] },
                   then: 'VOTING',
                   else: 'PREPARATION',
                 },
@@ -144,7 +107,8 @@ export default {
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
-      const listType = availableStates.VOTING.some(status => procedure.currentStatus === status)
+      const listType = (procedureStates.VOTING.concat(procedureStates.COMPLETED))
+        .some(status => procedure.currentStatus === status)
         ? 'VOTING'
         : 'PREPARATION';
       return {
@@ -201,9 +165,9 @@ export default {
       return !!voted;
     },
     votedGovernment: procedure =>
-      (procedure.voteResults && (procedure.voteResults.yes ||
-        procedure.voteResults.abstination || procedure.voteResults.no)) ||
-      procedure.currentStatus === 'Angenommen' || procedure.currentStatus === 'Abgelehnt' ||
-      procedure.currentStatus === 'Zurückgezogen',
+      procedure.voteResults &&
+      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
+    completed: procedure =>
+      procedureStates.COMPLETED.includes(procedure.currentStatus),
   },
 };
