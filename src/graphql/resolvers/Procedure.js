@@ -34,6 +34,8 @@ const availableStates = {
     'Zustimmung versagt',
     'Teile des Gesetzes für nichtig erklärt',
     'Für gegenstandslos erklärt',
+    'Angenommen',
+    'Abgelehnt',
   ],
 };
 
@@ -198,8 +200,9 @@ export default {
       const voted = await VoteModel.findOne({ procedure, users: user });
       return !!voted;
     },
-    votedGoverment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
+    votedGovernment: procedure =>
+      (procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)) ||
+      procedure.currentStatus === 'Angenommen' || procedure.currentStatus === 'Abgelehnt',
   },
 };

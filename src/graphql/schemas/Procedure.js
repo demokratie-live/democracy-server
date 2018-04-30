@@ -21,7 +21,7 @@ type Procedure {
   importantDocuments: [Document]
   voteResults: VoteResult
   voted: Boolean
-  votedGoverment: Boolean
+  votedGovernment: Boolean
   notify: Boolean
   listType: ProcedureType
 }
