@@ -15,10 +15,10 @@ export default {
         return 'de.democracy-deutschland.clientapp.beta';
       case 'production':
         return 'de.democracy-deutschland.clientapp';
-
       default:
         console.error('ERROR: no STAGE defined!');
         return 'de.democracy-deutschland.clientapp';
     }
   })(),
+  MIN_PERIOD: process.env.MIN_PERIOD || 19,
 };
