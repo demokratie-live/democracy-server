@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.8
+
+* graphQL
+  * also provide votedGoverment(votedGovernment) for backwards compatibility (client <= 0.7.5)
+
 ### 0.1.7
 
 * graphQL
