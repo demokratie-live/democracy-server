@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.6
+
+* Resync with bundestag.io on procedures gte 19
+* Parameterized the period to be displayed/used
+
 ### 0.1.5
 
 * pushNotifications
