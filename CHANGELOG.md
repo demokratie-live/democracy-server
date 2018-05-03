@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.1.9
+
+* webhook
+  * do a daily resync with the bundestag.io server
+  * removed count as integrity measurement
+
 ### 0.1.8
 
 * graphQL
