@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.x
+### 0.1.6
 
 * graphQL
   * Include "Abgelehnt" and "Angenommen" in Voting-List & unified procedureState definition [#306](https://github.com/demokratie-live/democracy-client/issues/306)
