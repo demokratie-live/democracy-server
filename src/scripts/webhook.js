@@ -41,7 +41,7 @@ export default async (data) => {
       // Append Changed IDs
       update = update.concat(changedIds);
       // Compare Counts Remote & Local and always sync on period >= MIN_PERIOD
-      if (period === CONSTANTS.MIN_PERIOD || (countBefore > localCount && countBefore >= 0)) {
+      if (period >= CONSTANTS.MIN_PERIOD || (countBefore > localCount && countBefore >= 0)) {
         // Find remote Procedure Updates
         const { data: { procedureUpdates } } = await client.query({
           query: getProcedureUpdates,

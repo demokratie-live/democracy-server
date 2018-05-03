@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.7
+
+* graphQL
+  * always import the correct voteDate for Anträge & Gesetze
+
 ### 0.1.6
 
 * graphQL
