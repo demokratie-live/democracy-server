@@ -1,6 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
 import procedureStates from '../../config/procedureStates';
+import CONSTANTS from '../../config/constants';
 
 export default {
   Query: {
@@ -21,10 +22,9 @@ export default {
           break;
       }
 
-      let period = { $gte: 19 };
+      const period = { $gte: CONSTANTS.MIN_PERIOD };
       let sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
-        period = { $gte: 19 };
         sort = { lastUpdateDate: -1 };
         return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
           .sort(sort)
@@ -33,7 +33,6 @@ export default {
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
-        period = { $gte: 19 };
         sort = {};
         const schemaProps = Object.keys(ProcedureModel.schema.obj).reduce(
           (obj, prop) => ({ ...obj, [prop]: { $first: `$${prop}` } }),
@@ -128,7 +127,7 @@ export default {
             { tags: { $regex: term, $options: 'i' } },
             { subjectGroups: { $regex: term, $options: 'i' } },
           ],
-          period: 19,
+          period: { $gte: CONSTANTS.MIN_PERIOD },
         },
         { score: { $meta: 'textScore' } },
       ).sort({ score: { $meta: 'textScore' } }),

@@ -2,6 +2,7 @@ import importProcedures from './import';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import createClient from '../graphql/client';
 import ProcedureModel from '../models/Procedure';
+import CONSTANTS from '../config/constants';
 
 export default async (data) => {
   const client = createClient();
@@ -39,8 +40,8 @@ export default async (data) => {
       const localCount = localGroup ? localGroup.count : 0;
       // Append Changed IDs
       update = update.concat(changedIds);
-      // Compare Counts Remote & Local
-      if (countBefore > localCount && countBefore >= 0) {
+      // Compare Counts Remote & Local and always sync on period >= MIN_PERIOD
+      if (period === CONSTANTS.MIN_PERIOD || (countBefore > localCount && countBefore >= 0)) {
         // Find remote Procedure Updates
         const { data: { procedureUpdates } } = await client.query({
           query: getProcedureUpdates,
