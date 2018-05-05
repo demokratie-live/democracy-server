@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.10
+
+* lock graphiql via config
+
 ### 0.1.9
 
 * webhook
