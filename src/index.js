@@ -88,7 +88,6 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
-
 /* // Push Notification test
 import pushNotify from './services/notifications';
 app.get('/push-test', async (req, res) => {
@@ -105,10 +104,10 @@ app.get('/push-test', async (req, res) => {
 });
 */
 
-/* // ImportAll Darf in Production nicht ausführbar sein!
-import importAll from './scripts/importAll';
-app.get('/webhooks/bundestagio/import-all', importAll);
-*/
+// ImportAll Darf in Production nicht ausführbar sein!
+// import importAll from './scripts/importAll';
+
+// app.get('/webhooks/bundestagio/import-all', importAll);
 
 // Create & start Server
 const graphqlServer = createServer(app);

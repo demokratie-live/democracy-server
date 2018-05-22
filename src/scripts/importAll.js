@@ -43,7 +43,12 @@ export default async (req, res) => {
       }
 
       // check vote results
-      let voteResults;
+      let voteResults = {
+        yes: null,
+        no: null,
+        abstination: null,
+        notVote: null,
+      };
       if (
         bIoProcedure.customData &&
         bIoProcedure.customData.voteResults &&
