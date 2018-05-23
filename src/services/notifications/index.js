@@ -45,7 +45,7 @@ const sendNotifications = ({
   // send bulk send android notifications
   if (androidNotificationTokens.length > 0) {
     const gcmMessage = new gcm.Message({
-      notification: {
+      data: {
         title: status,
         body: title,
         icon: 'ic_notification',
@@ -183,7 +183,7 @@ export default async ({
     // send bulk send android notifications
     if (androidNotificationTokens.length > 0) {
       const gcmMessage = new gcm.Message({
-        notification: {
+        data: {
           title: status,
           body: message,
           icon: 'ic_notification',

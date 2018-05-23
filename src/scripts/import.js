@@ -34,11 +34,15 @@ export default async (procedureIds) => {
     const newBIoProcedure = { ...bIoProcedure };
     if (bIoProcedure && bIoProcedure.history) {
       const [lastHistory] = newBIoProcedure.history.slice(-1);
-      const btWithDecisions = bIoProcedure.history.filter(({ assignment, initiator }) => assignment === 'BT' && initiator === '2. Beratung');
+      // Conditions on which Procedure is voted upon
+      const btWithDecisions = bIoProcedure.history.filter(({ initiator, decision }) =>
+        // Beschluss liegt vor
+        // TODO: decision should not be an array
+        (decision && (decision.find(({ tenor }) => tenor === 'Ablehnung der Vorlage' || tenor === 'Annahme der Vorlage'))) ||
+        // Zurückgezogen
+        initiator === 'Amtliche Mitteilung: Rücknahme');
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-      } else if (newBIoProcedure.currentStatus === 'Zurückgezogen') {
-        newBIoProcedure.voteDate = lastHistory.date;
       }
 
       // check vote results

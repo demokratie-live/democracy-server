@@ -16,7 +16,7 @@ import webhook from './scripts/webhook';
 // import importAll from './scripts/importAll';
 
 import auth from './express/auth';
-// import pushNotify from './services/notifications';
+import pushNotify from './services/notifications';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -31,6 +31,7 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
+// Apollo Engine
 if (process.env.ENGINE_API_KEY) {
   const engine = new Engine({
     engineConfig: { apiKey: process.env.ENGINE_API_KEY },
@@ -42,9 +43,11 @@ if (process.env.ENGINE_API_KEY) {
 
 app.use(bodyParser.json());
 
+// Authentification
 auth(app);
 
-if (process.env.ENVIRONMENT !== 'production') {
+// Graphiql
+if (constants.GRAPHIQL) {
   app.use(
     constants.GRAPHIQL_PATH,
     graphiqlExpress({
@@ -53,6 +56,7 @@ if (process.env.ENVIRONMENT !== 'production') {
   );
 }
 
+// Graphql
 app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   graphqlExpress({
     schema,
@@ -69,6 +73,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   })(req, res, next);
 });
 
+// Bundestag.io Webhook
 app.post('/webhooks/bundestagio/update', async (req, res) => {
   const { data } = req.body;
   try {
@@ -87,30 +92,29 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
-// app.get('/push-test', async (req, res) => {
-//   const { message } = req.query;
-//   const users = await UserModel.find();
-//   users.forEach((user) => {
-//     pushNotify({
-//       title: 'test',
-//       message: message || 'Test push notification to all users',
-//       user,
-//       payload: {
-//         action: 'procedureDetails',
-//         title: 'Neues Gesetz!',
-//         message: message || 'Test push notification to all users',
-//         procedureId: 232647,
-//       },
-//     });
-//   });
-//   res.send("push's send");
-// });
+app.get('/push-test', async (req, res) => {
+  const { message } = req.query;
+  const users = await UserModel.find();
+  users.forEach((user) => {
+    pushNotify({
+      title: 'test',
+      message: message || 'Test push notification to all users',
+      user,
+      payload: {
+        action: 'procedureDetails',
+        title: 'Neues Gesetz!',
+        message: message || 'Test push notification to all users',
+        procedureId: 232647,
+      },
+    });
+  });
+  res.send("push's send");
+});
 
 // Darf in Production nicht ausführbar sein!
 // app.get('/webhooks/bundestagio/import-all', importAll);
 
 const graphqlServer = createServer(app);
-
 graphqlServer.listen(constants.PORT, (err) => {
   if (err) {
     console.error(err);
