@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+* handle removed vote results [#325](https://github.com/demokratie-live/democracy-client/issues/325)
+
 ### 0.1.10
 
 * lock graphiql via config
