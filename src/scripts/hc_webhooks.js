@@ -9,7 +9,7 @@ export async function contributeProcedure(data) {
     const procedure = await ProcedureModel.findOne({ procedureId });
     if (procedure) {
       const user = new User({ email, password });
-      user.contribute({
+      await user.contribute({
         title: procedure.title,
         content: `<p>${procedure.abstract}</p>`,
         contentExcerpt: procedure.abstract,
