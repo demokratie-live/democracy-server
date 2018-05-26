@@ -69,7 +69,12 @@ export default {
             $addFields: {
               listType: {
                 $cond: {
-                  if: { $in: ['$currentStatus', procedureStates.VOTING.concat(procedureStates.COMPLETED)] },
+                  if: {
+                    $in: [
+                      '$currentStatus',
+                      procedureStates.VOTING.concat(procedureStates.COMPLETED),
+                    ],
+                  },
                   then: 'VOTING',
                   else: 'PREPARATION',
                 },
@@ -104,10 +109,11 @@ export default {
         .then(finishedVotings => [...activeVotings, ...finishedVotings]);
     },
 
+    proceduresById: async (parent, { ids }, { ProcedureModel }) => ProcedureModel.find({ _id: { $in: ids } }),
+
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
-      const listType = (procedureStates.VOTING.concat(procedureStates.COMPLETED))
-        .some(status => procedure.currentStatus === status)
+      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(status => procedure.currentStatus === status)
         ? 'VOTING'
         : 'PREPARATION';
       return {
@@ -171,7 +177,6 @@ export default {
     votedGoverment: procedure =>
       procedure.voteResults &&
       (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    completed: procedure =>
-      procedureStates.COMPLETED.includes(procedure.currentStatus),
+    completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
   },
 };
