@@ -12,6 +12,7 @@ import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 import webhook from './scripts/webhook';
+import { contributeProcedure } from './scripts/hc_webhooks';
 import auth from './express/auth';
 
 // Models
@@ -82,7 +83,27 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   } catch (error) {
     console.log(error);
     res.send({
-      error,
+      error: error.message,
+      succeeded: false,
+    });
+  }
+});
+
+// Human Connection webhook
+app.post('/webhooks/human-connection/contribute', async (req, res) => {
+  const { data } = req.body;
+  try {
+    const procedure = await contributeProcedure(data);
+    console.log(procedure);
+    res.send({
+      procedure,
+      succeeded: true,
+    });
+    console.log(`Contributed: ${procedure}`);
+  } catch (error) {
+    console.log(error);
+    res.send({
+      error: error.message,
       succeeded: false,
     });
   }
