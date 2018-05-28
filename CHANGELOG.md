@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+* [GraphQL] add Query: getProceduresById
+
 ### 0.1.10
 
 * lock graphiql via config
