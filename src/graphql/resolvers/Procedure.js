@@ -109,11 +109,14 @@ export default {
         .then(finishedVotings => [...activeVotings, ...finishedVotings]);
     },
 
-    proceduresById: async (parent, { ids }, { ProcedureModel }) => ProcedureModel.find({ _id: { $in: ids } }),
+    proceduresById: async (parent, { ids }, { ProcedureModel }) =>
+      ProcedureModel.find({ _id: { $in: ids } }),
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
-      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(status => procedure.currentStatus === status)
+      // eslint-disable-next-line
+      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+        status => procedure.currentStatus === status)
         ? 'VOTING'
         : 'PREPARATION';
       return {
