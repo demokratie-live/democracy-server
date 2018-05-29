@@ -1,8 +1,9 @@
 import { User, connect } from 'human-connection-api-nodejs-client';
 import mongoose from 'mongoose';
+import constants from '../config/constants';
 
 export async function contributeProcedure(data) {
-  connect(process.env.HC_BACKEND_URL || 'http://localhost:3030');
+  connect(constants.HC_BACKEND_URL);
   const ProcedureModel = mongoose.model('Procedure');
   const { procedureId, email, password } = data || {};
   if (procedureId && email && password) {
