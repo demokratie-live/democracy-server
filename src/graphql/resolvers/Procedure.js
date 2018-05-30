@@ -5,7 +5,7 @@ import CONSTANTS from '../../config/constants';
 
 export default {
   Query: {
-    procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
+    procedures: async (parent, { type, offset = 0, pageSize = 99 }, { ProcedureModel }) => {
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
@@ -69,7 +69,12 @@ export default {
             $addFields: {
               listType: {
                 $cond: {
-                  if: { $in: ['$currentStatus', procedureStates.VOTING.concat(procedureStates.COMPLETED)] },
+                  if: {
+                    $in: [
+                      '$currentStatus',
+                      procedureStates.VOTING.concat(procedureStates.COMPLETED),
+                    ],
+                  },
                   then: 'VOTING',
                   else: 'PREPARATION',
                 },
@@ -84,17 +89,26 @@ export default {
         return hotProcedures;
       }
 
-      const activeVotings = await ProcedureModel.find({
-        voteDate: { $exists: false },
-        currentStatus: { $in: currentStates },
-        period,
-      })
-        .sort({ lastUpdateDate: -1 })
-        .skip(offset)
-        .limit(pageSize);
+      const activeVotings = await ProcedureModel.aggregate([
+        {
+          $match: {
+            $or: [{ voteDate: { $gte: new Date() } }, { voteDate: { $exists: false } }],
+            currentStatus: { $in: currentStates },
+            period,
+          },
+        },
+        {
+          $addFields: {
+            nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
+          },
+        },
+        { $sort: { nlt: 1, lastUpdateDate: -1 } },
+        { $skip: offset },
+        { $limit: pageSize },
+      ]);
 
       return ProcedureModel.find({
-        voteDate: { $exists: true },
+        voteDate: { $lt: new Date().toISOString() },
         currentStatus: { $in: currentStates },
         period,
       })
@@ -106,8 +120,9 @@ export default {
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
-      const listType = (procedureStates.VOTING.concat(procedureStates.COMPLETED))
-        .some(status => procedure.currentStatus === status)
+      // eslint-disable-next-line
+      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+        status => procedure.currentStatus === status)
         ? 'VOTING'
         : 'PREPARATION';
       return {
@@ -171,7 +186,6 @@ export default {
     votedGoverment: procedure =>
       procedure.voteResults &&
       (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    completed: procedure =>
-      procedureStates.COMPLETED.includes(procedure.currentStatus),
+    completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
   },
 };

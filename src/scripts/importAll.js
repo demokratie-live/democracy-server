@@ -40,6 +40,10 @@ export default async (req, res) => {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
       } else if (pastStatus.some(status => status === newBIoProcedure.currentStatus)) {
         newBIoProcedure.voteDate = lastHistory.date;
+      } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
+        newBIoProcedure.voteDate = new Date(bIoProcedure.customData.expectedVotingDate);
+      } else {
+        newBIoProcedure.voteDate = null;
       }
 
       // check vote results
