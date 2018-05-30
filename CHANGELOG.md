@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.11
+
+* get estimated vote result from bundestagio
+* fix sorting for list (voteDate)
+
 ### 0.1.10
 
 * lock graphiql via config
