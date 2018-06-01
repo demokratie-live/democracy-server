@@ -38,15 +38,21 @@ export default async (procedureIds) => {
       const btWithDecisions = bIoProcedure.history.filter(({ initiator, decision }) =>
         // Beschluss liegt vor
         // TODO: decision should not be an array
-        (decision && (decision.find(({ tenor }) => tenor === 'Ablehnung der Vorlage' || tenor === 'Annahme der Vorlage'))) ||
-        // Zurückgezogen
-        initiator === 'Amtliche Mitteilung: Rücknahme');
+        (decision &&
+            decision.find(({ tenor }) => tenor === 'Ablehnung der Vorlage' || tenor === 'Annahme der Vorlage')) ||
+          // Zurückgezogen
+          initiator === 'Amtliche Mitteilung: Rücknahme');
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
       }
 
       // check vote results
-      let voteResults;
+      let voteResults = {
+        yes: null,
+        no: null,
+        abstination: null,
+        notVote: null,
+      };
       if (
         bIoProcedure.customData &&
         bIoProcedure.customData.voteResults &&
