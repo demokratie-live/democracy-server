@@ -48,12 +48,12 @@ const sendNotifications = ({
       data: {
         title: status,
         body: title,
-        color: '#4f81bd',
         payload,
       },
       notification: {
         icon: 'ic_notification',
         title: status,
+        color: '#4f81bd',
       },
     });
     gcmProvider.send(
