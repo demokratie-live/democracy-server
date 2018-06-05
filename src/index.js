@@ -16,7 +16,7 @@ import webhook from './scripts/webhook';
 // import importAll from './scripts/importAll';
 
 import auth from './express/auth';
-// import pushNotify from './services/notifications';
+import pushNotify from './services/notifications';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -92,24 +92,24 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
-// app.get('/push-test', async (req, res) => {
-//   const { message } = req.query;
-//   const users = await UserModel.find();
-//   users.forEach((user) => {
-//     pushNotify({
-//       title: 'test',
-//       message: message || 'Test push notification to all users',
-//       user,
-//       payload: {
-//         action: 'procedureDetails',
-//         title: 'Neues Gesetz!',
-//         message: message || 'Test push notification to all users',
-//         procedureId: 232647,
-//       },
-//     });
-//   });
-//   res.send("push's send");
-// });
+app.get('/push-test', async (req, res) => {
+  const { message } = req.query;
+  const users = await UserModel.find();
+  users.forEach((user) => {
+    pushNotify({
+      status: 'STATUS',
+      message: message || 'Test push notification to all users',
+      user,
+      payload: {
+        action: 'procedureDetails',
+        title: 'Neues Gesetz!',
+        message: message || 'Test push notification to all users',
+        procedureId: 232647,
+      },
+    });
+  });
+  res.send("push's send");
+});
 
 // Darf in Production nicht ausführbar sein!
 // app.get('/webhooks/bundestagio/import-all', importAll);

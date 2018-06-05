@@ -49,10 +49,14 @@ const sendNotifications = ({
         title: status,
         body: title,
         payload,
+        icon: 'ic_notification',
+        color: '#4f81bd',
       },
       notification: {
-        icon: 'ic_notification',
         title: status,
+        body: title,
+        payload,
+        icon: 'ic_notification',
         color: '#4f81bd',
       },
     });
@@ -190,10 +194,14 @@ export default async ({
           title: status,
           body: message,
           payload,
+          icon: 'ic_notification',
+          color: '#4f81bd',
         },
         notification: {
-          icon: 'ic_notification',
           title: status,
+          body: message,
+          payload,
+          icon: 'ic_notification',
           color: '#4f81bd',
         },
       });
