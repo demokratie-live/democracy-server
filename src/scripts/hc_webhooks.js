@@ -1,5 +1,6 @@
 import { User, connect } from 'human-connection-api-nodejs-client';
 import mongoose from 'mongoose';
+import slugify from 'slugify';
 import constants from '../config/constants';
 
 export async function contributeProcedure(data) {
@@ -17,6 +18,8 @@ export async function contributeProcedure(data) {
         type: 'post',
         language: 'de',
         categoryIds: ['5ac7768f8d655d2ee6d48fe4'], // politics & democracy
+      }, {
+        slug: slugify(procedure.title, { lower: true }),
       });
       return procedure;
     }
