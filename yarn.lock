@@ -2311,7 +2311,7 @@ http-signature@~1.2.0:
 
 "human-connection-api-nodejs-client@https://github.com/demokratie-live/human-connection-api-nodejs-client.git":
   version "1.0.0"
-  resolved "https://github.com/demokratie-live/human-connection-api-nodejs-client.git#da0111005670bd01f8eb6d7846bcd74f5242291d"
+  resolved "https://github.com/demokratie-live/human-connection-api-nodejs-client.git#718832a8dcb7355c673877fdabdafa48ddcc6c7b"
   dependencies:
     node-fetch "^2.1.2"
 
