@@ -20,6 +20,7 @@ export async function contributeProcedure(data) {
         categoryIds: ['5ac7768f8d655d2ee6d48fe4'], // politics & democracy
       }, {
         slug: slugify(procedure.title, { lower: true }),
+        organization: constants.HC_ORGANIZATION_SLUG,
       });
       return procedure;
     }
