@@ -189,9 +189,12 @@ export default async ({
         data: {
           title: status,
           body: message,
-          icon: 'ic_notification',
-          color: '#4f81bd',
           payload,
+        },
+        notification: {
+          icon: 'ic_notification',
+          title: status,
+          color: '#4f81bd',
         },
       });
       gcmProvider.send(
