@@ -21,14 +21,17 @@ const sendNotifications = ({
         {
           const note = new apn.Notification();
 
-          note.alert = `${status}\n${title}`;
+          note.alert = {
+            title: status,
+            body: title,
+          };
 
           note.topic = CONFIG.APN_TOPIC;
 
           note.payload = payload;
 
           apnProvider.send(note, token).then((result) => {
-            console.log('apnProvider.send', result);
+            console.log('apnProvider.send', util.inspect(result, false, null));
           });
         }
         break;
@@ -166,7 +169,10 @@ export default async ({
           {
             const note = new apn.Notification();
 
-            note.alert = message;
+            note.alert = {
+              title: status,
+              body: message,
+            };
 
             note.topic = CONFIG.APN_TOPIC;
 

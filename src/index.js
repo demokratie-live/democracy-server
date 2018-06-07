@@ -23,6 +23,7 @@ import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
+import PushNotifiactionModel from './models/PushNotifiaction';
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       UserModel,
       ActivityModel,
       VoteModel,
+      PushNotifiactionModel,
     },
     tracing: true,
     cacheControl: true,
@@ -93,12 +95,15 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
 });
 
 app.get('/push-test', async (req, res) => {
-  const { message } = req.query;
+  const { message, status } = req.query;
+  if (!message) {
+    res.send('message is missing');
+  }
   const users = await UserModel.find();
   users.forEach((user) => {
     pushNotify({
-      status: 'STATUS',
-      message: message || 'Test push notification to all users',
+      status,
+      message,
       user,
       payload: {
         action: 'procedureDetails',

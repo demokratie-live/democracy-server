@@ -1,7 +1,13 @@
 import _ from 'lodash';
+import { detailedDiff } from 'deep-object-diff';
 
 import createClient from '../graphql/client';
+
+// Models
 import Procedure from '../models/Procedure';
+import PushNotifiaction from '../models/PushNotifiaction';
+
+// Queries
 import getProcedures from '../graphql/queries/getProcedures';
 
 import { procedureUpdate, newPreperation, newVote } from '../services/notifications/index';
@@ -96,10 +102,7 @@ export default async (procedureIds) => {
       newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
     }
 
-    const oldProcedure = await Procedure.find(
-      { procedureId: newBIoProcedure.procedureId },
-      { _id: 1 },
-    ).limit(1);
+    const oldProcedure = await Procedure.findOne({ procedureId: newBIoProcedure.procedureId });
 
     return Procedure.findOneAndUpdate(
       { procedureId: newBIoProcedure.procedureId },
@@ -108,22 +111,54 @@ export default async (procedureIds) => {
         .value(),
       {
         upsert: true,
+        new: true,
       },
-    ).then(() => {
+    ).then((newDoc) => {
       /**
        * PUSH NOTIFICATIONS
        */
       // New Procedures
-      if (!oldProcedure.length) {
+      if (!oldProcedure) {
         console.log('PUSH NOTIFICATIONS', 'new Procedure', newBIoProcedure.procedureId);
+        PushNotifiaction.create({
+          procedureId: newBIoProcedure.procedureId,
+          type: 'new',
+        });
         newPreperation({ procedureId: newBIoProcedure.procedureId });
       } else {
         // Updated Procedures
-        console.log('PUSH NOTIFICATIONS', 'updated Procedure', newBIoProcedure.procedureId);
-        procedureUpdate({ procedureId: newBIoProcedure.procedureId });
+        const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
+        const updatedValues = _.compact(_.map(diffs.updated, (value, key) => {
+          switch (key) {
+            case 'currentStatus':
+            case 'importantDocuments':
+            case 'voteResults':
+              return key;
+
+            case 'updatedAt':
+            case 'bioUpdateAt':
+              return null;
+
+            default:
+              return null;
+          }
+        }));
+        console.log('PUSH NOTIFICATIONS', 'updated Procedure', newBIoProcedure.procedureId, diffs);
+        if (updatedValues.length > 0) {
+          PushNotifiaction.create({
+            procedureId: newBIoProcedure.procedureId,
+            type: 'update',
+            updatedValues,
+          });
+          procedureUpdate({ procedureId: newBIoProcedure.procedureId });
+        }
         if (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor') {
           // moved to Vote Procedures
           console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
+          PushNotifiaction.create({
+            procedureId: newBIoProcedure.procedureId,
+            type: 'newVote',
+          });
           newVote({ procedureId: newBIoProcedure.procedureId });
         }
       }
