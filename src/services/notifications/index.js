@@ -12,7 +12,7 @@ import ProcedureModel from '../../models/Procedure';
 import CONFIG from '../../config/constants';
 
 const sendNotifications = ({
-  tokenObjects, status, title, payload,
+  tokenObjects, title = 'DEMOCRACY', message, payload,
 }) => {
   const androidNotificationTokens = [];
   tokenObjects.forEach(({ token, os }) => {
@@ -22,8 +22,8 @@ const sendNotifications = ({
           const note = new apn.Notification();
 
           note.alert = {
-            title: status,
-            body: title,
+            title,
+            body: message,
           };
 
           note.topic = CONFIG.APN_TOPIC;
@@ -49,18 +49,9 @@ const sendNotifications = ({
   if (androidNotificationTokens.length > 0) {
     const gcmMessage = new gcm.Message({
       data: {
-        title: status,
-        body: title,
+        title,
+        body: message,
         payload,
-        icon: 'ic_notification',
-        color: '#4f81bd',
-      },
-      notification: {
-        title: status,
-        body: title,
-        payload,
-        icon: 'ic_notification',
-        color: '#4f81bd',
       },
     });
     gcmProvider.send(
@@ -81,15 +72,15 @@ const newVote = async ({ procedureId }) => {
     'notificationSettings.newVote': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  const status = 'Jetzt Abstimmen!';
+  const title = 'Jetzt Abstimmen!';
   sendNotifications({
     tokenObjects,
-    status,
-    title: procedure.title,
+    title,
+    message: procedure.title,
     payload: {
       procedureId,
       action: 'procedureDetails',
-      title: status,
+      title,
       message: procedure.title,
     },
   });
@@ -103,26 +94,26 @@ const newPreperation = async ({ procedureId }) => {
     'notificationSettings.newPreperation': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  let status;
+  let title;
   switch (procedure.type) {
     case 'Gesetzgebung':
-      status = 'Neue Gesetzesinitiative!';
+      title = 'Neue Gesetzesinitiative!';
       break;
     case 'Antrag':
-      status = 'Neuer Antrag!';
+      title = 'Neuer Antrag!';
       break;
     default:
-      status = 'Neu!';
+      title = 'Neu!';
       break;
   }
   sendNotifications({
     tokenObjects,
-    status,
-    title: procedure.title,
+    title,
+    message: procedure.title,
     payload: {
       procedureId,
       action: 'procedureDetails',
-      title: status,
+      title,
       message: procedure.title,
     },
   });
@@ -136,15 +127,15 @@ const procedureUpdate = async ({ procedureId }) => {
     'notificationSettings.procedures': procedure._id,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  const status = 'Update!';
+  const title = 'Update!';
   sendNotifications({
     tokenObjects,
-    status,
-    title: procedure.title,
+    title,
+    message: procedure.title,
     payload: {
       procedureId,
       action: 'procedureDetails',
-      title: status,
+      title,
       message: procedure.title,
     },
   });
@@ -154,7 +145,7 @@ const procedureUpdate = async ({ procedureId }) => {
 export { procedureUpdate, newVote, newPreperation };
 
 export default async ({
-  status, message, user, payload,
+  title, message, user, payload,
 }) => {
   let userId;
   if (_.isObject(user)) {
@@ -170,7 +161,7 @@ export default async ({
             const note = new apn.Notification();
 
             note.alert = {
-              title: status,
+              title,
               body: message,
             };
 
@@ -197,18 +188,9 @@ export default async ({
     if (androidNotificationTokens.length > 0) {
       const gcmMessage = new gcm.Message({
         data: {
-          title: status,
+          title,
           body: message,
           payload,
-          icon: 'ic_notification',
-          color: '#4f81bd',
-        },
-        notification: {
-          title: status,
-          body: message,
-          payload,
-          icon: 'ic_notification',
-          color: '#4f81bd',
         },
       });
       gcmProvider.send(

@@ -95,14 +95,14 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
 });
 
 app.get('/push-test', async (req, res) => {
-  const { message, status } = req.query;
+  const { message, title } = req.query;
   if (!message) {
     res.send('message is missing');
   }
   const users = await UserModel.find();
   users.forEach((user) => {
     pushNotify({
-      status,
+      title: title || 'DEMOCRACY',
       message,
       user,
       payload: {
