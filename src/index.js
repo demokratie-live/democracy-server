@@ -16,7 +16,6 @@ import webhook from './scripts/webhook';
 // import importAll from './scripts/importAll';
 
 import auth from './express/auth';
-import pushNotify from './services/notifications';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -94,6 +93,8 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
+/*
+import pushNotify from './services/notifications';
 app.get('/push-test', async (req, res) => {
   const { message, title } = req.query;
   if (!message) {
@@ -115,6 +116,7 @@ app.get('/push-test', async (req, res) => {
   });
   res.send("push's send");
 });
+*/
 
 // Darf in Production nicht ausführbar sein!
 // app.get('/webhooks/bundestagio/import-all', importAll);
