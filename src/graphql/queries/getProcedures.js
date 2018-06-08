@@ -8,6 +8,7 @@ export default gql`
       type
       period
       currentStatus
+      currentStatusHistory
       abstract
       tags
       subjectGroups
