@@ -1,7 +1,10 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+import _ from 'lodash';
 
 import procedureStates from '../../config/procedureStates';
 import CONSTANTS from '../../config/constants';
+
+import elasticsearch from '../../services/search';
 
 export default {
   Query: {
@@ -132,20 +135,29 @@ export default {
       };
     },
 
-    searchProcedures: (parent, { term }, { ProcedureModel }) =>
-      ProcedureModel.find(
-        {
-          $or: [
-            { procedureId: { $regex: term, $options: 'i' } },
-            { title: { $regex: term, $options: 'i' } },
-            { abstract: { $regex: term, $options: 'i' } },
-            { tags: { $regex: term, $options: 'i' } },
-            { subjectGroups: { $regex: term, $options: 'i' } },
-          ],
-          period: { $gte: CONSTANTS.MIN_PERIOD },
+    searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+      const { hits } = await elasticsearch.search({
+        index: 'procedures',
+        type: 'procedure',
+        body: {
+          query: {
+            function_score: {
+              query: {
+                multi_match: {
+                  query: term,
+                  fields: ['title^3', 'tags^2.5', 'abstract^2'],
+                  fuzziness: 'AUTO',
+                  prefix_length: 2,
+                },
+              },
+            },
+          },
         },
-        { score: { $meta: 'textScore' } },
-      ).sort({ score: { $meta: 'textScore' } }),
+      });
+      const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
+      const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
+      return _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId));
+    },
 
     notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
       if (!user) {
