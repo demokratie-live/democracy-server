@@ -154,7 +154,10 @@ export default async (procedureIds) => {
           });
           procedureUpdate({ procedureId: newBIoProcedure.procedureId });
         }
-        if (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor') {
+        if (
+          newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
+          oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor'
+        ) {
           // moved to Vote Procedures
           console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
           PushNotifiaction.create({
