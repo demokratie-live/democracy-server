@@ -12,6 +12,7 @@ type Procedure {
   type: String
   period: Int
   currentStatus: String
+  currentStatusHistory: [String]
   abstract: String
   tags: [String]
   voteDate: Date
