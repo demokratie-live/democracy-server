@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.1.xx
+
+* get estimated vote result from bundestagio
+* fix sorting for list (voteDate)
+
 ### 0.1.11
 
 * handle removed vote results [#325](https://github.com/demokratie-live/democracy-client/issues/325)

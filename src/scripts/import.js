@@ -50,6 +50,8 @@ export default async (procedureIds) => {
           initiator === 'Amtliche Mitteilung: Rücknahme');
       if (btWithDecisions.length > 0) {
         newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
+      } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
+        newBIoProcedure.voteDate = new Date(bIoProcedure.customData.expectedVotingDate);
       }
 
       // check vote results
