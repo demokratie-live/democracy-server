@@ -4,6 +4,7 @@
 
 * get estimated vote result from bundestagio
 * fix sorting for list (voteDate)
+* [Added] Add support for scraping currentState history
 
 ### 0.1.11
 
