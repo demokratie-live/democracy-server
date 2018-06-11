@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+* [Added] Add support for scraping currentState history
+
 ### 0.1.11
 
 * handle removed vote results [#325](https://github.com/demokratie-live/democracy-client/issues/325)
