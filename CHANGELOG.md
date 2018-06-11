@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.xx
+### 0.1.12
 
 * get estimated vote result from bundestagio
 * fix sorting for list (voteDate)
