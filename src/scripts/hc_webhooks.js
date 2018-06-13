@@ -13,14 +13,16 @@ export async function contributeProcedure(data) {
       const user = new User({ email, password });
       await user.contribute({
         title: procedure.title,
-        content: `<p>${procedure.abstract}</p>`,
+        content: `${procedure.abstract}`,
         contentExcerpt: procedure.abstract,
         type: 'post',
         language: 'de',
-        categoryIds: ['5ac7768f8d655d2ee6d48fe4'], // politics & democracy
       }, {
         slug: slugify(procedure.title, { lower: true }),
-        organization: constants.HC_ORGANIZATION_SLUG,
+        resolveSlugs: {
+          categories: ['democracy-politics'],
+          organization: constants.HC_ORGANIZATION_SLUG,
+        }
       });
       return procedure;
     }
