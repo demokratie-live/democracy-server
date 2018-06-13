@@ -28,10 +28,15 @@ type Procedure {
   listType: ProcedureType
 }
 
+type SearchProcedures {
+  procedures: [Procedure]
+  autocomplete: [String]
+}
+
 type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
-  searchProcedures(term: String!): [Procedure]
+  searchProcedures(term: String!): SearchProcedures
 }
 `;
