@@ -13,6 +13,7 @@ import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 import webhook from './scripts/webhook';
 import auth from './express/auth';
+import updateProcedures from './express/webhooks/bundestagio/updateProcedures';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -88,6 +89,8 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
+// Bundestag.io Webhook update specific procedures
+app.post('/webhooks/bundestagio/updateProcedures', updateProcedures);
 
 /* // Push Notification test
 import pushNotify from './services/notifications';
