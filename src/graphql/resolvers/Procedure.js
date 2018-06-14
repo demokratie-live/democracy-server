@@ -25,11 +25,22 @@ export default {
       const period = { $gte: CONSTANTS.MIN_PERIOD };
       let sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
-        sort = { lastUpdateDate: -1 };
-        return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
-          .sort(sort)
-          .skip(offset)
-          .limit(pageSize);
+        return ProcedureModel.aggregate([
+          {
+            $match: {
+              currentStatus: { $in: currentStates },
+              period,
+            },
+          },
+          {
+            $addFields: {
+              nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
+            },
+          },
+          { $sort: { nlt: 1, lastUpdateDate: -1 } },
+          { $skip: offset },
+          { $limit: pageSize },
+        ]);
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
