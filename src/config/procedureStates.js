@@ -6,12 +6,12 @@ export default {
     '1. Durchgang im Bundesrat abgeschlossen',
     'Überwiesen',
     'Noch nicht beraten',
-    'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
     'Einbringung abgelehnt',
     'Einbringung beschlossen',
   ],
   VOTING: ['Beschlussempfehlung liegt vor'],
   COMPLETED: [
+    'Nicht abgeschlossen - Einzelheiten siehe Vorgangsablauf',
     'Erledigt durch Ablauf der Wahlperiode',
     'Zurückgezogen',
     'Angenommen',
