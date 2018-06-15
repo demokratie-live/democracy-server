@@ -140,27 +140,63 @@ export default {
     },
 
     searchProcedures: async (parent, { term }, { ProcedureModel }) => {
-      const { hits } = await elasticsearch.search({
+      const { hits, suggest } = await elasticsearch.search({
         index: 'procedures',
         type: 'procedure',
         body: {
           query: {
             function_score: {
               query: {
-                multi_match: {
-                  query: term,
-                  fields: ['title^3', 'tags^2.5', 'abstract^2'],
-                  fuzziness: 'AUTO',
-                  prefix_length: 2,
+                bool: {
+                  must: [
+                    {
+                      term: { period: 19 },
+                    },
+                    {
+                      query_string: {
+                        query: "type:'Antrag' OR type:'Gesetzgebung'",
+                      },
+                    },
+                    {
+                      multi_match: {
+                        query: `*${term}*`,
+                        fields: ['title^3', 'tags^2.5', 'abstract^2'],
+                        fuzziness: 'AUTO',
+                        prefix_length: 3,
+                      },
+                    },
+                  ],
                 },
+              },
+            },
+          },
+
+          suggest: {
+            autocomplete: {
+              text: `${term}`,
+              term: {
+                field: 'title',
+                suggest_mode: 'popular',
               },
             },
           },
         },
       });
+
+      // prepare procedures
       const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
       const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
-      return _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId));
+
+      // prepare autocomplete
+      let autocomplete = [];
+      if (suggest.autocomplete[0]) {
+        autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
+      }
+      return {
+        procedures:
+          _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId)) || [],
+        autocomplete,
+      };
     },
 
     notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
