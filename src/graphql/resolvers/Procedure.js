@@ -28,11 +28,11 @@ export default {
       const period = { $gte: CONSTANTS.MIN_PERIOD };
       let sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
-        sort = { lastUpdateDate: -1 };
-        return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
-          .sort(sort)
-          .skip(offset)
-          .limit(pageSize);
+        return ProcedureModel.find({
+          currentStatus: { $in: currentStates },
+          period,
+          voteDate: { $not: { $type: 'date' } },
+        });
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
@@ -95,8 +95,13 @@ export default {
       const activeVotings = await ProcedureModel.aggregate([
         {
           $match: {
-            $or: [{ voteDate: { $gte: new Date() } }, { voteDate: { $exists: false } }],
-            currentStatus: { $in: currentStates },
+            $or: [
+              {
+                currentStatus: { $in: currentStates },
+                voteDate: { $exists: false },
+              },
+              { voteDate: { $gte: new Date() } },
+            ],
             period,
           },
         },
@@ -111,8 +116,7 @@ export default {
       ]);
 
       return ProcedureModel.find({
-        voteDate: { $lt: new Date().toISOString() },
-        currentStatus: { $in: currentStates },
+        voteDate: { $lt: new Date() },
         period,
       })
         .sort(sort)
@@ -125,7 +129,7 @@ export default {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
-        status => procedure.currentStatus === status)
+        status => procedure.currentStatus === status || procedure.voteDate)
         ? 'VOTING'
         : 'PREPARATION';
       return {

@@ -48,9 +48,13 @@ export default {
       // TODO check if procedure is votable
       const procedure = await ProcedureModel.findById(procedureId);
       let state;
-      if (procedureStates.VOTING.some(s => s === procedure.currentStatus)) {
+      if (
+        procedureStates.VOTING.some(s =>
+          s === procedure.currentStatus ||
+            (procedure.voteDate && new Date(procedure.voteDate) >= new Date()))
+      ) {
         state = 'VOTING';
-      } else if (procedureStates.COMPLETED.some(s => s === procedure.currentStatus)) {
+      } else if (procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)) {
         state = 'COMPLETED';
       }
 
