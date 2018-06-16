@@ -139,7 +139,25 @@ export default {
       };
     },
 
-    searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+    searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
+      let autocomplete = [];
+
+      // Search by procedureID or Document id
+      const directProcedures = await ProcedureModel.find({
+        $or: [
+          { procedureId: term },
+          {
+            'importantDocuments.number': term,
+          },
+        ],
+      });
+      if (directProcedures.length > 0) {
+        return {
+          procedures: directProcedures,
+          autocomplete,
+        };
+      }
+
       const { hits, suggest } = await elasticsearch.search({
         index: 'procedures',
         type: 'procedure',
@@ -188,7 +206,6 @@ export default {
       const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
 
       // prepare autocomplete
-      let autocomplete = [];
       if (suggest.autocomplete[0]) {
         autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
       }
@@ -197,6 +214,46 @@ export default {
           _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId)) || [],
         autocomplete,
       };
+    },
+
+    // DEPRECATED
+    searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+      const { hits } = await elasticsearch.search({
+        index: 'procedures',
+        type: 'procedure',
+        body: {
+          query: {
+            function_score: {
+              query: {
+                bool: {
+                  must: [
+                    {
+                      term: { period: 19 },
+                    },
+                    {
+                      query_string: {
+                        query: "type:'Antrag' OR type:'Gesetzgebung'",
+                      },
+                    },
+                    {
+                      multi_match: {
+                        query: `*${term}*`,
+                        fields: ['title^3', 'tags^2.5', 'abstract^2'],
+                        fuzziness: 'AUTO',
+                        prefix_length: 3,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // prepare procedures
+      const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
+      return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
     notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {

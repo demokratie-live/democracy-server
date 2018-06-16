@@ -38,6 +38,7 @@ type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
-  searchProcedures(term: String!): SearchProcedures
+  searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
+  searchProceduresAutocomplete(term: String!): SearchProcedures
 }
 `;
