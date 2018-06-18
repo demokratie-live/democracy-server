@@ -2,6 +2,7 @@ import _ from 'lodash';
 import { detailedDiff } from 'deep-object-diff';
 
 import createClient from '../graphql/client';
+import sendNotifications from '../scripts/sendNotifications';
 
 // Models
 import Procedure from '../models/Procedure';
@@ -124,7 +125,7 @@ export default async (procedureIds) => {
           procedureId: newBIoProcedure.procedureId,
           type: 'new',
         });
-        newPreperation({ procedureId: newBIoProcedure.procedureId });
+        // newPreperation({ procedureId: newBIoProcedure.procedureId });
       } else {
         // Updated Procedures
         const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
@@ -143,8 +144,13 @@ export default async (procedureIds) => {
               return null;
           }
         }));
-        console.log('PUSH NOTIFICATIONS', 'updated Procedure', newBIoProcedure.procedureId, diffs);
         if (updatedValues.length > 0) {
+          console.log(
+            'PUSH NOTIFICATIONS',
+            'updated Procedure',
+            newBIoProcedure.procedureId,
+            diffs,
+          );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'update',
@@ -162,13 +168,15 @@ export default async (procedureIds) => {
             procedureId: newBIoProcedure.procedureId,
             type: 'newVote',
           });
-          newVote({ procedureId: newBIoProcedure.procedureId });
+          // newVote({ procedureId: newBIoProcedure.procedureId });
         }
       }
     });
   });
 
   const result = await Promise.all(promises);
+
+  sendNotifications();
 
   return result.length;
   // Imported everything!
