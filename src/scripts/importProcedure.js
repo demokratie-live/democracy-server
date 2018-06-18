@@ -115,7 +115,7 @@ export default async (bIoProcedure, { push = false }) => {
           procedureId: newBIoProcedure.procedureId,
           type: 'new',
         });
-        newPreperation({ procedureId: newBIoProcedure.procedureId });
+        // newPreperation({ procedureId: newBIoProcedure.procedureId });
       } else {
         // Updated Procedures
         const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
@@ -134,8 +134,13 @@ export default async (bIoProcedure, { push = false }) => {
               return null;
           }
         }));
-        console.log('PUSH NOTIFICATIONS', 'updated Procedure', newBIoProcedure.procedureId, diffs);
         if (updatedValues.length > 0) {
+          console.log(
+            'PUSH NOTIFICATIONS',
+            'updated Procedure',
+            newBIoProcedure.procedureId,
+            diffs,
+          );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'update',
@@ -153,7 +158,7 @@ export default async (bIoProcedure, { push = false }) => {
             procedureId: newBIoProcedure.procedureId,
             type: 'newVote',
           });
-          newVote({ procedureId: newBIoProcedure.procedureId });
+          // newVote({ procedureId: newBIoProcedure.procedureId });
         }
       }
     }

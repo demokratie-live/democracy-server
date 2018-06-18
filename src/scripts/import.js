@@ -1,4 +1,5 @@
 import createClient from '../graphql/client';
+import sendNotifications from '../scripts/sendNotifications';
 
 import getProcedures from '../graphql/queries/getProcedures';
 
@@ -16,6 +17,8 @@ export default async (procedureIds) => {
   const promises = await procedures.map(procedure => importProcedure(procedure, { push: true }));
 
   const result = await Promise.all(promises);
+
+  sendNotifications();
 
   return result.length;
   // Imported everything!

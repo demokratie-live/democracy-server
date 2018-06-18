@@ -115,6 +115,7 @@ app.get('/push-test', async (req, res) => {
         title: 'Neues Gesetz!',
         message: message || 'Test push notification to all users',
         procedureId: 232647,
+        type: 'procedure',
       },
     });
   });

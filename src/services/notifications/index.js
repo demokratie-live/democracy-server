@@ -85,6 +85,27 @@ const newVote = async ({ procedureId }) => {
     },
   });
 };
+
+const newVotes = async ({ procedureIds }) => {
+  const users = await UserModel.find({
+    'notificationSettings.enabled': true,
+    'notificationSettings.newVote': true,
+  });
+  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const title = 'Jetzt Abstimmen!';
+  sendNotifications({
+    tokenObjects,
+    title,
+    message: `Es gibt ${procedureIds.length} neue Abstimmungen.`,
+    payload: {
+      procedureIds,
+      title,
+      message: `Es gibt ${procedureIds.length} neue Abstimmungen.`,
+      action: 'procedureBulk',
+      type: 'procedureBulk',
+    },
+  });
+};
 // newVote({ procedureId: 231079 });
 
 const newPreperation = async ({ procedureId }) => {
@@ -118,6 +139,26 @@ const newPreperation = async ({ procedureId }) => {
     },
   });
 };
+
+const newPreperations = async ({ procedureIds }) => {
+  const users = await UserModel.find({
+    'notificationSettings.enabled': true,
+    'notificationSettings.newPreperation': true,
+  });
+  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  sendNotifications({
+    tokenObjects,
+    title: 'Neu in Vorbereitung!',
+    message: `${procedureIds.length} Elemente neu in Vorbereitung`,
+    payload: {
+      procedureIds,
+      title: 'Neu in Vorbereitung!',
+      message: `${procedureIds.length} Elemente neu in Vorbereitung`,
+      action: 'procedureBulk',
+      type: 'procedureBulk',
+    },
+  });
+};
 // newPreperation({ procedureId: 231079 });
 
 const procedureUpdate = async ({ procedureId }) => {
@@ -142,7 +183,7 @@ const procedureUpdate = async ({ procedureId }) => {
 };
 // procedureUpdate({ procedureId: 231079 });
 
-export { procedureUpdate, newVote, newPreperation };
+export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations };
 
 export default async ({
   title, message, user, payload,
@@ -166,6 +207,7 @@ export default async ({
             };
 
             note.topic = CONFIG.APN_TOPIC;
+            note.contentAvailable = 1;
 
             note.payload = payload;
 
