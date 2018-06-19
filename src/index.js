@@ -24,6 +24,7 @@ import UserModel from './models/User';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
 import PushNotifiactionModel from './models/PushNotifiaction';
+import SearchTermModel from './models/SearchTerms';
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       ActivityModel,
       VoteModel,
       PushNotifiactionModel,
+      SearchTermModel,
     },
     tracing: true,
     cacheControl: true,
