@@ -23,17 +23,18 @@ export default {
       }
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
-      let sort = { voteDate: -1, lastUpdateDate: -1 };
+      const sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
         return ProcedureModel.find({
           currentStatus: { $in: currentStates },
           period,
           voteDate: { $not: { $type: 'date' } },
-        }).limit(pageSize).skip(offset);
+        })
+          .limit(pageSize)
+          .skip(offset);
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
-        sort = {};
         const schemaProps = Object.keys(ProcedureModel.schema.obj).reduce(
           (obj, prop) => ({ ...obj, [prop]: { $first: `$${prop}` } }),
           {},
@@ -94,10 +95,13 @@ export default {
           $match: {
             $or: [
               {
-                currentStatus: { $in: currentStates },
+                currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
                 voteDate: { $exists: false },
               },
-              { voteDate: { $gte: new Date() } },
+              {
+                currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                voteDate: { $gte: new Date() },
+              },
             ],
             period,
           },
@@ -113,7 +117,10 @@ export default {
       ]);
 
       return ProcedureModel.find({
-        voteDate: { $lt: new Date() },
+        $or: [
+          { voteDate: { $lt: new Date() } },
+          { currentStatus: { $in: procedureStates.COMPLETED } },
+        ],
         period,
       })
         .sort(sort)
