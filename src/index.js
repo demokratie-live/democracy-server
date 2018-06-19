@@ -19,6 +19,7 @@ import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
+import SearchTermModel from './models/SearchTerms';
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       UserModel,
       ActivityModel,
       VoteModel,
+      SearchTermModel,
     },
     tracing: true,
     cacheControl: true,
@@ -87,7 +89,6 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
     });
   }
 });
-
 
 /* // Push Notification test
 import pushNotify from './services/notifications';
