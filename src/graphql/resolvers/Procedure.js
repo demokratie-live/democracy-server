@@ -32,7 +32,7 @@ export default {
           currentStatus: { $in: currentStates },
           period,
           voteDate: { $not: { $type: 'date' } },
-        });
+        }).limit(pageSize).skip(offset);
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
