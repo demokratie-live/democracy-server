@@ -32,9 +32,14 @@ export default async (bIoProcedure, { push = false }) => {
       // Beschluss liegt vor
       // TODO: decision should not be an array
       (decision &&
-          decision.find(({ tenor }) => tenor === 'Ablehnung der Vorlage' || tenor === 'Annahme der Vorlage')) ||
+          decision.find(({ tenor }) =>
+            tenor === 'Ablehnung der Vorlage' ||
+              tenor === 'Annahme der Vorlage' ||
+              tenor === 'Erklärung der Vorlage für erledigt' ||
+              tenor === 'Annahme in Ausschussfassung')) ||
         // Zurückgezogen
-        initiator === 'Amtliche Mitteilung: Rücknahme');
+        initiator === 'Amtliche Mitteilung: Rücknahme' ||
+        initiator === 'Rücknahme');
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
     } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
