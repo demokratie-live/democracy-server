@@ -1,9 +1,21 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { Types } from 'mongoose';
 
 export default {
   Query: {
-    mostSearched: async (parent, {}, { SearchTermModel }) => SearchTermModel.find(),
+    mostSearched: async (parent, {}, { SearchTermModel }) => {
+      const result = await SearchTermModel.aggregate([
+        { $unwind: '$times' },
+        {
+          $group: {
+            _id: '$term',
+            times: { $push: '$times' },
+            size: { $sum: 1 },
+          },
+        },
+        { $sort: { size: -1 } },
+      ]);
+      return result.map(({ _id }) => ({ term: _id }));
+    },
   },
   Mutation: {
     finishSearch: async (parent, { term }, { SearchTermModel, user }) => {
