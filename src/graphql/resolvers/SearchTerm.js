@@ -23,7 +23,7 @@ export default {
       if (!user) {
         throw new Error('No auth');
       }
-      if (term.trim().length >= 3) {
+      if (term && term.trim().length >= 3) {
         SearchTermModel.findOneAndUpdate(
           {
             term: term.toLowerCase().trim(),
