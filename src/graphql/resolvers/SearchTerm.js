@@ -2,7 +2,7 @@
 
 export default {
   Query: {
-    mostSearched: async (parent, {}, { SearchTermModel }) => {
+    mostSearched: async (parent, args, { SearchTermModel }) => {
       const result = await SearchTermModel.aggregate([
         { $unwind: '$times' },
         {
