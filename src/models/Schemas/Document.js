@@ -3,7 +3,7 @@ import { Schema } from 'mongoose';
 const DocumentSchema = new Schema(
   {
     editor: String,
-    number: String,
+    number: { type: String, index: true },
     type: String,
     url: String,
   },
