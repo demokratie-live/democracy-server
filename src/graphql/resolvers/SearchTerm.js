@@ -22,19 +22,21 @@ export default {
       if (!user) {
         throw new Error('No auth');
       }
-      SearchTermModel.findOneAndUpdate(
-        {
-          term: term.toLowerCase(),
-        },
-        {
-          $push: {
-            times: new Date(),
+      if (term.trim().length >= 3) {
+        SearchTermModel.findOneAndUpdate(
+          {
+            term: term.toLowerCase().trim(),
           },
-        },
-        {
-          upsert: true,
-        },
-      ).then();
+          {
+            $push: {
+              times: new Date(),
+            },
+          },
+          {
+            upsert: true,
+          },
+        ).then();
+      }
       return { term };
     },
   },
