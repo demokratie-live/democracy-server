@@ -13,6 +13,7 @@ export default {
           },
         },
         { $sort: { size: -1 } },
+        { $limit: 10 },
       ]);
       return result.map(({ _id }) => ({ term: _id }));
     },
