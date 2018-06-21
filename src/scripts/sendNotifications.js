@@ -12,18 +12,17 @@ export default async () => {
     PushNotifiaction.find({ status: 'new', type: 'update' }),
   ]);
   //   console.log({ newVotePushes, newProcedurePushes, updatedPushes });
-  console.log(newVotePushes);
   if (newVotePushes.length > 0) {
     newVotes({ procedureIds: newVotePushes.map(({ procedureId }) => procedureId) });
   }
   if (newProcedurePushes.length > 0) {
     newPreperations({ procedureIds: newProcedurePushes.map(({ procedureId }) => procedureId) });
   }
-  PushNotifiaction.update(
+  await PushNotifiaction.update(
     {
       status: 'new',
     },
-    { status: 'complete' },
+    { $set: { status: 'complete' } },
     { multi: true },
   );
 };

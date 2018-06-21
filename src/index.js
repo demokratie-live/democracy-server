@@ -6,11 +6,14 @@ import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
+import { CronJob } from 'cron';
 
 import './config/db';
 import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
+
+import sendNotifications from './scripts/sendNotifications';
 
 import webhook from './scripts/webhook';
 // import importAll from './scripts/importAll';
@@ -134,5 +137,16 @@ graphqlServer.listen(constants.PORT, (err) => {
     console.error(err);
   } else {
     console.log(`App is listen on port: ${constants.PORT}`);
+
+    const cronjob = new CronJob(
+      '*/30 * * * *',
+      sendNotifications,
+      null,
+      true,
+      'Europe/Berlin',
+      null,
+      true,
+    );
+    console.log('cronjob.running', cronjob.running);
   }
 });

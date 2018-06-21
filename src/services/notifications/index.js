@@ -15,7 +15,18 @@ const sendNotifications = ({
   tokenObjects, title = 'DEMOCRACY', message, payload,
 }) => {
   const androidNotificationTokens = [];
-  tokenObjects.forEach(({ token, os }) => {
+
+  const devices = tokenObjects.reduce((prev, { token, os }) => {
+    const next = [...prev];
+    if (
+      !next.some(({ token: existingToken }) => existingToken === token)
+    ) {
+      next.push({ token, os });
+    }
+    return next;
+  }, []);
+
+  devices.forEach(({ token, os }) => {
     switch (os) {
       case 'ios':
         {
