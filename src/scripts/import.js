@@ -10,7 +10,7 @@ import PushNotifiaction from '../models/PushNotifiaction';
 // Queries
 import getProcedures from '../graphql/queries/getProcedures';
 
-import { procedureUpdate, newPreperation, newVote } from '../services/notifications/index';
+import { procedureUpdate } from '../services/notifications/index';
 
 const deputiesNumber = {
   8: 518,
