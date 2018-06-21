@@ -2,7 +2,6 @@ import _ from 'lodash';
 import { detailedDiff } from 'deep-object-diff';
 
 import createClient from '../graphql/client';
-import sendNotifications from '../scripts/sendNotifications';
 
 // Models
 import Procedure from '../models/Procedure';
@@ -175,8 +174,6 @@ export default async (procedureIds) => {
   });
 
   const result = await Promise.all(promises);
-
-  sendNotifications();
 
   return result.length;
   // Imported everything!

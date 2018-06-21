@@ -3,6 +3,7 @@ import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import createClient from '../graphql/client';
 import ProcedureModel from '../models/Procedure';
 import CONSTANTS from '../config/constants';
+import sendNotifications from '../scripts/sendNotifications';
 
 export default async (data) => {
   const client = createClient();
@@ -55,6 +56,8 @@ export default async (data) => {
     const part = update.slice(i, i + chunkSize);
     updateCount += await importProcedures(part); // eslint-disable-line no-await-in-loop
   }
+
+  sendNotifications();
 
   return updateCount;
 };
