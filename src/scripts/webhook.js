@@ -2,6 +2,7 @@ import importProcedures from './import';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import createClient from '../graphql/client';
 import ProcedureModel from '../models/Procedure';
+import CONSTANTS from '../config/constants';
 
 export default async (data) => {
   const client = createClient();
@@ -12,36 +13,38 @@ export default async (data) => {
   await Promise.all(data.map(async (d) => {
     const period = parseInt(d.period, 10);
     const types = d.types.filter(t => t.type === 'Gesetzgebung' || t.type === 'Antrag');
-    await Promise.all(types.map(async (t) => {
-      const { type, changedIds } = t;
-      // Append Changed IDs
-      update = update.concat(changedIds);
-      // Find remote Procedure Updates
-      const { data: { procedureUpdates } } = await client.query({
-        query: getProcedureUpdates,
-        variables: { period, type },
-      });
-      // Find local Procedure Updates
-      const localProcedureUpdates = await ProcedureModel.find(
-        { period, type },
-        { procedureId: 1, bioUpdateAt: 1, updatedAt: 1 },
-      );
-      // Compare
-      procedureUpdates.forEach((pu) => {
-        const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
-        if (
+    if (CONSTANTS.MIN_PERIOD <= period) {
+      await Promise.all(types.map(async (t) => {
+        const { type, changedIds } = t;
+        // Append Changed IDs
+        update = update.concat(changedIds);
+        // Find remote Procedure Updates
+        const { data: { procedureUpdates } } = await client.query({
+          query: getProcedureUpdates,
+          variables: { period, type },
+        });
+        // Find local Procedure Updates
+        const localProcedureUpdates = await ProcedureModel.find(
+          { period, type },
+          { procedureId: 1, bioUpdateAt: 1, updatedAt: 1 },
+        );
+        // Compare
+        procedureUpdates.forEach((pu) => {
+          const localData = localProcedureUpdates.find(ld => ld.procedureId === pu.procedureId);
+          if (
           // local data not present
-          !localData ||
-          // older than a day TODO: make it a week?
-          NOW - new Date(localData.updatedAt) > ONEDAY ||
-          // bio date is newer
-          (pu.bioUpdateAt &&
-            new Date(localData.bioUpdateAt).getTime() !== new Date(pu.bioUpdateAt).getTime())
-        ) {
-          update.push(pu.procedureId);
-        }
-      });
-    }));
+            !localData ||
+                // older than a day TODO: make it a week?
+                NOW - new Date(localData.updatedAt) > ONEDAY ||
+                // bio date is newer
+                (pu.bioUpdateAt &&
+                  new Date(localData.bioUpdateAt).getTime() !== new Date(pu.bioUpdateAt).getTime())
+          ) {
+            update.push(pu.procedureId);
+          }
+        });
+      }));
+    }
   }));
 
   // Splitt in Chunks & Update
