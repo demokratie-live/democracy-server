@@ -47,8 +47,8 @@ export default {
             $match: {
               period,
               $or: [
-                { voteDate: { $gt: oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) } },
-                { voteDate: null },
+                { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
+                { voteDate: { $not: { $type: 'date' } } },
               ],
             },
           },
@@ -99,7 +99,7 @@ export default {
             $or: [
               {
                 currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
-                voteDate: { $exists: false },
+                voteDate: { $not: { $type: 'date' } },
               },
               {
                 currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
