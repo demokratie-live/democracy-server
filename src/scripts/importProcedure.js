@@ -111,7 +111,16 @@ export default async (bIoProcedure, { push = false }) => {
       } else {
         // Updated Procedures
         procedureUpdate({ procedureId: newBIoProcedure.procedureId });
-        if (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor') {
+        if (
+          (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
+            oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
+            !(
+              oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
+            )) ||
+          (newBIoProcedure.currentStatus === 'Überwiesen' &&
+            newBIoProcedure.voteDate > new Date() &&
+            !oldProcedure.voteDate)
+        ) {) {
           // moved to Vote Procedures
           newVote({ procedureId: newBIoProcedure.procedureId });
         }
