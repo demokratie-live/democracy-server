@@ -69,22 +69,6 @@ export default {
             },
           },
           { $sort: { activities: -1 } },
-          {
-            $addFields: {
-              listType: {
-                $cond: {
-                  if: {
-                    $in: [
-                      '$currentStatus',
-                      procedureStates.VOTING.concat(procedureStates.COMPLETED),
-                    ],
-                  },
-                  then: 'VOTING',
-                  else: 'PREPARATION',
-                },
-              },
-            },
-          },
 
           { $skip: offset },
           { $limit: pageSize },
@@ -134,14 +118,8 @@ export default {
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
-      // eslint-disable-next-line
-      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
-        status => procedure.currentStatus === status || procedure.voteDate)
-        ? 'VOTING'
-        : 'PREPARATION';
       return {
         ...procedure.toObject(),
-        listType,
         notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
       };
     },
@@ -303,5 +281,17 @@ export default {
       procedure.voteResults &&
       (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
     completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
+    listType: (procedure) => {
+      if (
+        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+        (procedure.currentStatus === 'Überwiesen' &&
+          procedure.voteDate &&
+          new Date(procedure.voteDate) >= new Date()) ||
+        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+      ) {
+        return 'VOTING';
+      }
+      return 'PREPARATION';
+    },
   },
 };

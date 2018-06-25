@@ -47,14 +47,28 @@ export default {
       }
       // TODO check if procedure is votable
       const procedure = await ProcedureModel.findById(procedureId);
+      if (
+        !(
+          procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+          (procedure.currentStatus === 'Überwiesen' &&
+            procedure.voteDate &&
+            new Date(procedure.voteDate) >= new Date()) ||
+          procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+        )
+      ) {
+        throw new Error('Not votable');
+      }
       let state;
       if (
-        procedureStates.VOTING.some(s =>
-          s === procedure.currentStatus ||
-            (procedure.voteDate && new Date(procedure.voteDate) >= new Date()))
+        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+        (procedure.currentStatus === 'Überwiesen' &&
+          procedure.voteDate &&
+          new Date(procedure.voteDate) >= new Date())
       ) {
         state = 'VOTING';
-      } else if (procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)) {
+      } else if (
+        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+      ) {
         state = 'COMPLETED';
       }
 
