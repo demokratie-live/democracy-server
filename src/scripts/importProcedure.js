@@ -6,7 +6,7 @@ import Procedure from '../models/Procedure';
 import PushNotifiaction from '../models/PushNotifiaction';
 
 // Queries
-import { procedureUpdate, newPreperation, newVote } from '../services/notifications/index';
+import { procedureUpdate } from '../services/notifications/index';
 
 const deputiesNumber = {
   8: 518,
@@ -153,16 +153,16 @@ export default async (bIoProcedure, { push = false }) => {
           });
           procedureUpdate({ procedureId: newBIoProcedure.procedureId });
         }
-         if (
-             (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
-              oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
-              !(
-                oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
-                )) ||
-             (newBIoProcedure.currentStatus === 'Überwiesen' &&
-              newBIoProcedure.voteDate > new Date() &&
-              !oldProcedure.voteDate)
-             ) {
+        if (
+          (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
+            oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
+            !(
+              oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
+            )) ||
+          (newBIoProcedure.currentStatus === 'Überwiesen' &&
+            newBIoProcedure.voteDate > new Date() &&
+            !oldProcedure.voteDate)
+        ) {
           // moved to Vote Procedures
           console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
           PushNotifiaction.create({
