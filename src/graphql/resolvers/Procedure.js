@@ -68,7 +68,7 @@ export default {
               activities: { $sum: 1 },
             },
           },
-          { $sort: { activities: -1 } },
+          { $sort: { activities: -1, lastUpdateDate: -1, title: 1 } },
 
           { $skip: offset },
           { $limit: pageSize },
