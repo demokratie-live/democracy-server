@@ -33,6 +33,7 @@ export default {
           period,
           voteDate: { $not: { $type: 'date' } },
         })
+          .sort({ lastUpdateDate: -1 })
           .limit(pageSize)
           .skip(offset);
       }

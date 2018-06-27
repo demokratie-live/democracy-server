@@ -7,6 +7,7 @@ import util from 'util';
 
 import apnProvider from './apn';
 import gcmProvider from './gcm';
+
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
 import CONFIG from '../../config/constants';
@@ -18,9 +19,7 @@ const sendNotifications = ({
 
   const devices = tokenObjects.reduce((prev, { token, os }) => {
     const next = [...prev];
-    if (
-      !next.some(({ token: existingToken }) => existingToken === token)
-    ) {
+    if (!next.some(({ token: existingToken }) => existingToken === token)) {
       next.push({ token, os });
     }
     return next;
@@ -104,16 +103,24 @@ const newVotes = async ({ procedureIds }) => {
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   const title = 'Jetzt Abstimmen!';
+  let message = `Es gibt ${procedureIds.length} neue Abstimmungen.`;
+  let type = 'procedureBulk';
+  if (procedureIds.length === 1) {
+    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    message = `${procedure.title}`;
+    type = 'procedure';
+  }
   sendNotifications({
     tokenObjects,
     title,
-    message: `Es gibt ${procedureIds.length} neue Abstimmungen.`,
+    message,
     payload: {
+      procedureId: procedureIds[0],
       procedureIds,
       title,
-      message: `Es gibt ${procedureIds.length} neue Abstimmungen.`,
-      action: 'procedureBulk',
-      type: 'procedureBulk',
+      message,
+      action: type,
+      type,
     },
   });
 };
@@ -157,16 +164,26 @@ const newPreperations = async ({ procedureIds }) => {
     'notificationSettings.newPreperation': true,
   });
   const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const title = 'Neu in Vorbereitung!';
+  let message = `${procedureIds.length} Elemente neu in Vorbereitung`;
+  let type = 'procedureBulk';
+  console.log(procedureIds, procedureIds.length);
+  if (procedureIds.length === 1) {
+    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    message = `${procedure.title}`;
+    type = 'procedure';
+  }
   sendNotifications({
     tokenObjects,
-    title: 'Neu in Vorbereitung!',
-    message: `${procedureIds.length} Elemente neu in Vorbereitung`,
+    title,
+    message,
     payload: {
       procedureIds,
-      title: 'Neu in Vorbereitung!',
-      message: `${procedureIds.length} Elemente neu in Vorbereitung`,
-      action: 'procedureBulk',
-      type: 'procedureBulk',
+      procedureId: procedureIds[0],
+      title,
+      message,
+      action: type,
+      type,
     },
   });
 };
