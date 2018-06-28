@@ -11,7 +11,7 @@ export async function contributeProcedure(data) {
     const procedure = await ProcedureModel.findOne({ procedureId });
     if (procedure) {
       const user = new User({ email, password });
-      return await user.contribute({
+      return user.contribute({
         title: procedure.title,
         content: `${procedure.abstract}`,
         contentExcerpt: procedure.abstract,
@@ -22,7 +22,7 @@ export async function contributeProcedure(data) {
         resolveSlugs: {
           categories: ['democracy-politics'],
           organization: constants.HC_ORGANIZATION_SLUG,
-        }
+        },
       });
     }
     throw Error('No procedure found.');
