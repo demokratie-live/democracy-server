@@ -13,10 +13,11 @@ export async function contributeProcedure({ procedureId, email, password }) {
       return user.contribute(
         {
           title: procedure.title,
-          content: `${procedure.abstract}`,
+          content: procedure.abstract,
           contentExcerpt: procedure.abstract,
           type: 'post',
           language: 'de',
+          teaserImg: 'https://www.democracy-deutschland.de/hc/PARTEIENFINANZIERUNG.png',
         },
         {
           slug: slugify(procedure.title, { lower: true }),

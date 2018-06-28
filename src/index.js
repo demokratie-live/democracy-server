@@ -94,7 +94,11 @@ app.get('/webhooks/human-connection/contribute', async (req, res) => {
   const procedures = ['236215'];
   procedures.map(async (procedureId) => {
     try {
-      const procedure = await contributeProcedure({ procedureId, email: 'contact@democracy-deutschland.de', password: 'peter' });
+      const procedure = await contributeProcedure({
+        procedureId,
+        email: constants.HC_LOGIN_EMAIL,
+        password: constants.HC_LOGIN_PASSWORD,
+      });
       console.log(procedure);
       res.send({
         procedure,
