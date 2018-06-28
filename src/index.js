@@ -139,7 +139,7 @@ graphqlServer.listen(constants.PORT, (err) => {
     console.log(`App is listen on port: ${constants.PORT}`);
 
     const cronjob = new CronJob(
-      '*/30 * * * *',
+      '0 8 * * *',
       sendNotifications,
       null,
       true,
@@ -147,6 +147,16 @@ graphqlServer.listen(constants.PORT, (err) => {
       null,
       true,
     );
-    console.log('cronjob.running', cronjob.running);
+
+    const cronjob2 = new CronJob(
+      '45 19 * * *',
+      sendNotifications,
+      null,
+      true,
+      'Europe/Berlin',
+      null,
+      true,
+    );
+    console.log('cronjob.running', cronjob.running, cronjob2.running);
   }
 });
