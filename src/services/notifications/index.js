@@ -167,7 +167,7 @@ const newPreperations = async ({ procedureIds }) => {
   const title = 'Neu in Vorbereitung!';
   let message = `${procedureIds.length} Elemente neu in Vorbereitung`;
   let type = 'procedureBulk';
-  console.log(procedureIds, procedureIds.length);
+
   if (procedureIds.length === 1) {
     const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
     message = `${procedure.title}`;
