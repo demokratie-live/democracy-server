@@ -90,23 +90,25 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
 });
 
 // Human Connection webhook
-app.post('/webhooks/human-connection/contribute', async (req, res) => {
-  const { data } = req.body;
-  try {
-    const procedure = await contributeProcedure(data);
-    console.log(procedure);
-    res.send({
-      procedure,
-      succeeded: true,
-    });
-    console.log(`Contributed: ${procedure}`);
-  } catch (error) {
-    console.log(error);
-    res.send({
-      error: error.message,
-      succeeded: false,
-    });
-  }
+app.get('/webhooks/human-connection/contribute', async (req, res) => {
+  const procedures = ['236215'];
+  procedures.map(async (procedureId) => {
+    try {
+      const procedure = await contributeProcedure({ procedureId, email: 'contact@democracy-deutschland.de', password: 'peter' });
+      console.log(procedure);
+      res.send({
+        procedure,
+        succeeded: true,
+      });
+      console.log(`Contributed: ${procedure}`);
+    } catch (error) {
+      console.log(error);
+      res.send({
+        error: error.message,
+        succeeded: false,
+      });
+    }
+  });
 });
 
 /* // Push Notification test

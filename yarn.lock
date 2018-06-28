@@ -2309,9 +2309,9 @@ http-signature@~1.2.0:
   version "3.3.6"
   resolved "https://github.com/node-apn/node-http2/archive/apn-2.1.4.tar.gz#8333dee2d6e0089152cefad30f41ced502f9c366"
 
-"human-connection-api-nodejs-client@https://github.com/demokratie-live/human-connection-api-nodejs-client.git":
+"human-connection-api-nodejs-client@https://github.com/demokratie-live/human-connection-api-nodejs-client.git#master":
   version "1.0.0"
-  resolved "https://github.com/demokratie-live/human-connection-api-nodejs-client.git#1125e0f0b1b256892668da505f461fc730ffbba9"
+  resolved "https://github.com/demokratie-live/human-connection-api-nodejs-client.git#f7a1e1f01e86c555e916e3e4deff310c3c1c4fec"
   dependencies:
     node-fetch "^2.1.2"
 
