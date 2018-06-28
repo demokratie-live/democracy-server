@@ -26,7 +26,6 @@ export default {
       }
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
-      const sort = { voteDate: -1, lastUpdateDate: -1 };
       if (type === 'PREPARATION') {
         return ProcedureModel.find({
           currentStatus: { $in: currentStates },
@@ -99,22 +98,40 @@ export default {
             nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
           },
         },
-        { $sort: { nlt: 1, lastUpdateDate: -1 } },
+        { $sort: { nlt: 1, lastUpdateDate: -1, title: 1 } },
         { $skip: offset },
         { $limit: pageSize },
       ]);
 
-      return ProcedureModel.find({
-        $or: [
-          { voteDate: { $lt: new Date() } },
-          { currentStatus: { $in: procedureStates.COMPLETED } },
-        ],
-        period,
-      })
-        .sort(sort)
-        .skip(offset - activeVotings.length > 0 ? offset - activeVotings.length : 0)
-        .limit(pageSize - activeVotings.length)
-        .then(finishedVotings => [...activeVotings, ...finishedVotings]);
+      let pastVotings = [];
+      if (activeVotings.length < pageSize) {
+        const activeVotingsCount = await ProcedureModel.find({
+          $or: [
+            {
+              currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+              voteDate: { $not: { $type: 'date' } },
+            },
+            {
+              currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+              voteDate: { $gte: new Date() },
+            },
+          ],
+          period,
+        }).count();
+
+        pastVotings = await ProcedureModel.find({
+          $or: [
+            { voteDate: { $lt: new Date() } },
+            { currentStatus: { $in: procedureStates.COMPLETED } },
+          ],
+          period,
+        })
+          .sort({ voteDate: -1, lastUpdateDate: -1, title: 1 })
+          .skip(Math.max(offset - activeVotingsCount, 0))
+          .limit(pageSize - activeVotings.length);
+      }
+
+      return [...activeVotings, ...pastVotings];
     },
 
     procedure: async (parent, { id }, { user, ProcedureModel }) => {

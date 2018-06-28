@@ -16,7 +16,6 @@ import resolvers from './graphql/resolvers';
 import sendNotifications from './scripts/sendNotifications';
 
 import webhook from './scripts/webhook';
-// import importAll from './scripts/importAll';
 
 import auth from './express/auth';
 import updateProcedures from './express/webhooks/bundestagio/updateProcedures';
@@ -129,6 +128,8 @@ app.get('/push-test', async (req, res) => {
 */
 
 // Darf in Production nicht ausführbar sein!
+// import importAll from './scripts/importAll';
+
 // app.get('/webhooks/bundestagio/import-all', importAll);
 
 const graphqlServer = createServer(app);
@@ -138,25 +139,9 @@ graphqlServer.listen(constants.PORT, (err) => {
   } else {
     console.log(`App is listen on port: ${constants.PORT}`);
 
-    const cronjob = new CronJob(
-      '0 8 * * *',
-      sendNotifications,
-      null,
-      true,
-      'Europe/Berlin',
-      null,
-      true,
-    );
+    const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
 
-    const cronjob2 = new CronJob(
-      '45 19 * * *',
-      sendNotifications,
-      null,
-      true,
-      'Europe/Berlin',
-      null,
-      true,
-    );
+    const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
     console.log('cronjob.running', cronjob.running, cronjob2.running);
   }
 });
