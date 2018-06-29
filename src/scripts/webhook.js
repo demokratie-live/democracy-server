@@ -51,6 +51,7 @@ export default async (data) => {
   const chunkSize = 100;
   let updateCount = 0;
   let i = 0;
+  update = [...new Set(update)];
   for (i = 0; i < update.length; i += chunkSize) {
     const part = update.slice(i, i + chunkSize);
     updateCount += await importProcedures(part); // eslint-disable-line no-await-in-loop
