@@ -9,6 +9,7 @@ const ProcedureSchema = new Schema(
     period: { type: Number, required: true },
     title: { type: String, required: true },
     currentStatus: String,
+    currentStatusHistory: [String],
     abstract: String,
     tags: [String],
     state: {
