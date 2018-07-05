@@ -27,7 +27,20 @@ const ProcedureSchema = new Schema(
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
-      notVote: { type: Number, required: true },
+      notVoted: { type: Number, required: true },
+      partyVotes: [
+        {
+          party: { type: String, required: true },
+          main: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
+
+          deviants: {
+            yes: { type: Number, required: true },
+            no: { type: Number, required: true },
+            abstination: { type: Number, required: true },
+            notVoted: { type: Number, required: true },
+          },
+        },
+      ],
     },
   },
   { timestamps: true },

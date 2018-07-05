@@ -35,6 +35,7 @@ export default gql`
           yes
           no
           abstination
+          notVoted
         }
       }
     }

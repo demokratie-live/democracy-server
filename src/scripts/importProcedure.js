@@ -51,7 +51,7 @@ export default async (bIoProcedure, { push = false }) => {
       yes: null,
       no: null,
       abstination: null,
-      notVote: null,
+      notVoted: null,
     };
     if (
       bIoProcedure.customData &&
@@ -60,10 +60,13 @@ export default async (bIoProcedure, { push = false }) => {
         bIoProcedure.customData.voteResults.abstination ||
         bIoProcedure.customData.voteResults.no)
     ) {
+      console.log(bIoProcedure.customData.voteResults.partyVotes);
       voteResults = {
         yes: bIoProcedure.customData.voteResults.yes,
         abstination: bIoProcedure.customData.voteResults.abstination,
         no: bIoProcedure.customData.voteResults.no,
+        notVoted: bIoProcedure.customData.voteResults.notVoted,
+        partyVotes: bIoProcedure.customData.voteResults.partyVotes,
       };
     } else {
       bIoProcedure.history.some((h) => {
@@ -77,7 +80,7 @@ export default async (bIoProcedure, { push = false }) => {
                 yes: vResults ? vResults[0] : null,
                 no: vResults ? vResults[1] : null,
                 abstination: vResults ? vResults[2] : null,
-                notVote:
+                notVoted:
                   deputiesNumber[bIoProcedure.period] -
                   (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
               };

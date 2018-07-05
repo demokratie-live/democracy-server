@@ -35,6 +35,17 @@ export default gql`
           yes
           no
           abstination
+          notVoted
+          partyVotes {
+            party
+            main
+            deviants {
+              yes
+              no
+              abstination
+              notVoted
+            }
+          }
         }
       }
     }
