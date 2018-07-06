@@ -35,25 +35,19 @@ const refreshTokens = async (refreshToken) => {
     return {};
   }
   // Decode Token
-  let oldUser = null;
-  let user = null;
+  let userid = null;
   try {
-    oldUser = jwt.decode(refreshToken).user;
+    userid = jwt.decode(refreshToken).user;
   } catch (err) {
     return {};
   }
   // Validate UserData if an old User was set
-  if (oldUser) {
-    user = await UserModel.findOne({ _id: oldUser._id });
-    if (!user) {
-      return {};
-    }
-  }
+  const user = await UserModel.findOne({ _id: userid });
 
-  console.log('JWT: Token Refresh for User:');
-  console.log(user);
+  userid = user ? user._id : null;
+  console.log(`JWT: Token Refresh for User: ${userid}`);
   // Generate new Tokens
-  const [newToken, newRefreshToken] = await createTokens(user);
+  const [newToken, newRefreshToken] = await createTokens(userid);
   return {
     token: newToken,
     refreshToken: newRefreshToken,
@@ -83,15 +77,15 @@ export default async (req, res, next) => {
   // Check existing JWT Session
   // If Credentials are also present use them
   if (token && !deviceHash) {
-    console.log(`JWT: Token present: ${token}`);
+    console.log(`JWT: Token: ${token}`);
     try {
-      const { user } = jwt.verify(token, constants.AUTH_JWT_SECRET);
-      req.user = user;
+      const userid = jwt.verify(token, constants.AUTH_JWT_SECRET).user;
+      req.user = await UserModel.findOne({ _id: userid });
       success = true;
       console.log(`JWT: Token valid: ${token}`);
     } catch (err) {
       // Check for JWT Refresh Ability
-      console.log(`JWT: Token Error - refreshing: ${token}`);
+      console.log(`JWT: Token Error: ${token}`);
       const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
@@ -114,9 +108,9 @@ export default async (req, res, next) => {
         user.save();
       }
     }
-    console.log('JWT: New Tokens for User:');
-    console.log(user);
-    const [createToken, createRefreshToken] = await createTokens(user);
+    const userid = user ? user._id : null;
+    console.log(`JWT: New Tokens for User: ${userid}`);
+    const [createToken, createRefreshToken] = await createTokens(userid);
     headerToken({ res, token: createToken, refreshToken: createRefreshToken });
     req.user = user;
   }
