@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
 import UserModel from '../../models/User';
 import constants from '../../config/constants';
@@ -30,7 +31,7 @@ const createTokens = async ({ userId, isVerified, isDataSource }) => {
   return Promise.all([token, refreshToken]);
 };
 
-const refreshTokens = async ({token, refreshToken, IP}) => {
+const refreshTokens = async ({ refreshToken, IP }) => {
   // Verify Token
   try {
     jwt.verify(refreshToken, constants.AUTH_JWT_SECRET);
@@ -40,20 +41,21 @@ const refreshTokens = async ({token, refreshToken, IP}) => {
   // Decode Token
   let userId = null;
   try {
-    userId = jwt.decode(refreshToken).userId;
+    ({ userId } = jwt.decode(refreshToken));
   } catch (err) {
     return {};
   }
   // Calculate UserData
-  const user = await UserModel.findOne({ where: { _id: userId } });
-  let userData = {};
-  if (user) {
-    userData = {
-      userId: user._id,
-      isVerified: user.verified,
-      isDataSource: constants.WHITELIST_DATA_SOURCES.includes(IP),
-    };
+  const user = await UserModel.findOne({ _id: userId });
+  if (!user) {
+    return {};
   }
+  const userData = {
+    userId: user._id,
+    isVerified: user.verified,
+    isDataSource: constants.WHITELIST_DATA_SOURCES.includes(IP),
+  };
+
   console.log('Refresh Tokens Data:');
   console.log(userData);
   // Generate new Tokens
@@ -66,6 +68,7 @@ const refreshTokens = async ({token, refreshToken, IP}) => {
 };
 
 export default async (req, res, next) => {
+  console.log(`Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
   let success = false;
   if (token) {
@@ -79,7 +82,6 @@ export default async (req, res, next) => {
       console.log(`Token Error - refreshing: ${token}`);
       const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens({
-        token,
         refreshToken,
         IP: req.connection.remoteAddress,
       });
@@ -101,16 +103,23 @@ export default async (req, res, next) => {
   if (!success) {
     // Login
     console.log(`Token Error - autologin: ${token}`);
-    const { deviceHash, phoneHash } = req.query;
-    console.log(`DeviceHash: ${deviceHash}`);
-    const user = await UserModel.findOne({ where: { deviceHash }, raw: true });
-    let userData = {};
-    if (user) {
-      userData = {
-        userId: user._id,
-        isVerified: user.verified,
-        isDataSource: constants.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress),
-      };
+    const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
+    const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
+    console.log(`Credentials: DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+    const userData = {
+      userId: null,
+      isVerified: false,
+      isDataSource: constants.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress),
+    };
+    if (deviceHash) {
+      let user = await UserModel.findOne({ deviceHash, phoneHash });
+      if (!user) {
+        // create user
+        user = new UserModel({ deviceHash, phoneHash });
+        user.save();
+      }
+      userData.userId = user._id;
+      userData.isVerified = user.verified;
     }
     console.log('New Tokens Data:');
     console.log(userData);

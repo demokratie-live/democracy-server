@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 
 const UserSchema = new Schema(
   {
-    deviceHash: { type: String, required: true, unique: true },
+    deviceHash: { type: String, required: true },
+    phoneHash: { type: String, default: null },
+    verified: { type: Boolean, default: false },
     pushTokens: [
       {
         token: String,
@@ -33,5 +35,7 @@ UserSchema.methods = {
     );
   },
 };
+
+UserSchema.index({ deviceHash: 1, phoneHash: 1 }, { unique: true });
 
 export default mongoose.model('User', UserSchema);

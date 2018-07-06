@@ -28,5 +28,5 @@ export default {
   AUTH_JWT_TTL: process.env.AUTH_JWT_TTL || '1d',
   AUTH_JWT_REFRESH_TTL: process.env.AUTH_JWT_REFRESH_TTL || '7d',
   ENGINE_API_KEY: process.env.ENGINE_API_KEY || null,
-  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES ? process.env.WHITELIST_DATA_SOURCES.split(',') : ['::ffff:127.0.0.1'],
+  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES ? process.env.WHITELIST_DATA_SOURCES.split(',') : ['::ffff:127.0.0.1', '::1'],
 };
