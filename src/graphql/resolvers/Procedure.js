@@ -287,7 +287,7 @@ export default {
       };
     },
     voted: async (procedure, args, { VoteModel, user }) => {
-      const voted = await VoteModel.findOne({ procedure, users: user._id });
+      const voted = await VoteModel.findOne({ procedure, users: user });
       return !!voted;
     },
     votedGovernment: procedure =>

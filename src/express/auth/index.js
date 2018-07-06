@@ -3,12 +3,10 @@ import jwt from 'jsonwebtoken';
 import UserModel from '../../models/User';
 import constants from '../../config/constants';
 
-const createTokens = async ({ _id, isVerified, isDataSource }) => {
+const createTokens = async (user) => {
   const token = jwt.sign(
     {
-      _id,
-      isVerified,
-      isDataSource,
+      user,
     },
     constants.AUTH_JWT_SECRET,
     {
@@ -18,9 +16,7 @@ const createTokens = async ({ _id, isVerified, isDataSource }) => {
 
   const refreshToken = jwt.sign(
     {
-      _id,
-      isVerified,
-      isDataSource,
+      user,
     },
     constants.AUTH_JWT_SECRET,
     {
@@ -31,7 +27,7 @@ const createTokens = async ({ _id, isVerified, isDataSource }) => {
   return Promise.all([token, refreshToken]);
 };
 
-const refreshTokens = async ({ refreshToken, IP }) => {
+const refreshTokens = async (refreshToken) => {
   // Verify Token
   try {
     jwt.verify(refreshToken, constants.AUTH_JWT_SECRET);
@@ -39,27 +35,25 @@ const refreshTokens = async ({ refreshToken, IP }) => {
     return {};
   }
   // Decode Token
-  let _id = null;
+  let oldUser = null;
+  let user = null;
   try {
-    ({ _id } = jwt.decode(refreshToken));
+    oldUser = jwt.decode(refreshToken).user;
   } catch (err) {
     return {};
   }
-  // Calculate UserData
-  const user = await UserModel.findOne({ _id });
-  if (!user) {
-    return {};
+  // Validate UserData if an old User was set
+  if (oldUser) {
+    user = await UserModel.findOne({ _id: oldUser._id });
+    if (!user) {
+      return {};
+    }
   }
-  const userData = {
-    _id: user._id,
-    isVerified: user.verified,
-    isDataSource: constants.WHITELIST_DATA_SOURCES.includes(IP),
-  };
 
-  console.log('Refresh Tokens Data:');
-  console.log(userData);
+  console.log('JWT: Token Refresh for User:');
+  console.log(user);
   // Generate new Tokens
-  const [newToken, newRefreshToken] = await createTokens(userData);
+  const [newToken, newRefreshToken] = await createTokens(user);
   return {
     token: newToken,
     refreshToken: newRefreshToken,
@@ -79,59 +73,52 @@ const headerToken = async ({ res, token, refreshToken }) => {
 };
 
 export default async (req, res, next) => {
-  console.log(`Connection from: ${req.connection.remoteAddress}`);
+  console.log(`Server: Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
+  const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
+  const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
+  console.log(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+
   let success = false;
   // Check existing JWT Session
-  if (token) {
-    console.log(`Token present: ${token}`);
+  // If Credentials are also present use them
+  if (token && !deviceHash) {
+    console.log(`JWT: Token present: ${token}`);
     try {
       const { user } = jwt.verify(token, constants.AUTH_JWT_SECRET);
       req.user = user;
       success = true;
-      console.log(`Token valid: ${token}`);
+      console.log(`JWT: Token valid: ${token}`);
     } catch (err) {
       // Check for JWT Refresh Ability
-      console.log(`Token Error - refreshing: ${token}`);
+      console.log(`JWT: Token Error - refreshing: ${token}`);
       const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
-      const newTokens = await refreshTokens({
-        refreshToken,
-        IP: req.connection.remoteAddress,
-      });
+      const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         req.user = newTokens.user;
         success = true;
-        console.log(`Token refreshed: ${newTokens.token}`);
+        console.log(`JWT: Token refreshed: ${newTokens.token}`);
       }
     }
   }
   // Login
   if (!success) {
-    console.log(`Token Error - autologin: ${token}`);
-    const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
-    const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
-    console.log(`Credentials: DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
-    const userData = {
-      _id: null,
-      isVerified: false,
-      isDataSource: constants.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress),
-    };
+    console.log(`JWT: Token Error or Credentials present - autologin: ${token}`);
+    let user = null;
     if (deviceHash) {
-      let user = await UserModel.findOne({ deviceHash, phoneHash });
+      user = await UserModel.findOne({ deviceHash, phoneHash });
       // Create user
       if (!user) {
         user = new UserModel({ deviceHash, phoneHash });
         user.save();
       }
-      userData._id = user._id;
-      userData.isVerified = user.verified;
     }
-    console.log('New Tokens Data:');
-    console.log(userData);
-    const [createToken, createRefreshToken] = await createTokens(userData);
+    console.log('JWT: New Tokens for User:');
+    console.log(user);
+    const [createToken, createRefreshToken] = await createTokens(user);
     headerToken({ res, token: createToken, refreshToken: createRefreshToken });
-    req.user = userData;
+    req.user = user;
   }
   next();
 };

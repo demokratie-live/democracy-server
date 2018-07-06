@@ -6,9 +6,8 @@ import { isUser } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    notificationSettings: isUser.createResolver(async (parent, args, { user }) => {
-      return user.notificationSettings;
-    }),
+    notificationSettings: isUser.createResolver(async (parent, args, { user }) =>
+      user.notificationSettings),
   },
 
   Mutation: {

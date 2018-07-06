@@ -24,6 +24,12 @@ const UserSchema = new Schema(
   { timestamps: true },
 );
 
+UserSchema.methods = {
+  isVerified() {
+    return this.verfied;
+  },
+};
+
 UserSchema.index({ deviceHash: 1, phoneHash: 1 }, { unique: true });
 
 export default mongoose.model('User', UserSchema);

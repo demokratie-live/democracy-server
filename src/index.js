@@ -71,6 +71,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   graphqlExpress({
     schema,
     context: {
+      // User
       user: req.user,
       // Models
       ProcedureModel,
@@ -95,6 +96,7 @@ app.post('/webhooks/bundestagio/updateProcedures', isDataSource.createResolver(B
 if (constants.DEBUG) {
   // Push Notification test
   app.get('/push-test', debugPushNotifications);
+  // Bundestag.io Import All
   app.get('/webhooks/bundestagio/import-all', debugImportAll);
 }
 
