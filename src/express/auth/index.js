@@ -71,7 +71,9 @@ export default async (req, res, next) => {
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
   const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
   const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
-  console.log(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+  if (deviceHash || phoneHash) {
+    console.log(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+  }
 
   let success = false;
   // Check existing JWT Session
@@ -85,20 +87,21 @@ export default async (req, res, next) => {
       console.log(`JWT: Token valid: ${token}`);
     } catch (err) {
       // Check for JWT Refresh Ability
-      console.log(`JWT: Token Error: ${token}`);
+      console.log(`JWT: Token Error: ${err}`);
       const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         req.user = newTokens.user;
         success = true;
-        console.log(`JWT: Token refreshed: ${newTokens.token}`);
+        console.log(`JWT: Token Refresh (t): ${newTokens.token}`);
+        console.log(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
       }
     }
   }
   // Login
   if (!success) {
-    console.log(`JWT: Token Error or Credentials present - autologin: ${token}`);
+    console.log('JWT: Autologin (Token Error or Credentials present)');
     let user = null;
     if (deviceHash) {
       user = await UserModel.findOne({ deviceHash, phoneHash });
@@ -109,10 +112,12 @@ export default async (req, res, next) => {
       }
     }
     const userid = user ? user._id : null;
-    console.log(`JWT: New Tokens for User: ${userid}`);
+    console.log(`JWT: Token New for User: ${userid}`);
     const [createToken, createRefreshToken] = await createTokens(userid);
     headerToken({ res, token: createToken, refreshToken: createRefreshToken });
     req.user = user;
+    console.log(`JWT: Token New (t): ${createToken}`);
+    console.log(`JWT: Token New (r): ${createRefreshToken}`);
   }
   next();
 };
