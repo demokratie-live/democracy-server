@@ -23,4 +23,10 @@ export default {
     }
   })(),
   MIN_PERIOD: process.env.MIN_PERIOD || 19,
+  DEBUG: process.env.DEBUG || false,
+  AUTH_JWT_SECRET: process.env.AUTH_JWT_SECRET || null,
+  AUTH_JWT_TTL: process.env.AUTH_JWT_TTL || '1d',
+  AUTH_JWT_REFRESH_TTL: process.env.AUTH_JWT_REFRESH_TTL || '7d',
+  ENGINE_API_KEY: process.env.ENGINE_API_KEY || null,
+  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES ? process.env.WHITELIST_DATA_SOURCES.split(',') : ['::ffff:127.0.0.1'],
 };

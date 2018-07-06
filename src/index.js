@@ -7,6 +7,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
+import cookieParser from 'cookie-parser';
 
 import './config/db';
 import constants from './config/constants';
@@ -15,10 +16,11 @@ import resolvers from './graphql/resolvers';
 
 import sendNotifications from './scripts/sendNotifications';
 
-import webhook from './scripts/webhook';
-
 import auth from './express/auth';
-import updateProcedures from './express/webhooks/bundestagio/updateProcedures';
+import BIOupdate from './express/webhooks/bundestagio/update';
+import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures';
+import debugPushNotifications from './express/webhooks/debug/pushNotifications';
+import debugImportAll from './express/webhooks/debug/importAll';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -29,6 +31,9 @@ import PushNotifiactionModel from './models/PushNotifiaction';
 import SearchTermModel from './models/SearchTerms';
 
 const app = express();
+if (constants.DEBUG) {
+  app.use(cookieParser());
+}
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -36,9 +41,9 @@ const schema = makeExecutableSchema({
 });
 
 // Apollo Engine
-if (process.env.ENGINE_API_KEY) {
+if (constants.ENGINE_API_KEY) {
   const engine = new Engine({
-    engineConfig: { apiKey: process.env.ENGINE_API_KEY },
+    engineConfig: { apiKey: constants.ENGINE_API_KEY },
     graphqlPort: constants.PORT,
   });
   engine.start();
@@ -48,7 +53,7 @@ if (process.env.ENGINE_API_KEY) {
 app.use(bodyParser.json());
 
 // Authentification
-auth(app);
+app.use(auth);
 
 // Graphiql
 if (constants.GRAPHIQL) {
@@ -79,58 +84,18 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   })(req, res, next);
 });
 
-// Bundestag.io Webhook
-app.post('/webhooks/bundestagio/update', async (req, res) => {
-  const { data } = req.body;
-  try {
-    const updated = await webhook(data);
-    res.send({
-      updated,
-      succeeded: true,
-    });
-    console.log(`Updated: ${updated}`);
-  } catch (error) {
-    console.log(error);
-    res.send({
-      error,
-      succeeded: false,
-    });
-  }
-});
+// Bundestag.io
+// Webhook
+app.post('/webhooks/bundestagio/update', BIOupdate);
+// Webhook update specific procedures
+app.post('/webhooks/bundestagio/updateProcedures', BIOupdateProcedures);
 
-// Bundestag.io Webhook update specific procedures
-app.post('/webhooks/bundestagio/updateProcedures', updateProcedures);
-
-/* // Push Notification test
-import pushNotify from './services/notifications';
-app.get('/push-test', async (req, res) => {
-  const { message, title } = req.query;
-  if (!message) {
-    res.send('message is missing');
-  }
-  const users = await UserModel.find();
-  users.forEach((user) => {
-    pushNotify({
-      title: title || 'DEMOCRACY',
-      message,
-      user,
-      payload: {
-        action: 'procedureDetails',
-        title: 'Neues Gesetz!',
-        message: message || 'Test push notification to all users',
-        procedureId: 232647,
-        type: 'procedure',
-      },
-    });
-  });
-  res.send("push's send");
-});
-*/
-
-// Darf in Production nicht ausführbar sein!
-// import importAll from './scripts/importAll';
-
-// app.get('/webhooks/bundestagio/import-all', importAll);
+// Debug
+if (constants.DEBUG) {
+  // Push Notification test
+  app.get('/push-test', debugPushNotifications);
+  app.get('/webhooks/bundestagio/import-all', debugImportAll);
+}
 
 const graphqlServer = createServer(app);
 graphqlServer.listen(constants.PORT, (err) => {
