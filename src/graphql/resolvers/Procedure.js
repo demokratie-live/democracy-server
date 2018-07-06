@@ -6,9 +6,12 @@ import CONSTANTS from '../../config/constants';
 
 import elasticsearch from '../../services/search';
 
+import { isUser } from '../../express/auth/permissions';
+
 export default {
   Query: {
-    procedures: async (parent, { type, offset = 0, pageSize = 99 }, { ProcedureModel }) => {
+    procedures: async (parent,
+      { type, offset = 0, pageSize = 99 }, { ProcedureModel }) => {
       let currentStates = [];
       switch (type) {
         case 'PREPARATION':
@@ -259,10 +262,7 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
+    notifiedProcedures: isUser.createResolver(async (parent, args, { user, ProcedureModel }) => {
       const procedures = await ProcedureModel.find({
         _id: { $in: user.notificationSettings.procedures },
       });
@@ -271,7 +271,7 @@ export default {
         ...procedure.toObject(),
         notify: true,
       }));
-    },
+    }),
   },
 
   Procedure: {
@@ -287,7 +287,7 @@ export default {
       };
     },
     voted: async (procedure, args, { VoteModel, user }) => {
-      const voted = await VoteModel.findOne({ procedure, users: user });
+      const voted = await VoteModel.findOne({ procedure, users: user._id });
       return !!voted;
     },
     votedGovernment: procedure =>

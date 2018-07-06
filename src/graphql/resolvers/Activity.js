@@ -1,5 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
+import { isUser } from '../../express/auth/permissions';
 
 export default {
   Query: {
@@ -18,10 +19,8 @@ export default {
   },
 
   Mutation: {
-    increaseActivity: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
-      if (!user) {
-        throw new Error('No auth');
-      }
+    increaseActivity: isUser.createResolver(async (parent,
+      { procedureId }, { ProcedureModel, ActivityModel, user }) => {
       let searchQuery;
       if (Types.ObjectId.isValid(procedureId)) {
         searchQuery = { _id: Types.ObjectId(procedureId) };
@@ -41,6 +40,6 @@ export default {
       }
       const activityIndex = await ActivityModel.find({ procedure }).count();
       return { activityIndex, active };
-    },
+    }),
   },
 };

@@ -2,22 +2,17 @@
 /* eslint no-param-reassign: 0 */
 
 import _ from 'lodash';
+import { isUser } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    notificationSettings: async (parent, args, { user }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
+    notificationSettings: isUser.createResolver(async (parent, args, { user }) => {
       return user.notificationSettings;
-    },
+    }),
   },
 
   Mutation: {
-    addToken: async (parent, { token, os }, { user }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
+    addToken: isUser.createResolver(async (parent, { token, os }, { user }) => {
       if (!user.pushTokens.some(t => t.token === token)) {
         user.pushTokens.push({ token, os });
         user.save();
@@ -25,18 +20,15 @@ export default {
       return {
         succeeded: true,
       };
-    },
+    }),
 
-    updateNotificationSettings: async (
+    updateNotificationSettings: isUser.createResolver(async (
       parent,
       {
         enabled, disableUntil, procedures, tags, newVote, newPreperation,
       },
       { user },
     ) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
       user.notificationSettings = {
         ...user.notificationSettings,
         ..._.omitBy(
@@ -53,12 +45,10 @@ export default {
       };
       await user.save();
       return user.notificationSettings;
-    },
+    }),
 
-    toggleNotification: async (parent, { procedureId }, { user, ProcedureModel }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
+    toggleNotification: isUser.createResolver(async (parent,
+      { procedureId }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId });
 
       const index = user.notificationSettings.procedures.indexOf(procedure._id);
@@ -72,6 +62,6 @@ export default {
       }
       await user.save();
       return { ...procedure.toObject(), notify };
-    },
+    }),
   },
 };

@@ -29,6 +29,7 @@ import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
 import PushNotifiactionModel from './models/PushNotifiaction';
 import SearchTermModel from './models/SearchTerms';
+import { isDataSource } from './express/auth/permissions';
 
 const app = express();
 if (constants.DEBUG) {
@@ -86,9 +87,9 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
 
 // Bundestag.io
 // Webhook
-app.post('/webhooks/bundestagio/update', BIOupdate);
+app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
 // Webhook update specific procedures
-app.post('/webhooks/bundestagio/updateProcedures', BIOupdateProcedures);
+app.post('/webhooks/bundestagio/updateProcedures', isDataSource.createResolver(BIOupdateProcedures));
 
 // Debug
 if (constants.DEBUG) {

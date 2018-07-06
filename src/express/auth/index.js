@@ -3,10 +3,10 @@ import jwt from 'jsonwebtoken';
 import UserModel from '../../models/User';
 import constants from '../../config/constants';
 
-const createTokens = async ({ userId, isVerified, isDataSource }) => {
+const createTokens = async ({ _id, isVerified, isDataSource }) => {
   const token = jwt.sign(
     {
-      userId,
+      _id,
       isVerified,
       isDataSource,
     },
@@ -18,7 +18,7 @@ const createTokens = async ({ userId, isVerified, isDataSource }) => {
 
   const refreshToken = jwt.sign(
     {
-      userId,
+      _id,
       isVerified,
       isDataSource,
     },
@@ -39,19 +39,19 @@ const refreshTokens = async ({ refreshToken, IP }) => {
     return {};
   }
   // Decode Token
-  let userId = null;
+  let _id = null;
   try {
-    ({ userId } = jwt.decode(refreshToken));
+    ({ _id } = jwt.decode(refreshToken));
   } catch (err) {
     return {};
   }
   // Calculate UserData
-  const user = await UserModel.findOne({ _id: userId });
+  const user = await UserModel.findOne({ _id });
   if (!user) {
     return {};
   }
   const userData = {
-    userId: user._id,
+    _id: user._id,
     isVerified: user.verified,
     isDataSource: constants.WHITELIST_DATA_SOURCES.includes(IP),
   };
@@ -67,10 +67,22 @@ const refreshTokens = async ({ refreshToken, IP }) => {
   };
 };
 
+const headerToken = async ({ res, token, refreshToken }) => {
+  res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
+  res.set('x-token', token);
+  res.set('x-refresh-token', refreshToken);
+
+  if (constants.DEBUG) {
+    res.cookie('debugToken', token, { maxAge: 900000, httpOnly: true });
+    res.cookie('debugRefreshToken', refreshToken, { maxAge: 900000, httpOnly: true });
+  }
+};
+
 export default async (req, res, next) => {
   console.log(`Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
   let success = false;
+  // Check existing JWT Session
   if (token) {
     console.log(`Token present: ${token}`);
     try {
@@ -79,6 +91,7 @@ export default async (req, res, next) => {
       success = true;
       console.log(`Token valid: ${token}`);
     } catch (err) {
+      // Check for JWT Refresh Ability
       console.log(`Token Error - refreshing: ${token}`);
       const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens({
@@ -86,51 +99,39 @@ export default async (req, res, next) => {
         IP: req.connection.remoteAddress,
       });
       if (newTokens.token && newTokens.refreshToken) {
-        res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
-        res.set('x-token', newTokens.token);
-        res.set('x-refresh-token', newTokens.refreshToken);
-
-        if (constants.DEBUG) {
-          res.cookie('debugToken', newTokens.token, { maxAge: 900000, httpOnly: true });
-          res.cookie('debugRefreshToken', newTokens.refreshToken, { maxAge: 900000, httpOnly: true });
-        }
+        headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         req.user = newTokens.user;
         success = true;
         console.log(`Token refreshed: ${newTokens.token}`);
       }
     }
   }
+  // Login
   if (!success) {
-    // Login
     console.log(`Token Error - autologin: ${token}`);
     const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
     const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
     console.log(`Credentials: DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
     const userData = {
-      userId: null,
+      _id: null,
       isVerified: false,
       isDataSource: constants.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress),
     };
     if (deviceHash) {
       let user = await UserModel.findOne({ deviceHash, phoneHash });
+      // Create user
       if (!user) {
-        // create user
         user = new UserModel({ deviceHash, phoneHash });
         user.save();
       }
-      userData.userId = user._id;
+      userData._id = user._id;
       userData.isVerified = user.verified;
     }
     console.log('New Tokens Data:');
     console.log(userData);
     const [createToken, createRefreshToken] = await createTokens(userData);
-    res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
-    res.set('x-token', createToken);
-    res.set('x-refresh-token', createRefreshToken);
-    if (constants.DEBUG) {
-      res.cookie('debugToken', createToken, { maxAge: 900000, httpOnly: true });
-      res.cookie('debugRefreshToken', createRefreshToken, { maxAge: 900000, httpOnly: true });
-    }
+    headerToken({ res, token: createToken, refreshToken: createRefreshToken });
+    req.user = userData;
   }
   next();
 };

@@ -1,8 +1,9 @@
 import webhook from '../../../scripts/webhook';
 
 export default async (req, res) => {
-  const { data } = req.body;
+  console.log('BIO Update');
   try {
+    const { data } = req.body;
     const updated = await webhook(data);
     res.send({
       updated,

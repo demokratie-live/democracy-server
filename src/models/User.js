@@ -1,6 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import mongoose, { Schema } from 'mongoose';
-import jwt from 'jsonwebtoken';
 
 const UserSchema = new Schema(
   {
@@ -24,17 +23,6 @@ const UserSchema = new Schema(
   },
   { timestamps: true },
 );
-
-UserSchema.methods = {
-  createToken() {
-    return jwt.sign(
-      {
-        _id: this._id,
-      },
-      process.env.AUTH_JWT_SECRET,
-    );
-  },
-};
 
 UserSchema.index({ deviceHash: 1, phoneHash: 1 }, { unique: true });
 

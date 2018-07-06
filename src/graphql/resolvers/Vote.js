@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 
 import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
+import { isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
@@ -35,16 +36,13 @@ export default {
   },
 
   Mutation: {
-    vote: async (
+    vote: isVerified.createResolver(async (
       parent,
       { procedure: procedureId, selection },
       {
         VoteModel, ProcedureModel, ActivityModel, user,
       },
     ) => {
-      if (!user) {
-        throw new Error('No Auth!');
-      }
       // TODO check if procedure is votable
       const procedure = await ProcedureModel.findById(procedureId);
       if (
@@ -125,6 +123,6 @@ export default {
         },
       ]).then(result =>
         result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } });
-    },
+    }),
   },
 };

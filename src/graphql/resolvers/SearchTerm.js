@@ -1,4 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+import { isUser } from '../../express/auth/permissions';
 
 export default {
   Query: {
@@ -19,10 +20,7 @@ export default {
     },
   },
   Mutation: {
-    finishSearch: async (parent, { term }, { SearchTermModel, user }) => {
-      if (!user) {
-        throw new Error('No auth');
-      }
+    finishSearch: isUser.createResolver(async (parent, { term }, { SearchTermModel }) => {
       if (term && term.trim().length >= 3) {
         SearchTermModel.findOneAndUpdate(
           {
@@ -39,6 +37,6 @@ export default {
         ).then();
       }
       return { term };
-    },
+    }),
   },
 };
