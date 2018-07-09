@@ -30,4 +30,5 @@ export default {
   ENGINE_API_KEY: process.env.ENGINE_API_KEY || null,
   WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES ? process.env.WHITELIST_DATA_SOURCES.split(',') : ['::ffff:127.0.0.1', '::1'],
   SMS_VERIFICATION: !(process.env.SMS_VERIFICATION === 'false'),
+  JWT_BACKWARD_COMPATIBILITY: process.env.JWT_BACKWARD_COMPATIBILITY === 'true',
 };

@@ -3,11 +3,11 @@ import { Types } from 'mongoose';
 
 import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
-import { isVerified } from '../../express/auth/permissions';
+import { isUser, isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    votes: (parent, { procedure }, { VoteModel, user }) =>
+    votes: isUser.createResolver((parent, { procedure }, { VoteModel, user }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
         { $addFields: { voted: { $in: [user ? user._id : false, '$users'] } } },
@@ -32,7 +32,7 @@ export default {
           },
         },
       ]).then(result =>
-        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } }),
+        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } })),
   },
 
   Mutation: {

@@ -16,7 +16,7 @@ import resolvers from './graphql/resolvers';
 
 import sendNotifications from './scripts/sendNotifications';
 
-import auth from './express/auth';
+import { auth } from './express/auth';
 import BIOupdate from './express/webhooks/bundestagio/update';
 import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures';
 import debugPushNotifications from './express/webhooks/debug/pushNotifications';
@@ -71,6 +71,8 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
   graphqlExpress({
     schema,
     context: {
+      // Connection
+      res,
       // User
       user: req.user,
       // Models

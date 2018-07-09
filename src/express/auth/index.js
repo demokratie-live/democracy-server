@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import UserModel from '../../models/User';
 import constants from '../../config/constants';
 
-const createTokens = async (user) => {
+export const createTokens = async (user) => {
   const token = jwt.sign(
     {
       user,
@@ -55,7 +55,7 @@ const refreshTokens = async (refreshToken) => {
   };
 };
 
-const headerToken = async ({ res, token, refreshToken }) => {
+export const headerToken = async ({ res, token, refreshToken }) => {
   res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
   res.set('x-token', token);
   res.set('x-refresh-token', refreshToken);
@@ -66,7 +66,7 @@ const headerToken = async ({ res, token, refreshToken }) => {
   }
 };
 
-export default async (req, res, next) => {
+export const auth = async (req, res, next) => {
   console.log(`Server: Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
   const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);

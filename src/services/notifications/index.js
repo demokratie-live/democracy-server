@@ -10,7 +10,7 @@ import gcmProvider from './gcm';
 
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
-import CONFIG from '../../config/constants';
+import CONSTANTS from '../../config/constants';
 
 const sendNotifications = ({
   tokenObjects, title = 'DEMOCRACY', message, payload,
@@ -36,7 +36,7 @@ const sendNotifications = ({
             body: message,
           };
 
-          note.topic = CONFIG.APN_TOPIC;
+          note.topic = CONSTANTS.APN_TOPIC;
 
           note.payload = payload;
 
@@ -234,7 +234,7 @@ export default async ({
               body: message,
             };
 
-            note.topic = CONFIG.APN_TOPIC;
+            note.topic = CONSTANTS.APN_TOPIC;
             note.contentAvailable = 1;
 
             note.payload = payload;
