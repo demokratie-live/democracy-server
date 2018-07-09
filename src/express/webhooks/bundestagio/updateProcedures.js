@@ -1,7 +1,7 @@
 import importProcedures from '../../../scripts/import';
 
 export default async (req, res) => {
-  console.log('BIO Update Procedures');
+  console.log('Bundestag.io authenticated: Update Procedures');
   try {
     const { data: { procedureIds } } = req.body;
     const updated = await importProcedures(procedureIds);

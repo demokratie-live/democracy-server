@@ -1,7 +1,7 @@
 import webhook from '../../../scripts/webhook';
 
 export default async (req, res) => {
-  console.log('BIO Update');
+  console.log('Bundestag.io authenticated: Update');
   try {
     const { data } = req.body;
     const updated = await webhook(data);
