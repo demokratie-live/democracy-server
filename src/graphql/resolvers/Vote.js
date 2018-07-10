@@ -10,7 +10,7 @@ export default {
     votes: isUser.createResolver((parent, { procedure }, { VoteModel, user }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: { $in: [user ? user._id : false, '$users'] } } },
+        { $addFields: { voted: { $in: [user, '$users'] } } },
         {
           $group: {
             _id: '$procedure',

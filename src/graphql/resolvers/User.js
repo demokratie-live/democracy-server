@@ -38,6 +38,7 @@ export default {
       return { token };
     },
 
+    /* Was never used?!
     signIn: async (parent, { deviceHashEncrypted }, { res, UserModel }) => {
       if (!CONSTANTS.JWT_BACKWARD_COMPATIBILITY) {
         return null;
@@ -50,6 +51,6 @@ export default {
       const [token, refreshToken] = await createTokens(user._id);
       headerToken(res, token, refreshToken);
       return { token };
-    },
+    }, */
   },
 };
