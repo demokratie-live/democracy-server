@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+- [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462) 
+
 ### 0.1.12
 
 - [Changed] scrape bt-agenda `Überwiesen` show time
