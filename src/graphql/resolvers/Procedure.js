@@ -293,11 +293,6 @@ export default {
     votedGovernment: procedure =>
       procedure.voteResults &&
       (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
-    // required for client <= 0.7.5
-    votedGoverment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
     completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
     listType: (procedure) => {
       if (

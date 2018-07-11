@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+- [Removed] Deprecated graphql field goverment [#438](https://github.com/demokratie-live/democracy-client/issues/438)
+
 ### 0.1.12
 
 - [Changed] scrape bt-agenda `Überwiesen` show time
