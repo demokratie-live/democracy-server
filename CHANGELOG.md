@@ -1,5 +1,12 @@
 # Changelog
 
+### 0.1.xx
+
+- [Changed] JWT Header based authentification
+- [Added] DEBUG environment variable
+- [Added] Permissions for User-only and VerifiedUser-only requests
+- [Added] IP-Whitelist controll for Bundestag.io hooks
+
 ### 0.1.12
 
 - [Changed] scrape bt-agenda `Überwiesen` show time
