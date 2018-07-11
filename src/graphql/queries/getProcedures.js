@@ -8,6 +8,7 @@ export default gql`
       type
       period
       currentStatus
+      currentStatusHistory
       abstract
       tags
       subjectGroups
@@ -29,6 +30,7 @@ export default gql`
         number
       }
       customData {
+        expectedVotingDate
         voteResults {
           yes
           no

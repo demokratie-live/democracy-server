@@ -12,6 +12,7 @@ type Procedure {
   type: String
   period: Int
   currentStatus: String
+  currentStatusHistory: [String]
   abstract: String
   tags: [String]
   voteDate: Date
@@ -28,11 +29,17 @@ type Procedure {
   listType: ProcedureType
 }
 
+type SearchProcedures {
+  procedures: [Procedure]
+  autocomplete: [String]
+}
+
 type Query {
   procedure(id: ID!): Procedure
   procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
-  searchProcedures(term: String!): [Procedure]
+  searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
+  searchProceduresAutocomplete(term: String!): SearchProcedures
 }
 `;

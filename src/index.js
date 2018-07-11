@@ -6,19 +6,27 @@ import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
+import { CronJob } from 'cron';
 
 import './config/db';
 import constants from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
+
+import sendNotifications from './scripts/sendNotifications';
+
 import webhook from './scripts/webhook';
+
 import auth from './express/auth';
+import updateProcedures from './express/webhooks/bundestagio/updateProcedures';
 
 // Models
 import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
+import PushNotifiactionModel from './models/PushNotifiaction';
+import SearchTermModel from './models/SearchTerms';
 
 const app = express();
 
@@ -63,6 +71,8 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       UserModel,
       ActivityModel,
       VoteModel,
+      PushNotifiactionModel,
+      SearchTermModel,
     },
     tracing: true,
     cacheControl: true,
@@ -88,34 +98,50 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
   }
 });
 
+// Bundestag.io Webhook update specific procedures
+app.post('/webhooks/bundestagio/updateProcedures', updateProcedures);
 
 /* // Push Notification test
 import pushNotify from './services/notifications';
 app.get('/push-test', async (req, res) => {
-  const { message } = req.query;
+  const { message, title } = req.query;
+  if (!message) {
+    res.send('message is missing');
+  }
   const users = await UserModel.find();
   users.forEach((user) => {
     pushNotify({
-      title: 'test',
-      message: message || 'Test push notification to all users',
+      title: title || 'DEMOCRACY',
+      message,
       user,
+      payload: {
+        action: 'procedureDetails',
+        title: 'Neues Gesetz!',
+        message: message || 'Test push notification to all users',
+        procedureId: 232647,
+        type: 'procedure',
+      },
     });
   });
   res.send("push's send");
 });
 */
 
-/* // ImportAll Darf in Production nicht ausführbar sein!
-import importAll from './scripts/importAll';
-app.get('/webhooks/bundestagio/import-all', importAll);
-*/
+// Darf in Production nicht ausführbar sein!
+// import importAll from './scripts/importAll';
 
-// Create & start Server
+// app.get('/webhooks/bundestagio/import-all', importAll);
+
 const graphqlServer = createServer(app);
 graphqlServer.listen(constants.PORT, (err) => {
   if (err) {
     console.error(err);
   } else {
     console.log(`App is listen on port: ${constants.PORT}`);
+
+    const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
+
+    const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
+    console.log('cronjob.running', cronjob.running, cronjob2.running);
   }
 });
