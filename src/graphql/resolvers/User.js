@@ -2,21 +2,22 @@
 import RSAKey from 'react-native-rsa';
 
 import { createTokens, headerToken } from '../../express/auth';
-/* import { isUser } from '../../express/auth/permissions'; */
+/* import { isLoggedin } from '../../express/auth/permissions'; */
 import CONSTANTS from '../../config/constants';
 
 export default {
   Query: {
-    me: /* isUser.createResolver( */(parent, args, { UserModel, user }) => {
+    me: /* isLoggedin.createResolver( */(parent, args, { UserModel, user }) => {
       if (!user) {
         return null;
       }
-      // Normal Code - remove stuff above and enable isUser resolver
+      // Normal Code - remove stuff above and enable isLoggedin resolver
+      // Maybe return user; ?
       return UserModel.findById(user._id);
     }/* ) */,
   },
   Mutation: {
-    signUp: async (parent, { deviceHashEncrypted }, { res, UserModel }) => {
+    signUp: async (parent, { deviceHashEncrypted }, { res, UserModel, DeviceModel }) => {
       if (!CONSTANTS.JWT_BACKWARD_COMPATIBILITY) {
         return null;
       }
@@ -31,6 +32,12 @@ export default {
       user = await UserModel.findOne({ deviceHash });
       if (!user) {
         user = await UserModel.create({ deviceHash });
+
+        const device = await DeviceModel.findOne({ deviceHash });
+
+        if (!device) {
+          await DeviceModel.create({ deviceHash });
+        }
       }
 
       const [token, refreshToken] = await createTokens(user._id);

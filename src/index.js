@@ -25,6 +25,8 @@ import debugImportAll from './express/webhooks/debug/importAll';
 // Models
 import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
+import DeviceModel from './models/Device';
+import PhoneModel from './models/Phone';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
 import PushNotifiactionModel from './models/PushNotifiaction';
@@ -73,11 +75,15 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
     context: {
       // Connection
       res,
-      // User
+      // User, Device & Phone
       user: req.user,
+      device: req.device,
+      phone: req.phone,
       // Models
       ProcedureModel,
       UserModel,
+      DeviceModel,
+      PhoneModel,
       ActivityModel,
       VoteModel,
       PushNotifiactionModel,

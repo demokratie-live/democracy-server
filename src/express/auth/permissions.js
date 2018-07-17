@@ -36,9 +36,9 @@ export const isDataSource = createExpressResolver((req, res) => {
   return true;
 });
 
-// User is existent in Database (note: this is the case if there was an device id transmitted)
-export const isUser = createGraphQLResolver((parent, args, context) => {
-  if (!context.user) {
+// Device & User is existent in Database
+export const isLoggedin = createGraphQLResolver((parent, args, context) => {
+  if (!context.user || !context.user.device) {
     console.log('Permission denied: You need to login with your Device');
     throw new Error('Permission Denied');
   }

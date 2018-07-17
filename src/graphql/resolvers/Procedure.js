@@ -6,7 +6,7 @@ import CONSTANTS from '../../config/constants';
 
 import elasticsearch from '../../services/search';
 
-import { isUser } from '../../express/auth/permissions';
+import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
@@ -262,9 +262,10 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: isUser.createResolver(async (parent, args, { user, ProcedureModel }) => {
+    notifiedProcedures: isLoggedin.createResolver(async (parent, args,
+      { device, ProcedureModel }) => {
       const procedures = await ProcedureModel.find({
-        _id: { $in: user.notificationSettings.procedures },
+        _id: { $in: device.notificationSettings.procedures },
       });
 
       return procedures.map(procedure => ({

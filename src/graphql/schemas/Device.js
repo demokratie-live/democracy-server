@@ -1,7 +1,21 @@
 export default `
 
+  type Device {
+    notificationSettings: NotificationSettings
+  }
+
   type TokenResult {
-      succeeded: Boolean
+    succeeded: Boolean
+  }
+
+  type CodeResult {
+    reason: String
+    succeeded: Boolean!
+  }
+
+  type VerificationResult {
+    reason: String
+    succeeded: Boolean!
   }
 
   type NotificationSettings {
@@ -18,6 +32,9 @@ export default `
   }
 
   type Mutation {
+    requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
+    requestVerification(code: String!): VerificationResult
+
     addToken(token: String!, os: String!): TokenResult
     
     updateNotificationSettings(

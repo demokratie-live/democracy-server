@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { isUser } from '../../express/auth/permissions';
+import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
@@ -20,7 +20,7 @@ export default {
     },
   },
   Mutation: {
-    finishSearch: isUser.createResolver(async (parent, { term }, { SearchTermModel }) => {
+    finishSearch: isLoggedin.createResolver(async (parent, { term }, { SearchTermModel }) => {
       if (term && term.trim().length >= 3) {
         SearchTermModel.findOneAndUpdate(
           {

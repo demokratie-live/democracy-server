@@ -1,10 +1,10 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
-import { isUser } from '../../express/auth/permissions';
+import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    activityIndex: isUser.createResolver(async (parent, { procedureId },
+    activityIndex: isLoggedin.createResolver(async (parent, { procedureId },
       { ProcedureModel, ActivityModel, user }) => {
       const procedure = await ProcedureModel.findOne({ procedureId });
       const activityIndex = await ActivityModel.find({ procedure }).count();
@@ -20,7 +20,7 @@ export default {
   },
 
   Mutation: {
-    increaseActivity: isUser.createResolver(async (parent,
+    increaseActivity: isLoggedin.createResolver(async (parent,
       { procedureId }, { ProcedureModel, ActivityModel, user }) => {
       let searchQuery;
       if (Types.ObjectId.isValid(procedureId)) {

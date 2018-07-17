@@ -3,11 +3,11 @@ import { Types } from 'mongoose';
 
 import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
-import { isUser, isVerified } from '../../express/auth/permissions';
+import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    votes: isUser.createResolver((parent, { procedure }, { VoteModel, user }) =>
+    votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, user }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
         { $addFields: { voted: { $in: [user, '$users'] } } },

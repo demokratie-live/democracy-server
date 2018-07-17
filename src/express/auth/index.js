@@ -1,6 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
 import UserModel from '../../models/User';
+import DeviceModel from '../../models/Device';
+import PhoneModel from '../../models/Phone';
 import constants from '../../config/constants';
 
 export const createTokens = async (user) => {
@@ -69,8 +71,8 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 export const auth = async (req, res, next) => {
   console.log(`Server: Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
-  const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash : null);
-  const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash : null);
+  const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash || null : null);
+  const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
     console.log(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
@@ -83,6 +85,10 @@ export const auth = async (req, res, next) => {
     try {
       const userid = jwt.verify(token, constants.AUTH_JWT_SECRET).user;
       req.user = await UserModel.findOne({ _id: userid });
+      if (req.user) {
+        req.device = await DeviceModel.findOne({ _id: req.user.device });
+        req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+      }
       success = true;
       console.log(`JWT: Token valid: ${token}`);
     } catch (err) {
@@ -93,6 +99,10 @@ export const auth = async (req, res, next) => {
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         req.user = newTokens.user;
+        if (req.user) {
+          req.device = await DeviceModel.findOne({ _id: req.user.device });
+          req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+        }
         success = true;
         console.log(`JWT: Token Refresh (t): ${newTokens.token}`);
         console.log(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
@@ -103,11 +113,23 @@ export const auth = async (req, res, next) => {
   if (!success) {
     console.log('JWT: Autologin (Token Error or Credentials present)');
     let user = null;
+    let device = null;
+    let phone = null;
     if (deviceHash) {
-      user = await UserModel.findOne({ deviceHash, phoneHash });
-      // Create user
+      // User
+      device = await DeviceModel.findOne({ deviceHash });
+      phone = phoneHash ? await PhoneModel.findOne({ phoneHash }) : null;
+      user = await UserModel.findOne({ device, phone });
       if (!user) {
-        user = new UserModel({ deviceHash, phoneHash });
+        console.log('JWT: Create new User');
+        // Device
+        if (!device) {
+          device = new DeviceModel({ deviceHash });
+          device.save();
+        }
+
+        // Create user
+        user = new UserModel({ device, phone });
         user.save();
       }
     }
@@ -116,6 +138,8 @@ export const auth = async (req, res, next) => {
     const [createToken, createRefreshToken] = await createTokens(userid);
     headerToken({ res, token: createToken, refreshToken: createRefreshToken });
     req.user = user;
+    req.device = device;
+    req.phone = phone;
     console.log(`JWT: Token New (t): ${createToken}`);
     console.log(`JWT: Token New (r): ${createRefreshToken}`);
   }
