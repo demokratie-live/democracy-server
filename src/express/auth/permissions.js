@@ -36,17 +36,17 @@ export const isDataSource = createExpressResolver((req, res) => {
   return true;
 });
 
-// Device & User is existent in Database
-export const isLoggedin = createGraphQLResolver((parent, args, context) => {
-  if (!context.user || !context.user.device) {
+// User & Device is existent in Database
+export const isLoggedin = createGraphQLResolver((parent, args, { user, device }) => {
+  if (!user || !device) {
     console.log('Permission denied: You need to login with your Device');
     throw new Error('Permission Denied');
   }
 });
 
 // User has verified flag
-export const isVerified = createGraphQLResolver((parent, args, context) => {
-  if (!context.user || (CONSTANTS.SMS_VERIFICATION && !context.user.isVerified())) {
+export const isVerified = createGraphQLResolver((parent, args, { user, phone }) => {
+  if (!user || (CONSTANTS.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
     console.log('Permission denied: isVerified = false');
     throw new Error('Permission Denied');
   }

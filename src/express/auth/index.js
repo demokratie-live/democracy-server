@@ -86,8 +86,8 @@ export const auth = async (req, res, next) => {
       const userid = jwt.verify(token, constants.AUTH_JWT_SECRET).user;
       req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
-        req.device = await DeviceModel.findOne({ _id: req.user.device });
-        req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+        req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
+        req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
       }
       success = true;
       console.log(`JWT: Token valid: ${token}`);
@@ -100,8 +100,8 @@ export const auth = async (req, res, next) => {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         req.user = newTokens.user;
         if (req.user) {
-          req.device = await DeviceModel.findOne({ _id: req.user.device });
-          req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+          req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
+          req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
         }
         success = true;
         console.log(`JWT: Token Refresh (t): ${newTokens.token}`);

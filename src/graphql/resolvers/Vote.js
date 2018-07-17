@@ -1,16 +1,17 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
 
+import CONSTANTS from '../../config/constants';
 import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, user }) =>
+    votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, device, phone }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: { $in: [user, '$users'] } } },
+        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$users'] } } },
         {
           $group: {
             _id: '$procedure',
@@ -40,7 +41,7 @@ export default {
       parent,
       { procedure: procedureId, selection },
       {
-        VoteModel, ProcedureModel, ActivityModel, user,
+        VoteModel, ProcedureModel, ActivityModel, user, device, phone,
       },
     ) => {
       // TODO check if procedure is votable
@@ -74,9 +75,14 @@ export default {
       if (!vote) {
         vote = await VoteModel.create({ procedure, state });
       }
-      const hasVoted = vote.users.some(uId => uId.equals(user._id));
+      const hasVoted = vote.users.some(uId =>
+        uId.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
-        const voteUpdate = { $push: { users: user } };
+        const voteUpdate = {
+          $push: {
+            users: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          },
+        };
         switch (selection) {
           case 'YES':
             voteUpdate.$inc = { 'voteResults.yes': 1 };
@@ -96,11 +102,17 @@ export default {
       await Activity.Mutation.increaseActivity(
         parent,
         { procedureId },
-        { ProcedureModel, ActivityModel, user },
+        {
+          ProcedureModel,
+          ActivityModel,
+          user,
+          phone,
+          device,
+        },
       );
       return VoteModel.aggregate([
         { $match: { procedure: procedure._id } },
-        { $addFields: { voted: { $in: [user._id, '$users'] } } },
+        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? phone._id : device._id, '$users'] } } },
         {
           $group: {
             _id: '$procedure',

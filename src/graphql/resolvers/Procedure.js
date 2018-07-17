@@ -137,11 +137,11 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
-    procedure: async (parent, { id }, { user, ProcedureModel }) => {
+    procedure: async (parent, { id }, { device, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       return {
         ...procedure.toObject(),
-        notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        notify: !!(device && device.notificationSettings.procedures.indexOf(procedure._id) > -1),
       };
     },
 
@@ -276,10 +276,10 @@ export default {
   },
 
   Procedure: {
-    activityIndex: async (procedure, args, { ActivityModel, user }) => {
+    activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       const activityIndex = await ActivityModel.find({ procedure }).count();
       const active = await ActivityModel.findOne({
-        user,
+        user: (CONSTANTS.SMS_VERIFICATION && phone) ? phone._id : device._id,
         procedure,
       });
       return {
@@ -287,8 +287,11 @@ export default {
         active: !!active,
       };
     },
-    voted: async (procedure, args, { VoteModel, user }) => {
-      const voted = await VoteModel.findOne({ procedure, users: user });
+    voted: async (procedure, args, { VoteModel, device, phone }) => {
+      const voted = await VoteModel.findOne({
+        procedure,
+        users: (CONSTANTS.SMS_VERIFICATION && phone) ? phone._id : device._id,
+      });
       return !!voted;
     },
     votedGovernment: procedure =>

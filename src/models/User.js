@@ -19,7 +19,7 @@ const UserSchema = new Schema(
 
 UserSchema.methods = {
   isVerified() {
-    return this.verfied;
+    return this.verified;
   },
 };
 
