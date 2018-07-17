@@ -137,11 +137,12 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
-    procedure: async (parent, { id }, { device, ProcedureModel }) => {
+    procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       return {
         ...procedure.toObject(),
         notify: !!(device && device.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        verified: user.isVerified(),
       };
     },
 
