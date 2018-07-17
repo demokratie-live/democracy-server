@@ -11,7 +11,7 @@ export default {
     votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, device, phone }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$users'] } } },
+        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$users'] } } }, // eslint-disable-line no-nested-ternary
         {
           $group: {
             _id: '$procedure',
