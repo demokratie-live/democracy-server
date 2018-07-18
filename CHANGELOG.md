@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.13
+
+- [Add] Sorting for Procedures
+
 ### 0.1.12
 
 - [Changed] scrape bt-agenda `Überwiesen` show time
