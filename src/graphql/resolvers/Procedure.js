@@ -291,7 +291,10 @@ export default {
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       const voted = await VoteModel.findOne({
         procedure,
-        users: (CONSTANTS.SMS_VERIFICATION && phone) ? phone._id : device._id,
+        voters: {
+          kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+          object: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
+        },
       });
       return !!voted;
     },

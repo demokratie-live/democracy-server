@@ -3,6 +3,7 @@
 
 import _ from 'lodash';
 import crypto from 'crypto';
+import CONSTANTS from '../../config/constants';
 import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
 
@@ -13,8 +14,12 @@ export default {
   },
 
   Mutation: {
-    requestCode: isLoggedin.createResolver(async (parent, { newPhone, oldPhoneHash },
-      { phone, device }) => {
+    requestCode: isLoggedin.createResolver(async (parent, { newPhone, oldPhoneHash }, {
+      user,
+      device,
+      phone,
+      PhoneModel,
+    }) => {
       // Check for invalid transfere
       const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
       if (newPhoneHash === oldPhoneHash) {
@@ -25,9 +30,11 @@ export default {
       }
 
       // Check for valid oldPhoneHash
-      if ((oldPhoneHash && !phone) || (phone && phone.phoneHash !== oldPhoneHash)) {
+      if ((oldPhoneHash && !user.isVerified()) ||
+        (oldPhoneHash && !phone) ||
+        (phone && phone.phoneHash !== oldPhoneHash)) {
         return {
-          reason: 'oldPhoneHash !== user.phoneHash',
+          reason: 'oldPhoneHash !== phone.phoneHash',
           succeeded: false,
         };
       }
@@ -51,7 +58,7 @@ export default {
       // We should send the SMS here and return false if we dont succeed
 
       // Expiretime: 10 Minutes
-      const expires = new Date(now.getTime() + 600000);
+      const expires = new Date(now.getTime() + CONSTANTS.SMS_VERIFICATION_CODE_TTL);
       device.verifications.push({
         newPhoneHash,
         oldPhoneHash,
@@ -60,12 +67,22 @@ export default {
       });
       device.save();
 
+      // Allow to create new user based on last usage
+      let allowNewUser = false;
+      const existingPhone = await PhoneModel.findOne({ phoneHash: newPhoneHash });
+      if (existingPhone && existingPhone.updatedAt < (
+        new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
+        // Older then 6 Months
+        allowNewUser = true;
+      }
+
       return {
+        allowNewUser,
         succeeded: true,
       };
     }),
 
-    requestVerification: isLoggedin.createResolver(async (parent, { code }, {
+    requestVerification: isLoggedin.createResolver(async (parent, { code, newUser }, {
       res, user, device, phone, UserModel, PhoneModel,
     }) => {
       // Find Code
@@ -111,6 +128,14 @@ export default {
           newPhone = new PhoneModel({ phoneHash: verification.newPhoneHash });
           await newPhone.save();
         }
+      } else if (newUser && newPhone.updatedAt < (
+        new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
+        // Allow new User - Invalidate oldPhone
+        newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
+        await newPhone.save();
+        // Create Phone
+        newPhone = new PhoneModel({ phoneHash: verification.newPhoneHash });
+        await newPhone.save();
       }
 
       // Delete Existing User

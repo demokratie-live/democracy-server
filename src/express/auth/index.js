@@ -1,18 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
+import CONSTANTS from '../../config/constants';
 import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
 import PhoneModel from '../../models/Phone';
-import constants from '../../config/constants';
 
 export const createTokens = async (user) => {
   const token = jwt.sign(
     {
       user,
     },
-    constants.AUTH_JWT_SECRET,
+    CONSTANTS.AUTH_JWT_SECRET,
     {
-      expiresIn: constants.AUTH_JWT_TTL,
+      expiresIn: CONSTANTS.AUTH_JWT_TTL,
     },
   );
 
@@ -20,9 +20,9 @@ export const createTokens = async (user) => {
     {
       user,
     },
-    constants.AUTH_JWT_SECRET,
+    CONSTANTS.AUTH_JWT_SECRET,
     {
-      expiresIn: constants.AUTH_JWT_REFRESH_TTL,
+      expiresIn: CONSTANTS.AUTH_JWT_REFRESH_TTL,
     },
   );
 
@@ -32,7 +32,7 @@ export const createTokens = async (user) => {
 const refreshTokens = async (refreshToken) => {
   // Verify Token
   try {
-    jwt.verify(refreshToken, constants.AUTH_JWT_SECRET);
+    jwt.verify(refreshToken, CONSTANTS.AUTH_JWT_SECRET);
   } catch (err) {
     return {};
   }
@@ -62,7 +62,7 @@ export const headerToken = async ({ res, token, refreshToken }) => {
   res.set('x-token', token);
   res.set('x-refresh-token', refreshToken);
 
-  if (constants.DEBUG) {
+  if (CONSTANTS.DEBUG) {
     res.cookie('debugToken', token, { maxAge: 900000, httpOnly: true });
     res.cookie('debugRefreshToken', refreshToken, { maxAge: 900000, httpOnly: true });
   }
@@ -70,9 +70,9 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 
 export const auth = async (req, res, next) => {
   console.log(`Server: Connection from: ${req.connection.remoteAddress}`);
-  const token = req.headers['x-token'] || (constants.DEBUG ? req.cookies.debugToken : null);
-  const deviceHash = req.headers['x-device-hash'] || (constants.DEBUG ? req.query.deviceHash || null : null);
-  const phoneHash = req.headers['x-phone-hash'] || (constants.DEBUG ? req.query.phoneHash || null : null);
+  const token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
+  const deviceHash = req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
+  const phoneHash = req.headers['x-phone-hash'] || (CONSTANTS.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
     console.log(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
@@ -83,25 +83,47 @@ export const auth = async (req, res, next) => {
   if (token && !deviceHash) {
     console.log(`JWT: Token: ${token}`);
     try {
-      const userid = jwt.verify(token, constants.AUTH_JWT_SECRET).user;
+      const userid = jwt.verify(token, CONSTANTS.AUTH_JWT_SECRET).user;
+      // Set request variables
       req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
         req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
         req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
+      }
+      // Set new timestamps
+      if (req.user) {
+        req.user.update();
+      }
+      if (req.device) {
+        req.device.update();
+      }
+      if (req.phone) {
+        req.phone.update();
       }
       success = true;
       console.log(`JWT: Token valid: ${token}`);
     } catch (err) {
       // Check for JWT Refresh Ability
       console.log(`JWT: Token Error: ${err}`);
-      const refreshToken = req.headers['x-refresh-token'] || (constants.DEBUG ? req.cookies.debugRefreshToken : null);
+      const refreshToken = req.headers['x-refresh-token'] || (CONSTANTS.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
+        // Set request variables
         req.user = newTokens.user;
         if (req.user) {
           req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
           req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
+        }
+        // Set new timestamps
+        if (req.user) {
+          req.user.update();
+        }
+        if (req.device) {
+          req.device.update();
+        }
+        if (req.phone) {
+          req.phone.update();
         }
         success = true;
         console.log(`JWT: Token Refresh (t): ${newTokens.token}`);
@@ -137,9 +159,20 @@ export const auth = async (req, res, next) => {
     console.log(`JWT: Token New for User: ${userid}`);
     const [createToken, createRefreshToken] = await createTokens(userid);
     headerToken({ res, token: createToken, refreshToken: createRefreshToken });
+    // Set request variables
     req.user = user;
     req.device = device;
     req.phone = phone;
+    // Set new timestamps
+    if (req.user) {
+      req.user.update();
+    }
+    if (req.device) {
+      req.device.update();
+    }
+    if (req.phone) {
+      req.phone.update();
+    }
     console.log(`JWT: Token New (t): ${createToken}`);
     console.log(`JWT: Token New (r): ${createRefreshToken}`);
   }

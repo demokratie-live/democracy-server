@@ -1,4 +1,4 @@
-import UserModel from '../../../models/User';
+import DeviceModel from '../../../models/Device';
 import pushNotify from '../../../services/notifications';
 
 export default async (req, res) => {
@@ -6,16 +6,16 @@ export default async (req, res) => {
   if (!message) {
     res.send('message is missing');
   }
-  const users = await UserModel.find();
-  users.forEach((user) => {
+  const devices = await DeviceModel.find();
+  devices.forEach((device) => {
     pushNotify({
       title: title || 'DEMOCRACY',
       message,
-      user,
+      device,
       payload: {
         action: 'procedureDetails',
         title: 'Neues Gesetz!',
-        message: message || 'Test push notification to all users',
+        message: message || 'Test push notification to all devices',
         procedureId: 232647,
         type: 'procedure',
       },

@@ -10,6 +10,7 @@ export default `
 
   type CodeResult {
     reason: String
+    allowNewUser: Boolean
     succeeded: Boolean!
   }
 
@@ -33,7 +34,7 @@ export default `
 
   type Mutation {
     requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
-    requestVerification(code: String!): VerificationResult
+    requestVerification(code: String!, newUser: Boolean): VerificationResult
 
     addToken(token: String!, os: String!): TokenResult
     

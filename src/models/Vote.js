@@ -8,7 +8,10 @@ const VoteSchema = new Schema({
     required: true,
   },
   state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
-  users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  voters: [{
+    kind: String,
+    object: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+  }],
   voteResults: {
     yes: { type: Number, default: 0 },
     no: { type: Number, default: 0 },

@@ -11,7 +11,14 @@ export default {
     votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, device, phone }) =>
       VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$users'] } } }, // eslint-disable-line no-nested-ternary
+        {
+          $addFields: {
+            voted: {
+              kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+              object: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
+            },
+          },
+        },
         {
           $group: {
             _id: '$procedure',
@@ -75,12 +82,15 @@ export default {
       if (!vote) {
         vote = await VoteModel.create({ procedure, state });
       }
-      const hasVoted = vote.users.some(uId =>
-        uId.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
+      const hasVoted = vote.voters.some(({ kind, object }) =>
+        kind.equals(CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') && object.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
         const voteUpdate = {
           $push: {
-            users: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            voters: {
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              object: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
           },
         };
         switch (selection) {
@@ -112,7 +122,14 @@ export default {
       );
       return VoteModel.aggregate([
         { $match: { procedure: procedure._id } },
-        { $addFields: { voted: { $in: [CONSTANTS.SMS_VERIFICATION ? phone._id : device._id, '$users'] } } },
+        {
+          $addFields: {
+            voted: {
+              kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+              object: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
+            },
+          },
+        },
         {
           $group: {
             _id: '$procedure',
