@@ -69,6 +69,22 @@ export default {
             },
           },
           { $sort: { activities: -1, lastUpdateDate: -1, title: 1 } },
+          {
+            $addFields: {
+              listType: {
+                $cond: {
+                  if: {
+                    $in: [
+                      '$currentStatus',
+                      procedureStates.VOTING.concat(procedureStates.COMPLETED),
+                    ],
+                  },
+                  then: 'VOTING',
+                  else: 'PREPARATION',
+                },
+              },
+            },
+          },
 
           { $skip: offset },
           { $limit: pageSize },
@@ -134,8 +150,17 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
+    proceduresById: async (parent, { ids }, { ProcedureModel }) =>
+      ProcedureModel.find({ _id: { $in: ids } }),
+
     procedure: async (parent, { id }, { user, ProcedureModel }) => {
       const procedure = await ProcedureModel.findOne({ procedureId: id });
+      // eslint-disable-next-line
+      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+        status => procedure.currentStatus === status)
+        ? 'VOTING'
+        : 'PREPARATION';
+
       return {
         ...procedure.toObject(),
         notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
