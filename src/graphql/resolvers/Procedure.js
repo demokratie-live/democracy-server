@@ -8,8 +8,24 @@ import elasticsearch from '../../services/search';
 
 export default {
   Query: {
-    procedures: async (parent, { type, offset = 0, pageSize = 99 }, { ProcedureModel }) => {
+    procedures: async (
+      parent,
+      {
+        type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
+      },
+      { ProcedureModel },
+    ) => {
       let currentStates = [];
+
+      const filterQuery = {};
+      if (filter.type && filter.type.length > 0) {
+        filterQuery.type = { $in: filter.type };
+      }
+      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
+
+      let sortQuery = {};
       switch (type) {
         case 'PREPARATION':
           currentStates = procedureStates.PREPARATION;
@@ -27,70 +43,62 @@ export default {
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
       if (type === 'PREPARATION') {
+        switch (sort) {
+          case 'activities':
+            sortQuery = { activities: -1, lastUpdateDate: -1, title: 1 };
+            break;
+          case 'created':
+            sortQuery = { submissionDate: -1, lastUpdateDate: -1, title: 1 };
+            break;
+
+          default:
+            sortQuery = {
+              lastUpdateDate: -1,
+              title: 1,
+            };
+            break;
+        }
         return ProcedureModel.find({
           currentStatus: { $in: currentStates },
           period,
           voteDate: { $not: { $type: 'date' } },
+          ...filterQuery,
         })
-          .sort({ lastUpdateDate: -1 })
+          .sort(sortQuery)
           .limit(pageSize)
           .skip(offset);
       }
       if (type === 'HOT') {
         const oneWeekAgo = new Date();
-        const schemaProps = Object.keys(ProcedureModel.schema.obj).reduce(
-          (obj, prop) => ({ ...obj, [prop]: { $first: `$${prop}` } }),
-          {},
-        );
-        const hotProcedures = await ProcedureModel.aggregate([
-          {
-            $match: {
-              period,
-              $or: [
-                { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
-                { voteDate: { $not: { $type: 'date' } } },
-              ],
-            },
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              localField: '_id',
-              foreignField: 'procedure',
-              as: 'activityIndex',
-            },
-          },
-          { $unwind: '$activityIndex' },
-          {
-            $group: {
-              _id: '$_id',
-              ...schemaProps,
-              activities: { $sum: 1 },
-            },
-          },
-          { $sort: { activities: -1, lastUpdateDate: -1, title: 1 } },
-          {
-            $addFields: {
-              listType: {
-                $cond: {
-                  if: {
-                    $in: [
-                      '$currentStatus',
-                      procedureStates.VOTING.concat(procedureStates.COMPLETED),
-                    ],
-                  },
-                  then: 'VOTING',
-                  else: 'PREPARATION',
-                },
-              },
-            },
-          },
-
-          { $skip: offset },
-          { $limit: pageSize },
-        ]);
+        const hotProcedures = await ProcedureModel.find({
+          period,
+          activities: { $gt: 0 },
+          $or: [
+            { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
+            { voteDate: { $not: { $type: 'date' } } },
+          ],
+          ...filterQuery,
+        })
+          .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
+          .skip(offset)
+          .limit(pageSize);
 
         return hotProcedures;
+      }
+
+      switch (sort) {
+        case 'activities':
+          sortQuery = { activities: -1, lastUpdateDate: -1, title: 1 };
+          break;
+
+        default:
+          sortQuery = {
+            nlt: 1,
+            voteDate: -1,
+            lastUpdateDate: -1,
+            title: 1,
+          };
+          break;
       }
 
       const activeVotings = await ProcedureModel.aggregate([
@@ -107,6 +115,7 @@ export default {
               },
             ],
             period,
+            ...filterQuery,
           },
         },
         {
@@ -114,7 +123,7 @@ export default {
             nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
           },
         },
-        { $sort: { nlt: 1, lastUpdateDate: -1, title: 1 } },
+        { $sort: sortQuery },
         { $skip: offset },
         { $limit: pageSize },
       ]);
@@ -133,6 +142,7 @@ export default {
             },
           ],
           period,
+          ...filterQuery,
         }).count();
 
         pastVotings = await ProcedureModel.find({
@@ -141,8 +151,9 @@ export default {
             { currentStatus: { $in: procedureStates.COMPLETED } },
           ],
           period,
+          ...filterQuery,
         })
-          .sort({ voteDate: -1, lastUpdateDate: -1, title: 1 })
+          .sort(sortQuery)
           .skip(Math.max(offset - activeVotingsCount, 0))
           .limit(pageSize - activeVotings.length);
       }
@@ -301,7 +312,7 @@ export default {
 
   Procedure: {
     activityIndex: async (procedure, args, { ActivityModel, user }) => {
-      const activityIndex = await ActivityModel.find({ procedure }).count();
+      const activityIndex = procedure.activities || 0;
       const active = await ActivityModel.findOne({
         user,
         procedure,

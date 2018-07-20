@@ -34,9 +34,15 @@ type SearchProcedures {
   autocomplete: [String]
 }
 
+input ProcedureFilter {
+  subjectGroups: [String]
+  status: [String]
+  type: [String]
+}
+
 type Query {
   procedure(id: ID!): Procedure
-  procedures(type: ProcedureType!, pageSize: Int, offset: Int): [Procedure]
+  procedures(type: ProcedureType!, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")

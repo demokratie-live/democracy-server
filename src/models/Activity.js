@@ -9,4 +9,12 @@ const ActivitySchema = new Schema(
   { timestamps: false },
 );
 
+ActivitySchema.post('save', async (doc) => {
+  const activities = await mongoose
+    .model('Activity')
+    .find({ procedure: doc.procedure._id })
+    .count();
+  await mongoose.model('Procedure').findByIdAndUpdate(doc.procedure._id, { activities });
+});
+
 export default mongoose.model('Activity', ActivitySchema);

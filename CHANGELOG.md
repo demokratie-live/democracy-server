@@ -1,7 +1,8 @@
 # Changelog
 
-### 0.1.x
+### 0.1.13
 
+- [Add] Sorting for Procedures
 - [GraphQL] add Query: getProceduresById
 
 ### 0.1.12
