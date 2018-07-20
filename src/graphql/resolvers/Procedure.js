@@ -11,11 +11,19 @@ export default {
     procedures: async (
       parent,
       {
-        type, offset = 0, pageSize = 99, sort = 'lastUpdateDate',
+        type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
       },
       { ProcedureModel },
     ) => {
       let currentStates = [];
+
+      const filterQuery = {};
+      if (filter.type && filter.type.length > 0) {
+        filterQuery.type = { $in: filter.type };
+      }
+      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
 
       let sortQuery = {};
       switch (type) {
@@ -54,6 +62,7 @@ export default {
           currentStatus: { $in: currentStates },
           period,
           voteDate: { $not: { $type: 'date' } },
+          ...filterQuery,
         })
           .sort(sortQuery)
           .limit(pageSize)
@@ -68,6 +77,7 @@ export default {
             { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
             { voteDate: { $not: { $type: 'date' } } },
           ],
+          ...filterQuery,
         })
           .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
           .skip(offset)
@@ -105,6 +115,7 @@ export default {
               },
             ],
             period,
+            ...filterQuery,
           },
         },
         {
@@ -131,6 +142,7 @@ export default {
             },
           ],
           period,
+          ...filterQuery,
         }).count();
 
         pastVotings = await ProcedureModel.find({
@@ -139,6 +151,7 @@ export default {
             { currentStatus: { $in: procedureStates.COMPLETED } },
           ],
           period,
+          ...filterQuery,
         })
           .sort(sortQuery)
           .skip(Math.max(offset - activeVotingsCount, 0))
