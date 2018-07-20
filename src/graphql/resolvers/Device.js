@@ -24,7 +24,7 @@ export default {
       const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
       if (newPhoneHash === oldPhoneHash) {
         return {
-          reason: 'newPhoneHash === oldPhoneHash',
+          reason: 'newPhoneHash equals oldPhoneHash',
           succeeded: false,
         };
       }
@@ -34,7 +34,7 @@ export default {
         (oldPhoneHash && !phone) ||
         (phone && phone.phoneHash !== oldPhoneHash)) {
         return {
-          reason: 'oldPhoneHash !== phone.phoneHash',
+          reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
         };
       }
@@ -93,7 +93,7 @@ export default {
       // Code valid?
       if (!verification) {
         return {
-          reason: 'Invalid Code or Code expired.',
+          reason: 'Invalid Code or Code expired',
           succeeded: false,
         };
       }

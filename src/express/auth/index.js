@@ -92,13 +92,16 @@ export const auth = async (req, res, next) => {
       }
       // Set new timestamps
       if (req.user) {
-        req.user.update();
+        req.user.markModified('updatedAt');
+        req.user.save();
       }
       if (req.device) {
-        req.device.update();
+        req.device.markModified('updatedAt');
+        req.device.save();
       }
       if (req.phone) {
-        req.phone.update();
+        req.phone.markModified('updatedAt');
+        req.phone.save();
       }
       success = true;
       console.log(`JWT: Token valid: ${token}`);
@@ -117,13 +120,16 @@ export const auth = async (req, res, next) => {
         }
         // Set new timestamps
         if (req.user) {
-          req.user.update();
+          req.user.markModified('updatedAt');
+          req.user.save();
         }
         if (req.device) {
-          req.device.update();
+          req.device.markModified('updatedAt');
+          req.device.save();
         }
         if (req.phone) {
-          req.phone.update();
+          req.phone.markModified('updatedAt');
+          req.phone.save();
         }
         success = true;
         console.log(`JWT: Token Refresh (t): ${newTokens.token}`);
@@ -165,13 +171,16 @@ export const auth = async (req, res, next) => {
     req.phone = phone;
     // Set new timestamps
     if (req.user) {
-      req.user.update();
+      req.user.markModified('updatedAt');
+      req.user.save();
     }
     if (req.device) {
-      req.device.update();
+      req.device.markModified('updatedAt');
+      req.device.save();
     }
     if (req.phone) {
-      req.phone.update();
+      req.phone.markModified('updatedAt');
+      req.phone.save();
     }
     console.log(`JWT: Token New (t): ${createToken}`);
     console.log(`JWT: Token New (r): ${createRefreshToken}`);
