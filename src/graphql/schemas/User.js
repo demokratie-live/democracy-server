@@ -1,7 +1,6 @@
 export default `
   type User {
     _id: String!
-    device: Device!
     verified: Boolean!
   }
   

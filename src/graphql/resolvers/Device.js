@@ -93,7 +93,7 @@ export default {
       let verificationPhone = PhoneModel.fineOne({ phoneHash: newPhoneHash });
       if (!verificationPhone) {
         return {
-          reason: 'Could not find newPhone',
+          reason: 'Could not find newPhoneHash',
           succeeded: false,
         };
       }

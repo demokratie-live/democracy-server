@@ -137,7 +137,7 @@ export const auth = async (req, res, next) => {
   }
   // Login
   if (!success) {
-    console.log('JWT: Autologin (Token Error or Credentials present)');
+    console.log('JWT: Token Error or Credentials present');
     let user = null;
     let device = null;
     let phone = null;
