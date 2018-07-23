@@ -17,14 +17,6 @@ const DeviceSchema = new Schema(
       procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
       tags: [],
     },
-    verifications: [
-      {
-        newPhoneHash: { type: String, required: true },
-        oldPhoneHash: String,
-        code: { type: String, required: true },
-        expires: { type: Date, required: true },
-      },
-    ],
   },
   { timestamps: true },
 );

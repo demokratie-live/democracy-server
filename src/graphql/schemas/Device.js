@@ -34,7 +34,7 @@ export default `
 
   type Mutation {
     requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
-    requestVerification(code: String!, newUser: Boolean): VerificationResult
+    requestVerification(code: String!, newPhoneHash: String!, newUser: Boolean): VerificationResult
 
     addToken(token: String!, os: String!): TokenResult
     

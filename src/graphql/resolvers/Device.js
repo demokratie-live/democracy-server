@@ -39,9 +39,14 @@ export default {
         };
       }
 
+      let verificationPhone = PhoneModel.fineOne({ phoneHash: newPhoneHash });
+      if (!verificationPhone) {
+        verificationPhone = new PhoneModel({ phoneHash: newPhoneHash });
+      }
+
       const now = new Date();
       // Check if there is still a valid Code
-      const activeCode = device.verifications.find(({ expires }) => now < expires);
+      const activeCode = verificationPhone.verifications.find(({ expires }) => now < expires);
       if (activeCode) {
         return {
           reason: 'Valid Code still present',
@@ -57,24 +62,23 @@ export default {
       // Send SMS
       // We should send the SMS here and return false if we dont succeed
 
-      // Expiretime: 10 Minutes
-      const expires = new Date(now.getTime() + CONSTANTS.SMS_VERIFICATION_CODE_TTL);
-      device.verifications.push({
-        newPhoneHash,
-        oldPhoneHash,
-        code,
-        expires,
-      });
-      device.save();
-
       // Allow to create new user based on last usage
       let allowNewUser = false;
-      const existingPhone = await PhoneModel.findOne({ phoneHash: newPhoneHash });
-      if (existingPhone && existingPhone.updatedAt < (
+      if (!oldPhoneHash && verificationPhone.updatedAt < (
         new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
         // Older then 6 Months
         allowNewUser = true;
       }
+
+      // Expiretime: 10 Minutes
+      const expires = new Date(now.getTime() + CONSTANTS.SMS_VERIFICATION_CODE_TTL);
+      verificationPhone.verifications.push({
+        deviceHash: device.deviceHash,
+        oldPhoneHash,
+        code,
+        expires,
+      });
+      await verificationPhone.save();
 
       return {
         allowNewUser,
@@ -82,12 +86,21 @@ export default {
       };
     }),
 
-    requestVerification: isLoggedin.createResolver(async (parent, { code, newUser }, {
+    requestVerification: isLoggedin.createResolver(async (parent, { code, newPhoneHash, newUser }, {
       res, user, device, phone, UserModel, PhoneModel,
     }) => {
+      // Find new Phone
+      let verificationPhone = PhoneModel.fineOne({ phoneHash: newPhoneHash });
+      if (!verificationPhone) {
+        return {
+          reason: 'Could not find newPhone',
+          succeeded: false,
+        };
+      }
+
       // Find Code
       const now = new Date();
-      const verification = device.verifications.find(({ code: dbCode, expires }) =>
+      const verification = verificationPhone.verifications.find(({ code: dbCode, expires }) =>
         now < expires && code === dbCode);
 
       // Code valid?
@@ -98,14 +111,13 @@ export default {
         };
       }
 
-      // Invalidate Code
-      device.verifications = device.verifications.map((obj) => {
-        if (obj._id === verification._id) {
-          obj.expires = now;
-        }
-        return obj;
-      });
-      device.save();
+      // Check device
+      if (device.deviceHash !== verification.deviceHash) {
+        return {
+          reason: 'Code requested from another Device',
+          succeeded: false,
+        };
+      }
 
       // User has phoneHash, but no oldPhoneHash?
       if ((phone && phone.phoneHash && !verification.oldPhoneHash) ||
@@ -116,42 +128,47 @@ export default {
         };
       }
 
-      // Find or create Phone
-      let newPhone = await PhoneModel.findOne({ phoneHash: verification.newPhoneHash });
-      if (!newPhone) {
-        if (verification.oldPhoneHash) {
-          newPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
-          newPhone.phoneHash = verification.newPhoneHash;
-          await newPhone.save();
-        } else {
-          // Create Phone
-          newPhone = new PhoneModel({ phoneHash: verification.newPhoneHash });
-          await newPhone.save();
+      // Invalidate Code
+      verificationPhone.verifications = verificationPhone.verifications.map((obj) => {
+        if (obj._id === verification._id) {
+          obj.expires = now;
         }
-      } else if (newUser && newPhone.updatedAt < (
+        return obj;
+      });
+
+      // NewUser?
+      if (newUser && verificationPhone.updatedAt < (
         new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
         // Allow new User - Invalidate oldPhone
-        newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
-        await newPhone.save();
+        verificationPhone.phoneHash = `Invalidated at '${now}': ${verificationPhone.phoneHash}`;
+        await verificationPhone.save();
         // Create Phone
-        newPhone = new PhoneModel({ phoneHash: verification.newPhoneHash });
-        await newPhone.save();
+        verificationPhone = new PhoneModel({ phoneHash: verification.newPhoneHash });
+      } else if (verification.oldPhoneHash) {
+        // Old Phone
+        verificationPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
+        verificationPhone.phoneHash = verification.newPhoneHash;
       }
+      await verificationPhone.save();
 
       // Delete Existing User
-      await UserModel.deleteOne({ device: device._id, phone: newPhone._id });
+      await UserModel.deleteOne({ device: device._id, phone: verificationPhone._id });
 
       // Unverify all of the same device or phone
       await UserModel.update(
-        { $or: [{ device: device._id }, { phone: newPhone._id }] },
+        { $or: [{ device: device._id }, { phone: verificationPhone._id }] },
         { verified: false },
         { multi: true },
       );
 
       // Create new User and update session User
-      user = await UserModel.create({ device: device._id, phone: newPhone._id, verified: true });
+      user = await UserModel.create({
+        device: device._id,
+        phone: verificationPhone._id,
+        verified: true,
+      });
       // This should not be necessary since the call ends here - but you never know
-      phone = newPhone;
+      phone = verificationPhone;
 
       // Send new tokens since user id has been changed
       const [token, refreshToken] = await createTokens(user._id);
@@ -165,7 +182,7 @@ export default {
     addToken: isLoggedin.createResolver(async (parent, { token, os }, { device }) => {
       if (!device.pushTokens.some(t => t.token === token)) {
         device.pushTokens.push({ token, os });
-        device.save();
+        await device.save();
       }
       return {
         succeeded: true,
