@@ -46,10 +46,12 @@ const refreshTokens = async (refreshToken) => {
   // Validate UserData if an old User was set
   const user = await UserModel.findOne({ _id: userid });
 
-  userid = user ? user._id : null;
-  console.log(`JWT: Token Refresh for User: ${userid}`);
+  if (!user) {
+    return {};
+  }
+  console.log(`JWT: Token Refresh for User: ${user._id}`);
   // Generate new Tokens
-  const [newToken, newRefreshToken] = await createTokens(userid);
+  const [newToken, newRefreshToken] = await createTokens(user._id);
   return {
     token: newToken,
     refreshToken: newRefreshToken,
@@ -89,19 +91,17 @@ export const auth = async (req, res, next) => {
       if (req.user) {
         req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
         req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
-      }
-      // Set new timestamps
-      if (req.user) {
+        // Set new timestamps
         req.user.markModified('updatedAt');
         req.user.save();
-      }
-      if (req.device) {
-        req.device.markModified('updatedAt');
-        req.device.save();
-      }
-      if (req.phone) {
-        req.phone.markModified('updatedAt');
-        req.phone.save();
+        if (req.device) {
+          req.device.markModified('updatedAt');
+          req.device.save();
+        }
+        if (req.phone) {
+          req.phone.markModified('updatedAt');
+          req.phone.save();
+        }
       }
       success = true;
       console.log(`JWT: Token valid: ${token}`);
@@ -117,19 +117,17 @@ export const auth = async (req, res, next) => {
         if (req.user) {
           req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
           req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
-        }
-        // Set new timestamps
-        if (req.user) {
+          // Set new timestamps
           req.user.markModified('updatedAt');
           req.user.save();
-        }
-        if (req.device) {
-          req.device.markModified('updatedAt');
-          req.device.save();
-        }
-        if (req.phone) {
-          req.phone.markModified('updatedAt');
-          req.phone.save();
+          if (req.device) {
+            req.device.markModified('updatedAt');
+            req.device.save();
+          }
+          if (req.phone) {
+            req.phone.markModified('updatedAt');
+            req.phone.save();
+          }
         }
         success = true;
         console.log(`JWT: Token Refresh (t): ${newTokens.token}`);
@@ -160,30 +158,25 @@ export const auth = async (req, res, next) => {
         user = new UserModel({ device, phone });
         user.save();
       }
+      console.log(`JWT: Token New for User: ${user._id}`);
+      const [createToken, createRefreshToken] = await createTokens(user._id);
+      headerToken({ res, token: createToken, refreshToken: createRefreshToken });
+      // Set new timestamps
+      user.markModified('updatedAt');
+      user.save();
+      device.markModified('updatedAt');
+      device.save();
+      if (phone) {
+        phone.markModified('updatedAt');
+        phone.save();
+      }
+      console.log(`JWT: Token New (t): ${createToken}`);
+      console.log(`JWT: Token New (r): ${createRefreshToken}`);
     }
-    const userid = user ? user._id : null;
-    console.log(`JWT: Token New for User: ${userid}`);
-    const [createToken, createRefreshToken] = await createTokens(userid);
-    headerToken({ res, token: createToken, refreshToken: createRefreshToken });
     // Set request variables
     req.user = user;
     req.device = device;
     req.phone = phone;
-    // Set new timestamps
-    if (req.user) {
-      req.user.markModified('updatedAt');
-      req.user.save();
-    }
-    if (req.device) {
-      req.device.markModified('updatedAt');
-      req.device.save();
-    }
-    if (req.phone) {
-      req.phone.markModified('updatedAt');
-      req.phone.save();
-    }
-    console.log(`JWT: Token New (t): ${createToken}`);
-    console.log(`JWT: Token New (r): ${createRefreshToken}`);
   }
   next();
 };
