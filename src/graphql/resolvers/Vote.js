@@ -83,7 +83,7 @@ export default {
         vote = await VoteModel.create({ procedure, state });
       }
       const hasVoted = vote.voters.some(({ kind, object }) =>
-        kind.equals(CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') && object.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
+        kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') && object.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
         const voteUpdate = {
           $push: {

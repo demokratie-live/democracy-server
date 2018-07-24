@@ -57,17 +57,17 @@ export default {
       }
 
       // Genrate Code
-      const min = 10000;
-      const max = 99999;
+      const min = 100000;
+      const max = 999999;
       const code = Math.floor(Math.random() * (max - min + 1)) + min; // eslint-disable-line
 
       // Send SMS
       // We should send the SMS here and return false if we dont succeed
 
       // Allow to create new user based on last usage
-      const verificationPhone = PhoneModel.findOne({ phoneHash: newPhoneHash });
-      let allowNewUser = false;
-      if (!verificationPhone || verificationPhone.updatedAt < (
+      const verificationPhone = await PhoneModel.findOne({ phoneHash: newPhoneHash });
+      let allowNewUser = false; // Is only set if there was a user registered
+      if (verificationPhone && verificationPhone.updatedAt < (
         new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
         // Older then 6 Months
         allowNewUser = true;
@@ -154,11 +154,15 @@ export default {
       // oldPhoneHash and no newPhone
       if (verification.oldPhoneHash && !newPhone) {
         // Todo: Can fail?
-        newPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
-        newPhone.phoneHash = newPhoneHash;
-        await newPhone.save();
+        const oldPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
+        // We found an old phone and no new User is requested
+        if (oldPhone && (!newUser || oldPhone.updatedAt >= (
+          new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
+          newPhone = oldPhone;
+          newPhone.phoneHash = newPhoneHash;
+          await newPhone.save();
+        }
       }
-      // TODO: oldPhoneHash and newPhone - current solution: use newPhone
 
       // Still no newPhone?
       if (!newPhone) {
