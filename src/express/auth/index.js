@@ -163,12 +163,12 @@ export const auth = async (req, res, next) => {
       headerToken({ res, token: createToken, refreshToken: createRefreshToken });
       // Set new timestamps
       user.markModified('updatedAt');
-      user.save();
+      await user.save();
       device.markModified('updatedAt');
-      device.save();
+      await device.save();
       if (phone) {
         phone.markModified('updatedAt');
-        phone.save();
+        await phone.save();
       }
       console.log(`JWT: Token New (t): ${createToken}`);
       console.log(`JWT: Token New (r): ${createRefreshToken}`);

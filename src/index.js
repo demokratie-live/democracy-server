@@ -27,6 +27,7 @@ import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
 import DeviceModel from './models/Device';
 import PhoneModel from './models/Phone';
+import VerificationModel from './models/Verification';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
 import PushNotifiactionModel from './models/PushNotifiaction';
@@ -84,6 +85,7 @@ app.use(constants.GRAPHQL_PATH, (req, res, next) => {
       UserModel,
       DeviceModel,
       PhoneModel,
+      VerificationModel,
       ActivityModel,
       VoteModel,
       PushNotifiactionModel,
