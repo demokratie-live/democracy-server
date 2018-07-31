@@ -1,5 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import CONSTANTS from '../../config/constants';
 import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
@@ -81,7 +82,7 @@ export const auth = async (req, res, next) => {
 
   let success = false;
   // Check existing JWT Session
-  // If Credentials are also present use them
+  // If Credentials are also present use them instead
   if (token && !deviceHash) {
     console.log(`JWT: Token: ${token}`);
     try {
@@ -143,20 +144,26 @@ export const auth = async (req, res, next) => {
     let phone = null;
     if (deviceHash) {
       // User
-      device = await DeviceModel.findOne({ deviceHash });
-      phone = phoneHash ? await PhoneModel.findOne({ phoneHash }) : null;
+      device = await DeviceModel.findOne({
+        deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+      });
+      phone = phoneHash ? await PhoneModel.findOne({
+        phoneHash: bcrypt.hashSync(phoneHash, CONSTANTS.BCRYPT_SALT),
+      }) : null;
       user = await UserModel.findOne({ device, phone });
       if (!user) {
         console.log('JWT: Create new User');
         // Device
         if (!device) {
-          device = new DeviceModel({ deviceHash });
-          device.save();
+          device = new DeviceModel({
+            deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+          });
+          await device.save();
         }
 
         // Create user
         user = new UserModel({ device, phone });
-        user.save();
+        await user.save();
       }
       console.log(`JWT: Token New for User: ${user._id}`);
       const [createToken, createRefreshToken] = await createTokens(user._id);

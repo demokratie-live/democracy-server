@@ -3,6 +3,7 @@
 
 import _ from 'lodash';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import CONSTANTS from '../../config/constants';
 import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
@@ -33,16 +34,20 @@ export default {
       // Check for valid oldPhoneHash
       if ((oldPhoneHash && !user.isVerified()) ||
         (oldPhoneHash && !phone) ||
-        (phone && phone.phoneHash !== oldPhoneHash)) {
+        (phone && phone.phoneHash !== bcrypt.hashSync(oldPhoneHash, CONSTANTS.BCRYPT_SALT))) {
         return {
           reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
         };
       }
 
-      let verification = await VerificationModel.findOne({ phoneHash: newPhoneHash });
+      let verification = await VerificationModel.findOne({
+        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+      });
       if (!verification) {
-        verification = new VerificationModel({ phoneHash: newPhoneHash });
+        verification = new VerificationModel({
+          phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        });
         await verification.save();
       }
 
@@ -65,7 +70,9 @@ export default {
       // We should send the SMS here and return false if we dont succeed
 
       // Allow to create new user based on last usage
-      const verificationPhone = await PhoneModel.findOne({ phoneHash: newPhoneHash });
+      const verificationPhone = await PhoneModel.findOne({
+        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+      });
       let allowNewUser = false; // Is only set if there was a user registered
       if (verificationPhone && verificationPhone.updatedAt < (
         new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
@@ -77,7 +84,7 @@ export default {
       const expires = new Date(now.getTime() + CONSTANTS.SMS_VERIFICATION_CODE_TTL);
       verification.verifications.push({
         deviceHash: device.deviceHash,
-        oldPhoneHash,
+        oldPhoneHash: bcrypt.hashSync(oldPhoneHash, CONSTANTS.BCRYPT_SALT),
         code,
         expires,
       });
@@ -93,7 +100,9 @@ export default {
       res, user, device, phone, UserModel, PhoneModel, VerificationModel,
     }) => {
       // Find Verification
-      const verifications = await VerificationModel.findOne({ phoneHash: newPhoneHash });
+      const verifications = await VerificationModel.findOne({
+        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+      });
       if (!verifications) {
         return {
           reason: 'Could not find verification request',
@@ -141,7 +150,9 @@ export default {
       await verifications.save();
 
       // New Phone
-      let newPhone = await PhoneModel.findOne({ phoneHash: newPhoneHash });
+      let newPhone = await PhoneModel.findOne({
+        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+      });
       // Phone exists & New User?
       if (newPhone && newUser && newPhone.updatedAt < (
         new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
@@ -153,7 +164,7 @@ export default {
 
       // oldPhoneHash and no newPhone
       if (verification.oldPhoneHash && !newPhone) {
-        // Todo: Can fail?
+        // Find old Phone
         const oldPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
         // We found an old phone and no new User is requested
         if (oldPhone && (!newUser || oldPhone.updatedAt >= (
@@ -167,7 +178,9 @@ export default {
       // Still no newPhone?
       if (!newPhone) {
         // Create Phone
-        newPhone = new PhoneModel({ phoneHash: newPhoneHash });
+        newPhone = new PhoneModel({
+          phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        });
         await newPhone.save();
       }
 

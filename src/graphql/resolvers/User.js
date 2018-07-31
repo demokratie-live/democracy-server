@@ -1,5 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import RSAKey from 'react-native-rsa';
+import bcrypt from 'bcrypt';
 
 import { createTokens, headerToken } from '../../express/auth';
 /* import { isLoggedin } from '../../express/auth/permissions'; */
@@ -28,36 +29,24 @@ export default {
       if (!deviceHash) {
         throw new Error('invalid deviceHash');
       }
-      let user;
-      user = await UserModel.findOne({ deviceHash });
+
+      let device = await DeviceModel.findOne({
+        deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+      });
+      if (!device) {
+        device = await DeviceModel.create({
+          deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+        });
+      }
+
+      let user = await UserModel.findOne({ device });
       if (!user) {
-        user = await UserModel.create({ deviceHash });
-
-        const device = await DeviceModel.findOne({ deviceHash });
-
-        if (!device) {
-          await DeviceModel.create({ deviceHash });
-        }
+        user = await UserModel.create({ device });
       }
 
       const [token, refreshToken] = await createTokens(user._id);
       headerToken({ res, token, refreshToken });
       return { token };
     },
-
-    /* Was never used?!
-    signIn: async (parent, { deviceHashEncrypted }, { res, UserModel }) => {
-      if (!CONSTANTS.JWT_BACKWARD_COMPATIBILITY) {
-        return null;
-      }
-      const user = await UserModel.findOne({ deviceHashEncrypted });
-      if (!user) {
-        throw new Error('User does not exsit!');
-      }
-
-      const [token, refreshToken] = await createTokens(user._id);
-      headerToken(res, token, refreshToken);
-      return { token };
-    }, */
   },
 };
