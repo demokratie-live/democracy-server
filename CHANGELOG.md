@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.13
+
+- [Fix] add internal lane topic for push notifications
+
 ### 0.1.12
 
 - [Changed] scrape bt-agenda `Überwiesen` show time
