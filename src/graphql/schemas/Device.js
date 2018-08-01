@@ -12,11 +12,13 @@ export default `
     reason: String
     allowNewUser: Boolean
     succeeded: Boolean!
+    resendTime: Int
   }
 
   type ReCodeResult {
     reason: String
     succeeded: Boolean!
+    resendTime: Int
   }
 
   type VerificationResult {
