@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import CONSTANTS from '../../config/constants';
 import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
@@ -145,10 +145,10 @@ export const auth = async (req, res, next) => {
     if (deviceHash) {
       // User
       device = await DeviceModel.findOne({
-        deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
       });
       phone = phoneHash ? await PhoneModel.findOne({
-        phoneHash: bcrypt.hashSync(phoneHash, CONSTANTS.BCRYPT_SALT),
+        phoneHash: crypto.createHash('sha256').update(phoneHash).digest('hex'),
       }) : null;
       user = await UserModel.findOne({ device, phone });
       if (!user) {
@@ -156,7 +156,7 @@ export const auth = async (req, res, next) => {
         // Device
         if (!device) {
           device = new DeviceModel({
-            deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+            deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
           });
           await device.save();
         }

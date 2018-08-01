@@ -10,7 +10,7 @@ import { CronJob } from 'cron';
 import cookieParser from 'cookie-parser';
 
 import './config/db';
-import constants from './config/constants';
+import CONSTANTS from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
 
@@ -35,7 +35,7 @@ import SearchTermModel from './models/SearchTerms';
 import { isDataSource } from './express/auth/permissions';
 
 const app = express();
-if (constants.DEBUG) {
+if (CONSTANTS.DEBUG) {
   app.use(cookieParser());
 }
 
@@ -45,10 +45,10 @@ const schema = makeExecutableSchema({
 });
 
 // Apollo Engine
-if (constants.ENGINE_API_KEY) {
+if (CONSTANTS.ENGINE_API_KEY) {
   const engine = new Engine({
-    engineConfig: { apiKey: constants.ENGINE_API_KEY },
-    graphqlPort: constants.PORT,
+    engineConfig: { apiKey: CONSTANTS.ENGINE_API_KEY },
+    graphqlPort: CONSTANTS.PORT,
   });
   engine.start();
   app.use(engine.expressMiddleware());
@@ -60,17 +60,17 @@ app.use(bodyParser.json());
 app.use(auth);
 
 // Graphiql
-if (constants.GRAPHIQL) {
+if (CONSTANTS.GRAPHIQL) {
   app.use(
-    constants.GRAPHIQL_PATH,
+    CONSTANTS.GRAPHIQL_PATH,
     graphiqlExpress({
-      endpointURL: constants.GRAPHQL_PATH,
+      endpointURL: CONSTANTS.GRAPHQL_PATH,
     }),
   );
 }
 
 // Graphql
-app.use(constants.GRAPHQL_PATH, (req, res, next) => {
+app.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
   graphqlExpress({
     schema,
     context: {
@@ -103,7 +103,7 @@ app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate))
 app.post('/webhooks/bundestagio/updateProcedures', isDataSource.createResolver(BIOupdateProcedures));
 
 // Debug
-if (constants.DEBUG) {
+if (CONSTANTS.DEBUG) {
   // Push Notification test
   app.get('/push-test', debugPushNotifications);
   // Bundestag.io Import All
@@ -111,11 +111,11 @@ if (constants.DEBUG) {
 }
 
 const graphqlServer = createServer(app);
-graphqlServer.listen(constants.PORT, (err) => {
+graphqlServer.listen(CONSTANTS.PORT, (err) => {
   if (err) {
     console.error(err);
   } else {
-    console.log(`App is listen on port: ${constants.PORT}`);
+    console.log(`App is listen on port: ${CONSTANTS.PORT}`);
 
     const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
 

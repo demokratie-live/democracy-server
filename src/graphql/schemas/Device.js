@@ -14,6 +14,11 @@ export default `
     succeeded: Boolean!
   }
 
+  type ReCodeResult {
+    reason: String
+    succeeded: Boolean!
+  }
+
   type VerificationResult {
     reason: String
     succeeded: Boolean!
@@ -34,6 +39,7 @@ export default `
 
   type Mutation {
     requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
+    resendCode(newPhone: String!): ReCodeResult
     requestVerification(code: String!, newPhoneHash: String!, newUser: Boolean): VerificationResult
 
     addToken(token: String!, os: String!): TokenResult

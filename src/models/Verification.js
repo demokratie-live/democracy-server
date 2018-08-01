@@ -7,8 +7,16 @@ const VerificationSchema = new Schema(
       {
         deviceHash: String,
         oldPhoneHash: String,
-        code: { type: String, required: true },
+        codes: [
+          {
+            code: { type: String, required: true },
+            time: { type: Date, required: true },
+            SMSID: { type: String, default: null },
+          },
+        ],
+        SMSStatus: { type: Number },
         expires: { type: Date, required: true },
+
       },
     ],
   },

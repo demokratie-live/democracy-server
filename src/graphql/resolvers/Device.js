@@ -1,12 +1,23 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 /* eslint no-param-reassign: 0 */
 
+import ms from 'ms';
 import _ from 'lodash';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
 import CONSTANTS from '../../config/constants';
 import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
+import { sendSMS, statusSMS } from '../../services/sms';
+
+/* const correctPhone = (phone) => {
+  // correct newPhone: removed leading zero
+  if (phone.charAt(0) === '0') {
+    phone = phone.substr(1);
+  }
+  // correct newPhone: add 0049
+  phone = `0049${phone}`;
+  return phone;
+}; */
 
 export default {
   Query: {
@@ -15,6 +26,9 @@ export default {
   },
 
   Mutation: {
+    // ************
+    // REQUEST CODE
+    // ************
     requestCode: isLoggedin.createResolver(async (parent, { newPhone, oldPhoneHash }, {
       user,
       device,
@@ -22,8 +36,20 @@ export default {
       PhoneModel,
       VerificationModel,
     }) => {
+      // check newPhone prefix & length, 4 prefix, min. length 10
+      if (newPhone.substr(0, 4) !== '0049' || newPhone.length < 14) {
+        return {
+          reason: 'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
+          succeeded: false,
+        };
+      }
+
       // Check for invalid transfere
       const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
+      console.log(newPhoneHash);
+      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
+      const oldPhoneDBHash = oldPhoneHash ?
+        crypto.createHash('sha256').update(oldPhoneHash).digest('hex') : null;
       if (newPhoneHash === oldPhoneHash) {
         return {
           reason: 'newPhoneHash equals oldPhoneHash',
@@ -34,7 +60,7 @@ export default {
       // Check for valid oldPhoneHash
       if ((oldPhoneHash && !user.isVerified()) ||
         (oldPhoneHash && !phone) ||
-        (phone && phone.phoneHash !== bcrypt.hashSync(oldPhoneHash, CONSTANTS.BCRYPT_SALT))) {
+        (phone && phone.phoneHash !== oldPhoneDBHash)) {
         return {
           reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
@@ -42,13 +68,12 @@ export default {
       }
 
       let verification = await VerificationModel.findOne({
-        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        phoneHash: newPhoneDBHash,
       });
       if (!verification) {
         verification = new VerificationModel({
-          phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+          phoneHash: newPhoneDBHash,
         });
-        await verification.save();
       }
 
       const now = new Date();
@@ -67,28 +92,37 @@ export default {
       const code = Math.floor(Math.random() * (max - min + 1)) + min; // eslint-disable-line
 
       // Send SMS
-      // We should send the SMS here and return false if we dont succeed
+      const { status, SMSID } = await sendSMS(newPhone, code);
 
       // Allow to create new user based on last usage
       const verificationPhone = await PhoneModel.findOne({
-        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        phoneHash: newPhoneDBHash,
       });
       let allowNewUser = false; // Is only set if there was a user registered
       if (verificationPhone && verificationPhone.updatedAt < (
-        new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
+        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
         // Older then 6 Months
         allowNewUser = true;
       }
 
-      // Expiretime: 10 Minutes
-      const expires = new Date(now.getTime() + CONSTANTS.SMS_VERIFICATION_CODE_TTL);
+      // Code expiretime
+      const expires = new Date(now.getTime() + ms(CONSTANTS.SMS_VERIFICATION_CODE_TTL));
       verification.verifications.push({
         deviceHash: device.deviceHash,
-        oldPhoneHash: bcrypt.hashSync(oldPhoneHash, CONSTANTS.BCRYPT_SALT),
-        code,
+        oldPhoneHash: oldPhoneDBHash,
+        codes: [{ code, time: now, SMSID }],
         expires,
       });
       await verification.save();
+
+      // Check Status here to make sure the Verification request is saved
+      console.log(status);
+      if (!status) {
+        return {
+          reason: 'Could not send SMS to given newPhone',
+          succeeded: false,
+        };
+      }
 
       return {
         allowNewUser,
@@ -96,12 +130,106 @@ export default {
       };
     }),
 
+    // ***********
+    // RESEND CODE
+    // ***********
+    resendCode: isLoggedin.createResolver(async (parent, { newPhone }, {
+      VerificationModel,
+    }) => {
+      // check newPhone prefix & length, 4 prefix, min. length 10
+      if (newPhone.substr(0, 4) !== '0049' || newPhone.length < 14) {
+        return {
+          reason: 'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
+          succeeded: false,
+        };
+      }
+
+      const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
+      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
+
+      const verification = await VerificationModel.findOne({
+        phoneHash: newPhoneDBHash,
+      });
+      if (!verification) {
+        return {
+          reason: 'Could not find verification request',
+          succeeded: false,
+        };
+      }
+
+      const now = new Date();
+      // Check if there is still a valid Code
+      const activeCode = verification.verifications.find(({ expires }) => now < expires);
+      if (!activeCode) {
+        return {
+          reason: 'Could not find existing valid Code',
+          succeeded: false,
+        };
+      }
+
+      // Find Code Count & latest Code Time
+      const codesCount = activeCode.codes.length;
+      const latestCode = activeCode.codes.reduce((max, p) =>
+        (p.time > max.time ? p : max), activeCode.codes[0]);
+
+      // Check code time
+      if ((latestCode.time.getTime() +
+        ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) >=
+        now.getTime()) {
+        return {
+          reason: 'You have to wait till you can request another Code',
+          succeeded: false,
+        };
+      }
+
+      // Validate that the Number has recieved the Code
+      // const latestCode = activeCode.codes.find(({ time }) => new Date(time) === latestCodeTime);
+      const smsstatus = await statusSMS(latestCode.SMSID);
+      if (!smsstatus) {
+        return {
+          reason: 'Your number seems incorrect, please correct it!',
+          succeeded: false,
+        };
+      }
+
+      // Genrate Code
+      const min = 100000;
+      const max = 999999;
+      const code = Math.floor(Math.random() * (max - min + 1)) + min; // eslint-disable-line
+
+      // Send SMS
+      const { status, SMSID } = await sendSMS(newPhone, code);
+
+      activeCode.codes.push({
+        code,
+        time: now,
+        SMSID,
+      });
+      verification.save();
+
+      // Check Status here to make sure the Verification request is saved
+      if (!status) {
+        return {
+          reason: 'Could not send SMS to given newPhone',
+          succeeded: false,
+        };
+      }
+
+      return {
+        succeeded: true,
+      };
+    }),
+
+    // ********************
+    // REQUEST VERIFICATION
+    // ********************
     requestVerification: isLoggedin.createResolver(async (parent, { code, newPhoneHash, newUser }, {
       res, user, device, phone, UserModel, PhoneModel, VerificationModel,
     }) => {
+      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
       // Find Verification
       const verifications = await VerificationModel.findOne({
-        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        phoneHash: newPhoneDBHash,
       });
       if (!verifications) {
         return {
@@ -112,8 +240,8 @@ export default {
 
       // Find Code
       const now = new Date();
-      const verification = verifications.verifications.find(({ code: dbCode, expires }) =>
-        now < expires && code === dbCode);
+      const verification = verifications.verifications.find(({ expires, codes }) =>
+        now < expires && codes.find(({ code: dbCode }) => code === dbCode));
 
       // Code valid?
       if (!verification) {
@@ -151,11 +279,11 @@ export default {
 
       // New Phone
       let newPhone = await PhoneModel.findOne({
-        phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+        phoneHash: newPhoneDBHash,
       });
       // Phone exists & New User?
       if (newPhone && newUser && newPhone.updatedAt < (
-        new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))) {
+        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
         // Allow new User - Invalidate newPhone
         newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
         await newPhone.save();
@@ -168,7 +296,7 @@ export default {
         const oldPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
         // We found an old phone and no new User is requested
         if (oldPhone && (!newUser || oldPhone.updatedAt >= (
-          new Date(now.getTime() - CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
+          new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))))) {
           newPhone = oldPhone;
           newPhone.phoneHash = newPhoneHash;
           await newPhone.save();
@@ -179,7 +307,7 @@ export default {
       if (!newPhone) {
         // Create Phone
         newPhone = new PhoneModel({
-          phoneHash: bcrypt.hashSync(newPhoneHash, CONSTANTS.BCRYPT_SALT),
+          phoneHash: newPhoneDBHash,
         });
         await newPhone.save();
       }
