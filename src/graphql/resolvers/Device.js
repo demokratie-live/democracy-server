@@ -36,6 +36,14 @@ export default {
       PhoneModel,
       VerificationModel,
     }) => {
+      // Check for SMS Verification
+      if (!CONSTANTS.SMS_VERIFICATION) {
+        return {
+          reason: 'SMS Verification is disabled!',
+          succeeded: false,
+        };
+      }
+
       // check newPhone prefix & length, 4 prefix, min. length 10
       if (newPhone.substr(0, 4) !== '0049' || newPhone.length < 14) {
         return {
@@ -186,6 +194,14 @@ export default {
     requestVerification: isLoggedin.createResolver(async (parent, { code, newPhoneHash, newUser }, {
       res, user, device, phone, UserModel, PhoneModel, VerificationModel,
     }) => {
+      // Check for SMS Verification
+      if (!CONSTANTS.SMS_VERIFICATION) {
+        return {
+          reason: 'SMS Verification is disabled!',
+          succeeded: false,
+        };
+      }
+
       const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
       // Find Verification
       const verifications = await VerificationModel.findOne({
