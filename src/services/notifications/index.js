@@ -40,9 +40,13 @@ const sendNotifications = ({
 
           note.payload = payload;
 
-          apnProvider.send(note, token).then((result) => {
-            console.log('apnProvider.send', util.inspect(result, false, null));
-          });
+          if (apnProvider) {
+            apnProvider.send(note, token).then((result) => {
+              console.log('apnProvider.send', util.inspect(result, false, null));
+            });
+          } else {
+            console.log('ERROR: apnProvider not present');
+          }
         }
         break;
 
@@ -239,9 +243,13 @@ export default async ({
 
             note.payload = payload;
 
-            apnProvider.send(note, token).then((result) => {
-              console.log('apnProvider.send', util.inspect(result, false, null));
-            });
+            if (apnProvider) {
+              apnProvider.send(note, token).then((result) => {
+                console.log('apnProvider.send', util.inspect(result, false, null));
+              });
+            } else {
+              console.log('ERROR: apnProvider not present');
+            }
           }
           break;
 
