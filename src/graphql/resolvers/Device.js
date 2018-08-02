@@ -9,16 +9,6 @@ import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
 import { sendSMS, statusSMS } from '../../services/sms';
 
-/* const correctPhone = (phone) => {
-  // correct newPhone: removed leading zero
-  if (phone.charAt(0) === '0') {
-    phone = phone.substr(1);
-  }
-  // correct newPhone: add 0049
-  phone = `0049${phone}`;
-  return phone;
-}; */
-
 export default {
   Query: {
     notificationSettings: isLoggedin.createResolver(async (parent, args, { device }) =>

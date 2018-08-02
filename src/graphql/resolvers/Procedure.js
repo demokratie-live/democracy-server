@@ -324,13 +324,14 @@ export default {
       };
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
-      const voted = await VoteModel.findOne({
-        procedure,
-        voters: {
-          kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-          object: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
-        },
-      });
+      const voted = (CONSTANTS.SMS_VERIFICATION && !phone) ? null :
+        await VoteModel.findOne({
+          procedure,
+          voters: {
+            kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+            object: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
+          },
+        });
       return !!voted;
     },
     votedGovernment: procedure =>
