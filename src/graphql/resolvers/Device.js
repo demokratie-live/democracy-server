@@ -46,7 +46,6 @@ export default {
 
       // Check for invalid transfere
       const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
-      console.log(newPhoneHash);
       const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
       const oldPhoneDBHash = oldPhoneHash ?
         crypto.createHash('sha256').update(oldPhoneHash).digest('hex') : null;
@@ -76,20 +75,71 @@ export default {
         });
       }
 
+      // Genrate Code
+      const minVal = 100000;
+      const maxVal = 999999;
+      const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
+
       const now = new Date();
       // Check if there is still a valid Code
       const activeCode = verification.verifications.find(({ expires }) => now < expires);
       if (activeCode) {
-        return {
-          reason: 'Valid Code still present',
-          succeeded: false,
-        };
-      }
+        // ***********
+        // Resend Code
+        // ***********
+        // Find Code Count & latest Code Time
+        const codesCount = activeCode.codes.length;
+        const latestCode = activeCode.codes.reduce((max, p) =>
+          (p.time > max.time ? p : max), activeCode.codes[0]);
 
-      // Genrate Code
-      const min = 100000;
-      const max = 999999;
-      const code = Math.floor(Math.random() * (max - min + 1)) + min; // eslint-disable-line
+        // Check code time
+        if ((latestCode.time.getTime() +
+          ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) >=
+          now.getTime()) {
+          return {
+            reason: 'You have to wait till you can request another Code',
+            resendTime: Math.ceil(((latestCode.time.getTime() +
+              ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) -
+              now.getTime()) / 1000),
+            succeeded: false,
+          };
+        }
+
+        // Validate that the Number has recieved the Code
+        const smsstatus = await statusSMS(latestCode.SMSID);
+        if (!smsstatus) {
+          return {
+            reason: 'Your number seems incorrect, please correct it!',
+            succeeded: false,
+          };
+        }
+
+        // Send SMS
+        const { status, SMSID } = await sendSMS(newPhone, code);
+
+        activeCode.codes.push({
+          code,
+          time: now,
+          SMSID,
+        });
+        verification.save();
+
+        // Check Status here to make sure the Verification request is saved
+        if (!status) {
+          return {
+            reason: 'Could not send SMS to given newPhone',
+            succeeded: false,
+          };
+        }
+
+        return {
+          succeeded: true,
+          resendTime: CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** (codesCount + 1),
+        };
+        // ***********
+        // Resend Code
+        // ********END
+      }
 
       // Send SMS
       const { status, SMSID } = await sendSMS(newPhone, code);
@@ -116,7 +166,6 @@ export default {
       await verification.save();
 
       // Check Status here to make sure the Verification request is saved
-      console.log(status);
       if (!status) {
         return {
           reason: 'Could not send SMS to given newPhone',
@@ -128,100 +177,6 @@ export default {
         allowNewUser,
         resendTime: CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME,
         succeeded: true,
-      };
-    }),
-
-    // ***********
-    // RESEND CODE
-    // ***********
-    resendCode: isLoggedin.createResolver(async (parent, { newPhone }, {
-      VerificationModel,
-    }) => {
-      // check newPhone prefix & length, 4 prefix, min. length 10
-      if (newPhone.substr(0, 4) !== '0049' || newPhone.length < 14) {
-        return {
-          reason: 'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
-          succeeded: false,
-        };
-      }
-
-      const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
-      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
-
-      const verification = await VerificationModel.findOne({
-        phoneHash: newPhoneDBHash,
-      });
-      if (!verification) {
-        return {
-          reason: 'Could not find verification request',
-          succeeded: false,
-        };
-      }
-
-      const now = new Date();
-      // Check if there is still a valid Code
-      const activeCode = verification.verifications.find(({ expires }) => now < expires);
-      if (!activeCode) {
-        return {
-          reason: 'Could not find existing valid Code',
-          succeeded: false,
-        };
-      }
-
-      // Find Code Count & latest Code Time
-      const codesCount = activeCode.codes.length;
-      const latestCode = activeCode.codes.reduce((max, p) =>
-        (p.time > max.time ? p : max), activeCode.codes[0]);
-
-      // Check code time
-      if ((latestCode.time.getTime() +
-        ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) >=
-        now.getTime()) {
-        return {
-          reason: 'You have to wait till you can request another Code',
-          resendTime: Math.ceil(((latestCode.time.getTime() +
-            ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) -
-            now.getTime()) / 1000),
-          succeeded: false,
-        };
-      }
-
-      // Validate that the Number has recieved the Code
-      // const latestCode = activeCode.codes.find(({ time }) => new Date(time) === latestCodeTime);
-      const smsstatus = await statusSMS(latestCode.SMSID);
-      if (!smsstatus) {
-        return {
-          reason: 'Your number seems incorrect, please correct it!',
-          succeeded: false,
-        };
-      }
-
-      // Genrate Code
-      const min = 100000;
-      const max = 999999;
-      const code = Math.floor(Math.random() * (max - min + 1)) + min; // eslint-disable-line
-
-      // Send SMS
-      const { status, SMSID } = await sendSMS(newPhone, code);
-
-      activeCode.codes.push({
-        code,
-        time: now,
-        SMSID,
-      });
-      verification.save();
-
-      // Check Status here to make sure the Verification request is saved
-      if (!status) {
-        return {
-          reason: 'Could not send SMS to given newPhone',
-          succeeded: false,
-        };
-      }
-
-      return {
-        succeeded: true,
-        resendTime: CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** (codesCount + 1),
       };
     }),
 
