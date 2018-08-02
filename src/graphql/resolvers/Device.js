@@ -92,12 +92,12 @@ export default {
 
         // Check code time
         if ((latestCode.time.getTime() +
-          ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) >=
+          ((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount) * 1000)) >=
           now.getTime()) {
           return {
             reason: 'You have to wait till you can request another Code',
             resendTime: Math.ceil(((latestCode.time.getTime() +
-              ((CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** codesCount) * 1000)) -
+              ((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount) * 1000)) -
               now.getTime()) / 1000),
             succeeded: false,
           };
@@ -132,7 +132,7 @@ export default {
 
         return {
           succeeded: true,
-          resendTime: CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME ** (codesCount + 1),
+          resendTime: ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** (codesCount + 1),
         };
         // ***********
         // Resend Code
@@ -173,7 +173,7 @@ export default {
 
       return {
         allowNewUser,
-        resendTime: CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME,
+        resendTime: ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME),
         succeeded: true,
       };
     }),
