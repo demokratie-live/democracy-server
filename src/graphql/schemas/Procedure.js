@@ -27,6 +27,7 @@ type Procedure {
   completed: Boolean
   notify: Boolean
   listType: ProcedureType
+  verified: Boolean
 }
 
 type SearchProcedures {
