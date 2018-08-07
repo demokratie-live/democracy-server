@@ -12,7 +12,8 @@ export default `
     reason: String
     allowNewUser: Boolean
     succeeded: Boolean!
-    resendTime: Int
+    resendTime: Date
+    expireTime: Date
   }
 
   type VerificationResult {

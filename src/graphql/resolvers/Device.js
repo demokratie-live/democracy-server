@@ -9,6 +9,13 @@ import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
 import { sendSMS, statusSMS } from '../../services/sms';
 
+const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
+  new Date(Math.min(
+    expires,
+    latestCodeTime +
+    (((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount) * 1000),
+  ));
+
 export default {
   Query: {
     notificationSettings: isLoggedin.createResolver(async (parent, args, { device }) =>
@@ -30,6 +37,13 @@ export default {
       if (!CONSTANTS.SMS_VERIFICATION) {
         return {
           reason: 'SMS Verification is disabled!',
+          succeeded: false,
+        };
+      }
+
+      if (!oldPhoneHash && user.isVerified()) {
+        return {
+          reason: 'You are already verified!',
           succeeded: false,
         };
       }
@@ -56,8 +70,7 @@ export default {
 
       // Check for valid oldPhoneHash
       if ((oldPhoneHash && !user.isVerified()) ||
-        (oldPhoneHash && !phone) ||
-        (phone && phone.phoneHash !== oldPhoneDBHash)) {
+        (oldPhoneHash && !phone)) {
         return {
           reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
@@ -92,13 +105,16 @@ export default {
 
         // Check code time
         if ((latestCode.time.getTime() +
-          ((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount) * 1000)) >=
+          (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount)) >=
           now.getTime()) {
           return {
             reason: 'You have to wait till you can request another Code',
-            resendTime: Math.ceil(((latestCode.time.getTime() +
-              ((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount) * 1000)) -
-              now.getTime()) / 1000),
+            resendTime: calculateResendTime({
+              latestCodeTime: latestCode.time.getTime(),
+              codesCount,
+              expires: (new Date(activeCode.expires)).getTime(),
+            }),
+            expireTime: activeCode.expires,
             succeeded: false,
           };
         }
@@ -132,7 +148,12 @@ export default {
 
         return {
           succeeded: true,
-          resendTime: ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** (codesCount + 1),
+          resendTime: calculateResendTime({
+            latestCodeTime: now.getTime(),
+            codesCount: codesCount + 1,
+            expires: (new Date(activeCode.expires)).getTime(),
+          }),
+          expireTime: activeCode.expires,
         };
         // ***********
         // Resend Code
@@ -173,7 +194,12 @@ export default {
 
       return {
         allowNewUser,
-        resendTime: ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME),
+        resendTime: calculateResendTime({
+          latestCodeTime: now.getTime(),
+          codesCount: 1,
+          expires: expires.getTime(),
+        }),
+        expireTime: expires,
         succeeded: true,
       };
     }),
@@ -226,8 +252,7 @@ export default {
       }
 
       // User has phoneHash, but no oldPhoneHash?
-      if ((phone && phone.phoneHash && !verification.oldPhoneHash) ||
-        (verification.oldPhoneHash && (!phone || phone.phoneHash !== verification.oldPhoneHash))) {
+      if (verification.oldPhoneHash && (!phone || phone.phoneHash !== verification.oldPhoneHash)) {
         return {
           reason: 'User phoneHash and oldPhoneHash inconsistent',
           succeeded: false,
