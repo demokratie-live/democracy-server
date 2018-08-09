@@ -39,12 +39,14 @@ export default {
         throw new Error('Procedure not found');
       }
       let active = await ActivityModel.findOne({
-        user: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+        actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+        kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
         procedure,
       });
       if (!active) {
         active = await ActivityModel.create({
-          user: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
           procedure,
         });
       }

@@ -15,7 +15,7 @@ export default {
           $addFields: {
             voted: {
               kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              object: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
+              voter: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
             },
           },
         },
@@ -82,14 +82,14 @@ export default {
       if (!vote) {
         vote = await VoteModel.create({ procedure, state });
       }
-      const hasVoted = vote.voters.some(({ kind, object }) =>
-        kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') && object.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
+      const hasVoted = vote.voters.some(({ kind, voter }) =>
+        kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') && voter === (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
         const voteUpdate = {
           $push: {
             voters: {
               kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-              object: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         };
@@ -126,7 +126,7 @@ export default {
           $addFields: {
             voted: {
               kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              object: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
+              voter: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
             },
           },
         },

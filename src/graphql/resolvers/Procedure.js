@@ -314,10 +314,12 @@ export default {
   Procedure: {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       const activityIndex = procedure.activities || 0;
-      const active = await ActivityModel.findOne({
-        user: (CONSTANTS.SMS_VERIFICATION && phone) ? phone._id : device._id,
-        procedure,
-      });
+      const active = (CONSTANTS.SMS_VERIFICATION && !phone) ? false :
+        await ActivityModel.findOne({
+          actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          procedure,
+        });
       return {
         activityIndex,
         active: !!active,
@@ -330,7 +332,7 @@ export default {
           voters: {
             $elemMatch: {
               kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              object: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
+              voter: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
             },
           },
         });

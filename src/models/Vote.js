@@ -10,7 +10,7 @@ const VoteSchema = new Schema({
   state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
   voters: [{
     kind: String,
-    object: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+    voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
   }],
   voteResults: {
     yes: { type: Number, default: 0 },
