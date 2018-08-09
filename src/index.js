@@ -33,7 +33,12 @@ import VoteModel from './models/Vote';
 import PushNotifiactionModel from './models/PushNotifiaction';
 import SearchTermModel from './models/SearchTerms';
 import { isDataSource } from './express/auth/permissions';
+import { migrate } from './migrations/scripts';
 
+// Migrations
+migrate();
+
+// Express Server
 const app = express();
 if (CONSTANTS.DEBUG) {
   app.use(cookieParser());

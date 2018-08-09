@@ -1,12 +1,3 @@
-import mm from 'mongodb-migrations';
-import fs from 'fs';
+import { create } from './';
 
-const config = JSON.parse(fs.readFileSync('./mm.json'));
-const migrator = new mm.Migrator(config);
-console.log(process.argv[2]);
-migrator.create(`${__dirname}`, process.argv[2], (err) => {
-  if (err) {
-    console.log(err);
-  }
-  migrator.dispose();
-});
+create(process.argv[2]);
