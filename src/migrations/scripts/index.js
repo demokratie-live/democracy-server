@@ -13,8 +13,8 @@ export const create = (name) => {
   });
 };
 
-export const migrate = async () => {
-  return new Promise((resolve, reject) => {
+export const migrate = async () =>
+  new Promise((resolve, reject) => {
     const migrator = new mm.Migrator(config);
     migrator.runFromDir(`${__dirname}/../`, (err) => {
       if (err) {
@@ -24,4 +24,3 @@ export const migrate = async () => {
       resolve();
     });
   });
-};

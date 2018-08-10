@@ -11,6 +11,9 @@ const VoteSchema = new Schema({
   voters: [{
     kind: String,
     voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+    // Todo: This is not working
+    // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
+    _id: false,
   }],
   voteResults: {
     yes: { type: Number, default: 0 },
