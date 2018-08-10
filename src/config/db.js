@@ -5,9 +5,9 @@ import CONSTANTS from './constants';
 
 mongoose.Promise = global.Promise;
 
-if (CONSTANTS.DEBUG) {
-  mongoose.set('debug', true);
-}
+// Set Mongo Debug in Debugmode
+mongoose.set('debug', CONSTANTS.DEBUG);
+
 (async () => {
   try {
     mongoose.connect(CONSTANTS.db.url, {});

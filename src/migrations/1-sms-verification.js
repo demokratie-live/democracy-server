@@ -42,7 +42,7 @@ module.exports.up = async function (done) { // eslint-disable-line
   while (await voteCursor.hasNext()) { // eslint-disable-line no-await-in-loop
     const oldVote = await voteCursor.next(); // eslint-disable-line no-await-in-loop
     // Transform Voters
-    const voters = await Promise.all(oldVote.users.map(async (id) => { // eslint-disable-line no-await-in-loop
+    const voters = await Promise.all(oldVote.users.map(async (id) => { // eslint-disable-line
       const oldVoter = await oldUsers.findOne({ _id: id }); // eslint-disable-line no-await-in-loop
       const device = await DeviceModel.findOne({ // eslint-disable-line no-await-in-loop
         deviceHash: crypto.createHash('sha256').update(oldVoter.deviceHash).digest('hex'),
