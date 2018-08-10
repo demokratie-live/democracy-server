@@ -38,7 +38,11 @@ import { migrate } from './migrations/scripts';
 // Async Warpping Function
 (async () => {
   // Migrations
-  await migrate();
+  await migrate().catch((err) => {
+    console.log(err);
+    console.log('Migration not successful - I die now!');
+    process.exit();
+  });
 
   // Express Server
   const app = express();
