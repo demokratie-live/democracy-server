@@ -13,13 +13,15 @@ export const create = (name) => {
   });
 };
 
-export const migrate = new Promise((resolve, reject) => {
-  const migrator = new mm.Migrator(config);
-  migrator.runFromDir(`${__dirname}/../`, (err) => {
-    if (err) {
-      reject(err);
-    }
-    migrator.dispose();
-    resolve();
+export const migrate = async () => {
+  return new Promise((resolve, reject) => {
+    const migrator = new mm.Migrator(config);
+    migrator.runFromDir(`${__dirname}/../`, (err) => {
+      if (err) {
+        reject(err);
+      }
+      migrator.dispose();
+      resolve();
+    });
   });
-});
+};
