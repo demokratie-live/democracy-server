@@ -11,8 +11,8 @@
     "lint": "eslint .",
     "build": "babel src -d dist -s",
     "serve": "node dist/index.js",
-    "migrations:migrate": "babel-node src/migrations/scripts/migrate.js",
-    "migrations:create": "babel-node src/migrations/scripts/create.js"
+    "migrations:migrate": "node -r dotenv/config -r babel-register src/migrations/scripts/migrate.js",
+    "migrations:create": "node -r dotenv/config -r babel-register src/migrations/scripts/create.js"
   },
   "dependencies": {
     "apn": "^2.2.0",

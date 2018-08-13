@@ -1,7 +1,5 @@
 import mm from 'mongodb-migrations';
-import fs from 'fs';
-
-const config = JSON.parse(fs.readFileSync('./mm.json'));
+import config from './../../../mm-config';
 
 export const create = (name) => {
   const migrator = new mm.Migrator(config);
