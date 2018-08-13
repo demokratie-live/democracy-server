@@ -11,7 +11,16 @@ module.exports.up = async function (done) { // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
-    if (this.db.s.children.length === 0) {
+    const collections = await new Promise((resolve, reject) => {
+      this.db.listCollections().toArray((err, names) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(names);
+        }
+      });
+    });
+    if (collections.length === 0) {
       done();
       return;
     }
