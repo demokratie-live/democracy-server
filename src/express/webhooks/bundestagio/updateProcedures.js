@@ -8,7 +8,7 @@ export default async (req, res) => {
   const { data: { procedureIds } } = req.body;
 
   const updated = await importProcedures(procedureIds);
-  console.log(`Updated Agenda: ${updated}`);
+  Log.info(`Updated Agenda: ${updated}`);
 
   return res.send({
     updated,

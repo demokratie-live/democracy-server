@@ -8,6 +8,8 @@ import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
 
+import './services/logger';
+
 import './config/db';
 import constants from './config/constants';
 import typeDefs from './graphql/schemas';
@@ -88,9 +90,9 @@ app.post('/webhooks/bundestagio/update', async (req, res) => {
       updated,
       succeeded: true,
     });
-    console.log(`Updated: ${updated}`);
+    Log.info(`Updated: ${updated}`);
   } catch (error) {
-    console.log(error);
+    Log.error(error);
     res.send({
       error,
       succeeded: false,
@@ -135,13 +137,16 @@ app.get('/push-test', async (req, res) => {
 const graphqlServer = createServer(app);
 graphqlServer.listen(constants.PORT, (err) => {
   if (err) {
-    console.error(err);
+    Log.error(err);
   } else {
-    console.log(`App is listen on port: ${constants.PORT}`);
+    Log.info(`App is listen on port: ${constants.PORT}`);
 
     const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
 
     const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
-    console.log('cronjob.running', cronjob.running, cronjob2.running);
+    Log.info(JSON.stringify({
+      cronjob: cronjob.running,
+      cronjob2: cronjob2.running,
+    }));
   }
 });

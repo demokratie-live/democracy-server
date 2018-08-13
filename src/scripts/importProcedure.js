@@ -42,7 +42,10 @@ export default async (bIoProcedure, { push = false }) => {
         initiator === 'Rücknahme');
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-    } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
+    } else if (
+      bIoProcedure.customData &&
+      bIoProcedure.customData.expectedVotingDate
+    ) {
       newBIoProcedure.voteDate = new Date(bIoProcedure.customData.expectedVotingDate);
     }
 
@@ -72,14 +75,18 @@ export default async (bIoProcedure, { push = false }) => {
             if (decision.type === 'Namentliche Abstimmung') {
               const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
               const voteResultsProto = decision.comment.match(voteResultsRegEx);
-              const vResults = voteResultsProto ? voteResultsProto[0].split(':') : null;
+              const vResults = voteResultsProto
+                ? voteResultsProto[0].split(':')
+                : null;
               voteResults = {
                 yes: vResults ? vResults[0] : null,
                 no: vResults ? vResults[1] : null,
                 abstination: vResults ? vResults[2] : null,
                 notVote:
                   deputiesNumber[bIoProcedure.period] -
-                  (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
+                  (vResults
+                    ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0)
+                    : 0),
               };
               return true;
             }
@@ -97,7 +104,9 @@ export default async (bIoProcedure, { push = false }) => {
     newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
   }
 
-  const oldProcedure = await Procedure.findOne({ procedureId: newBIoProcedure.procedureId });
+  const oldProcedure = await Procedure.findOne({
+    procedureId: newBIoProcedure.procedureId,
+  });
 
   return Procedure.findOneAndUpdate(
     { procedureId: newBIoProcedure.procedureId },
@@ -115,7 +124,10 @@ export default async (bIoProcedure, { push = false }) => {
        */
       // New Procedures
       if (!oldProcedure) {
-        console.log('PUSH NOTIFICATIONS', 'new Procedure', newBIoProcedure.procedureId);
+        Log.push(JSON.stringify({
+          type: 'new Procedure',
+          ids: newBIoProcedure.procedureId,
+        }));
         PushNotifiaction.create({
           procedureId: newBIoProcedure.procedureId,
           type: 'new',
@@ -140,12 +152,11 @@ export default async (bIoProcedure, { push = false }) => {
           }
         }));
         if (updatedValues.length > 0) {
-          console.log(
-            'PUSH NOTIFICATIONS',
-            'updated Procedure',
-            newBIoProcedure.procedureId,
+          Log.import(JSON.stringify({
+            type: 'updated Procedure',
+            ids: newBIoProcedure.procedureId,
             diffs,
-          );
+          }));
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'update',
@@ -157,14 +168,18 @@ export default async (bIoProcedure, { push = false }) => {
           (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
             oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
             !(
-              oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
+              oldProcedure.currentStatus === 'Überwiesen' &&
+              newBIoProcedure.voteDate > new Date()
             )) ||
           (newBIoProcedure.currentStatus === 'Überwiesen' &&
             newBIoProcedure.voteDate > new Date() &&
             !oldProcedure.voteDate)
         ) {
           // moved to Vote Procedures
-          console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
+          Log.import(JSON.stringify({
+            type: 'new Vote',
+            ids: newBIoProcedure.procedureId,
+          }));
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'newVote',

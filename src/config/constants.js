@@ -18,9 +18,16 @@ export default {
       case 'production':
         return 'de.democracy-deutschland.clientapp';
       default:
-        console.error('ERROR: no STAGE defined!');
+        Log.error('ERROR: no STAGE defined!');
         return 'de.democracy-deutschland.clientapp';
     }
   })(),
   MIN_PERIOD: process.env.MIN_PERIOD || 19,
+  LOGGING: {
+    CONSOLE: process.env.LOGGING_CONSOLE || false,
+    FILE: process.env.LOGGING_FILE || false,
+    DISCORD: process.env.LOGGING_DISCORD || false,
+    DISCORD_WEBHOOK: process.env.LOGGING_DISCORD_WEBHOOK || false,
+    MONGO: process.env.LOGGING_MONGO || false,
+  },
 };

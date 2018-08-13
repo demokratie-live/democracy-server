@@ -13,7 +13,10 @@ import ProcedureModel from '../../models/Procedure';
 import CONFIG from '../../config/constants';
 
 const sendNotifications = ({
-  tokenObjects, title = 'DEMOCRACY', message, payload,
+  tokenObjects,
+  title = 'DEMOCRACY',
+  message,
+  payload,
 }) => {
   const androidNotificationTokens = [];
 
@@ -42,10 +45,13 @@ const sendNotifications = ({
 
           if (apnProvider) {
             apnProvider.send(note, token).then((result) => {
-              console.log('apnProvider.send', util.inspect(result, false, null));
+              Log.Notification({
+                type: 'apnProvider.send',
+                data: util.inspect(result, false, null),
+              });
             });
           } else {
-            console.log('ERROR: apnProvider not present');
+            Log.error('ERROR: apnProvider not present');
           }
         }
         break;
@@ -72,8 +78,8 @@ const sendNotifications = ({
       gcmMessage,
       { registrationTokens: androidNotificationTokens },
       (err, response) => {
-        if (err) console.error('gcmProvider', err);
-        else console.log('gcmProvider', response);
+        if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
+        else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
       },
     );
   }
@@ -85,7 +91,10 @@ const newVote = async ({ procedureId }) => {
     'notificationSettings.enabled': true,
     'notificationSettings.newVote': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = users.reduce(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
   const title = 'Jetzt Abstimmen!';
   sendNotifications({
     tokenObjects,
@@ -105,12 +114,17 @@ const newVotes = async ({ procedureIds }) => {
     'notificationSettings.enabled': true,
     'notificationSettings.newVote': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = users.reduce(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
   const title = 'Jetzt Abstimmen!';
   let message = `Es gibt ${procedureIds.length} neue Abstimmungen.`;
   let type = 'procedureBulk';
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -136,7 +150,10 @@ const newPreperation = async ({ procedureId }) => {
     'notificationSettings.enabled': true,
     'notificationSettings.newPreperation': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = users.reduce(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
   let title;
   switch (procedure.type) {
     case 'Gesetzgebung':
@@ -167,13 +184,18 @@ const newPreperations = async ({ procedureIds }) => {
     'notificationSettings.enabled': true,
     'notificationSettings.newPreperation': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = users.reduce(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
   const title = 'Neu in Vorbereitung!';
   let message = `${procedureIds.length} Elemente neu in Vorbereitung`;
   let type = 'procedureBulk';
 
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -199,7 +221,10 @@ const procedureUpdate = async ({ procedureId }) => {
     'notificationSettings.enabled': true,
     'notificationSettings.procedures': procedure._id,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = users.reduce(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
   const title = 'Update!';
   sendNotifications({
     tokenObjects,
@@ -245,10 +270,13 @@ export default async ({
 
             if (apnProvider) {
               apnProvider.send(note, token).then((result) => {
-                console.log('apnProvider.send', util.inspect(result, false, null));
+                Log.notification(JSON.stringify({
+                  type: 'apnProvider.send',
+                  data: util.inspect(result, false, null),
+                }));
               });
             } else {
-              console.log('ERROR: apnProvider not present');
+              Log.error('ERROR: apnProvider not present');
             }
           }
           break;
@@ -275,8 +303,12 @@ export default async ({
         gcmMessage,
         { registrationTokens: androidNotificationTokens },
         (err, response) => {
-          if (err) console.error('gcmProvider', err);
-          else console.log('gcmProvider', response);
+          if (err) {
+            Log.error(JSON.stringify({
+              type: 'gcmProvider',
+              err,
+            }));
+          } else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
         },
       );
     }
