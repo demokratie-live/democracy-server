@@ -1,7 +1,7 @@
 import webhook from '../../../scripts/webhook';
 
 export default async (req, res) => {
-  console.log('Bundestag.io authenticated: Update');
+  Log.import('Bundestag.io authenticated: Update');
   try {
     const { data } = req.body;
     const updated = await webhook(data);
@@ -9,9 +9,9 @@ export default async (req, res) => {
       updated,
       succeeded: true,
     });
-    console.log(`Updated: ${updated}`);
+    Log.import(`Updated: ${updated}`);
   } catch (error) {
-    console.log(error);
+    Log.error(JSON.stringify({ error }));
     res.send({
       error,
       succeeded: false,

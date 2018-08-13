@@ -18,7 +18,7 @@ export default {
       case 'production':
         return 'de.democracy-deutschland.clientapp';
       default:
-        console.error('ERROR: no STAGE defined!');
+        Log.error('ERROR: no STAGE defined!');
         return 'de.democracy-deutschland.clientapp';
     }
   })(),
@@ -35,4 +35,11 @@ export default {
   SMS_VERIFICATION_NEW_USER_DELAY: process.env.SMS_VERIFICATION_NEW_USER_DELAY || '24w',
   JWT_BACKWARD_COMPATIBILITY: process.env.JWT_BACKWARD_COMPATIBILITY === 'true',
   SMS_PROVIDER_KEY: process.env.SMS_PROVIDER_KEY,
+  LOGGING: {
+    CONSOLE: process.env.LOGGING_CONSOLE || false,
+    FILE: process.env.LOGGING_FILE || false,
+    DISCORD: process.env.LOGGING_DISCORD || false,
+    DISCORD_WEBHOOK: process.env.LOGGING_DISCORD_WEBHOOK || false,
+    MONGO: process.env.LOGGING_MONGO || false,
+  },
 };

@@ -9,6 +9,8 @@ import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
 import cookieParser from 'cookie-parser';
 
+import './services/logger';
+
 import './config/db';
 import CONSTANTS from './config/constants';
 import typeDefs from './graphql/schemas';
@@ -111,7 +113,10 @@ import { migrate } from './migrations/scripts';
   // Webhook
   app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
   // Webhook update specific procedures
-  app.post('/webhooks/bundestagio/updateProcedures', isDataSource.createResolver(BIOupdateProcedures));
+  app.post(
+    '/webhooks/bundestagio/updateProcedures',
+    isDataSource.createResolver(BIOupdateProcedures),
+  );
 
   // Debug
   if (CONSTANTS.DEBUG) {
@@ -124,14 +129,17 @@ import { migrate } from './migrations/scripts';
   const graphqlServer = createServer(app);
   graphqlServer.listen(CONSTANTS.PORT, (err) => {
     if (err) {
-      console.error(err);
+      Log.error(JSON.stringify({ err }));
     } else {
-      console.log(`App is listen on port: ${CONSTANTS.PORT}`);
+      Log.info(`App is listen on port: ${CONSTANTS.PORT}`);
 
       const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
 
       const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
-      console.log('cronjob.running', cronjob.running, cronjob2.running);
+      Log.info(JSON.stringify({
+        cronjob: cronjob.running,
+        cronjob2: cronjob2.running,
+      }));
     }
   });
 })();

@@ -13,7 +13,10 @@ import ProcedureModel from '../../models/Procedure';
 import CONSTANTS from '../../config/constants';
 
 const sendNotifications = ({
-  tokenObjects, title = 'DEMOCRACY', message, payload,
+  tokenObjects,
+  title = 'DEMOCRACY',
+  message,
+  payload,
 }) => {
   const androidNotificationTokens = [];
 
@@ -42,10 +45,13 @@ const sendNotifications = ({
 
           if (apnProvider) {
             apnProvider.send(note, token).then((result) => {
-              console.log('apnProvider.send', util.inspect(result, false, null));
+              Log.Notification({
+                type: 'apnProvider.send',
+                data: util.inspect(result, false, null),
+              });
             });
           } else {
-            console.log('ERROR: apnProvider not present');
+            Log.error('ERROR: apnProvider not present');
           }
         }
         break;
@@ -72,8 +78,8 @@ const sendNotifications = ({
       gcmMessage,
       { registrationTokens: androidNotificationTokens },
       (err, response) => {
-        if (err) console.error('gcmProvider', err);
-        else console.log('gcmProvider', response);
+        if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
+        else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
       },
     );
   }
@@ -110,7 +116,9 @@ const newVotes = async ({ procedureIds }) => {
   let message = `Es gibt ${procedureIds.length} neue Abstimmungen.`;
   let type = 'procedureBulk';
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -173,7 +181,9 @@ const newPreperations = async ({ procedureIds }) => {
   let type = 'procedureBulk';
 
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -245,10 +255,13 @@ export default async ({
 
             if (apnProvider) {
               apnProvider.send(note, token).then((result) => {
-                console.log('apnProvider.send', util.inspect(result, false, null));
+                Log.notification(JSON.stringify({
+                  type: 'apnProvider.send',
+                  data: util.inspect(result, false, null),
+                }));
               });
             } else {
-              console.log('ERROR: apnProvider not present');
+              Log.error('ERROR: apnProvider not present');
             }
           }
           break;
@@ -275,8 +288,12 @@ export default async ({
         gcmMessage,
         { registrationTokens: androidNotificationTokens },
         (err, response) => {
-          if (err) console.error('gcmProvider', err);
-          else console.log('gcmProvider', response);
+          if (err) {
+            Log.error(JSON.stringify({
+              type: 'gcmProvider',
+              err,
+            }));
+          } else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
         },
       );
     }

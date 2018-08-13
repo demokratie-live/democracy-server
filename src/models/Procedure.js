@@ -56,8 +56,8 @@ export default mongoose.model('Procedure', ProcedureSchema);
 
 mongoose.model('Procedure').ensureIndexes((err) => {
   if (!err) {
-    console.log('SearchIndexs for Procedures created');
+    Log.info('SearchIndexs for Procedures created');
   } else {
-    console.log({ err });
+    Log.error(JSON.stringify({ err }));
   }
 });

@@ -46,7 +46,9 @@
     "passport-jwt": "^4.0.0",
     "prettier-eslint": "^8.2.0",
     "react-native-rsa": "^0.0.3",
-    "request": "^2.87.0"
+    "request": "^2.87.0",
+    "winston": "^3.0.0",
+    "winston-discord": "^0.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
