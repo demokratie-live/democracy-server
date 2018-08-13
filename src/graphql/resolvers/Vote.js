@@ -8,39 +8,37 @@ import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    votes: isLoggedin.createResolver((parent, { procedure }, { VoteModel, device, phone }) =>
-      VoteModel.aggregate([
+    votes: isLoggedin.createResolver(async (parent, { procedure },
+      { VoteModel, device, phone }) => {
+      const voted = await VoteModel.aggregate([
         { $match: { procedure: Types.ObjectId(procedure) } },
+        { $unwind: '$voters' },
         {
-          $addFields: {
-            voted: {
-              kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              voter: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
-            },
+          $match: {
+            'voters.kind': (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+            'voters.voter': (CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id), // eslint-disable-line no-nested-ternary
           },
         },
-        {
-          $group: {
-            _id: '$procedure',
-            yes: { $sum: '$voteResults.yes' },
-            no: { $sum: '$voteResults.no' },
-            abstination: { $sum: '$voteResults.abstination' },
-            voted: { $first: '$voted' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            voted: 1,
-            voteResults: {
-              yes: '$yes',
-              no: '$no',
-              abstination: '$abstination',
-            },
-          },
-        },
-      ]).then(result =>
-        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } })),
+        { $addFields: { voted: true } },
+        { $project: { _id: 1, voteResults: 1, voted: 1 } },
+      ]);
+
+      if (voted) {
+        return voted;
+      }
+
+      const unvoted = await VoteModel.aggregate([
+        { $match: { procedure: Types.ObjectId(procedure) } },
+        { $addFields: { voted: false } },
+        { $project: { _id: 1, voteResults: 1, voted: 1 } },
+      ]);
+
+      if (unvoted) {
+        return unvoted;
+      }
+
+      return { voted: false, voteResults: { yes: null, no: null, abstination: null } };
+    }),
   },
 
   Mutation: {
@@ -120,7 +118,8 @@ export default {
           device,
         },
       );
-      return VoteModel.aggregate([
+      return this.Query.votes(parent, { procedureId }, { VoteModel, device, phone });
+      /* return VoteModel.aggregate([
         { $match: { procedure: procedure._id } },
         {
           $addFields: {
@@ -151,7 +150,7 @@ export default {
           },
         },
       ]).then(result =>
-        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } });
+        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } }); */
     }),
   },
 };
