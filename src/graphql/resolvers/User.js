@@ -16,7 +16,7 @@ export default {
       // Maybe return user; ?
       const dbUser = await UserModel.findById(user._id);
       const { deviceHash } = device;
-      return { ...dbUser, deviceHash };
+      return { ...dbUser.toObject(), deviceHash };
     }/* ) */,
   },
   Mutation: {
