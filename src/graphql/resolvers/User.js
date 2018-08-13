@@ -8,13 +8,15 @@ import CONSTANTS from '../../config/constants';
 
 export default {
   Query: {
-    me: /* isLoggedin.createResolver( */(parent, args, { UserModel, user }) => {
+    me: /* isLoggedin.createResolver( */async (parent, args, { UserModel, user, device }) => {
       if (!user) {
         return null;
       }
       // Normal Code - remove stuff above and enable isLoggedin resolver
       // Maybe return user; ?
-      return UserModel.findById(user._id);
+      const dbUser = await UserModel.findById(user._id);
+      const { deviceHash } = device;
+      return { ...dbUser, deviceHash };
     }/* ) */,
   },
   Mutation: {
