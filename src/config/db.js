@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import mongoose from 'mongoose';
+import { inspect } from 'util';
 
 import CONSTANTS from './constants';
 
@@ -7,7 +8,7 @@ mongoose.Promise = global.Promise;
 
 if (CONSTANTS.LOGGING.MONGO) {
   mongoose.set('debug', (...rest) => {
-    Log[CONSTANTS.LOGGING.MONGO](JSON.stringify(rest));
+    Log[CONSTANTS.LOGGING.MONGO](inspect(rest));
   });
 }
 (async () => {

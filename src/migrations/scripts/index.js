@@ -7,7 +7,7 @@ export const create = (name) => {
   const migrator = new mm.Migrator(config);
   migrator.create(`${__dirname}/../`, name, (err) => {
     if (err) {
-      console.log(err);
+      Log.error(JSON.stringify(err));
     }
     migrator.dispose();
   });

@@ -11,7 +11,7 @@ export const statusSMS = async (SMSID) => {
   return new Promise((resolve, reject) => {
     request({ url, qs }, (err, response, body) => {
       if (err) {
-        console.log(err);
+        Log.error(JSON.stringify(err));
         reject(err);
       }
       switch (parseInt(body, 10)) {
@@ -139,7 +139,6 @@ export const sendSMS = async (phone, code) => {
 
   return new Promise((resolve, reject) => {
     request({ url, qs }, (err, response, body) => {
-      // console.log(response);
       let status = false;
       let statusCode = null;
       let SMSID = null;

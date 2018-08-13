@@ -26,7 +26,7 @@ const createGraphQLResolver = (resolver) => {
 // User has Data Source flag (note: its not required to have an actual user for this)
 export const isDataSource = createExpressResolver((req, res) => {
   if (!CONSTANTS.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress)) {
-    console.log('Permission denied: isDataSource = false');
+    Log.warn('Permission denied: isDataSource = false');
     res.send({
       error: 'Permission denied',
       succeeded: false,
@@ -39,7 +39,7 @@ export const isDataSource = createExpressResolver((req, res) => {
 // User & Device is existent in Database
 export const isLoggedin = createGraphQLResolver((parent, args, { user, device }) => {
   if (!user || !device) {
-    console.log('Permission denied: You need to login with your Device');
+    Log.warn('Permission denied: You need to login with your Device');
     throw new Error('Permission Denied');
   }
 });
@@ -47,7 +47,7 @@ export const isLoggedin = createGraphQLResolver((parent, args, { user, device })
 // User has verified flag
 export const isVerified = createGraphQLResolver((parent, args, { user, phone }) => {
   if (!user || (CONSTANTS.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
-    console.log('Permission denied: isVerified = false');
+    Log.warn('Permission denied: isVerified = false');
     throw new Error('Permission Denied');
   }
 });

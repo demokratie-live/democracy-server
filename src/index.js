@@ -41,8 +41,7 @@ import { migrate } from './migrations/scripts';
 (async () => {
   // Migrations
   await migrate().catch((err) => {
-    console.log(err);
-    console.log('Migration not successful - I die now!');
+    Log.error(JSON.stringify({ err, message: 'Migration not successful - I die now!' }));
     process.exit();
   });
 

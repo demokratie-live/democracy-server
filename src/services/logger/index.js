@@ -14,8 +14,7 @@ const alignedWithColorsAndTime = winston.format.combine(
 
     const ts = timestamp.slice(0, 19).replace('T', ' ');
     return `${ts} [${level}]: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
-    }`;
+      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
   }),
 );
 const alignedWithTime = winston.format.combine(
@@ -28,8 +27,7 @@ const alignedWithTime = winston.format.combine(
 
     const ts = timestamp.slice(0, 19).replace('T', ' ');
     return `${ts} [${level}]: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
-    }`;
+      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
   }),
 );
 
@@ -57,9 +55,10 @@ const myLevels = {
     info: 2,
     notification: 3,
     import: 4,
-    verbose: 5,
-    debug: 6,
-    silly: 7,
+    jwt: 5,
+    verbose: 6,
+    debug: 7,
+    silly: 8,
   },
   colors: {
     error: 'red',
@@ -67,6 +66,7 @@ const myLevels = {
     info: 'green',
     notification: 'magenta',
     import: 'magenta',
+    jwt: 'magenta',
     verbose: 'blue',
     debug: 'blue',
     silly: 'gray',

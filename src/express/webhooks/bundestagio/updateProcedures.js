@@ -5,7 +5,7 @@
 import importProcedures from '../../../scripts/import';
 
 export default async (req, res) => {
-  console.log('Bundestag.io authenticated: Update Procedures');
+  Log.info('Bundestag.io authenticated: Update Procedures');
   try {
     const { data: { procedureIds } } = req.body;
     const updated = await importProcedures(procedureIds);
@@ -15,7 +15,7 @@ export default async (req, res) => {
       succeeded: true,
     });
   } catch (error) {
-    Log.error(error);
+    Log.error(JSON.stringify({ error }));
     res.send({
       error,
       succeeded: false,
