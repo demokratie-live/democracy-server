@@ -72,7 +72,7 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 };
 
 export const auth = async (req, res, next) => {
-  Log.info(`Server: Connection from: ${req.connection.remoteAddress}`);
+  Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
   const deviceHash = req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
   const phoneHash = req.headers['x-phone-hash'] || (CONSTANTS.DEBUG ? req.query.phoneHash || null : null);
@@ -138,11 +138,11 @@ export const auth = async (req, res, next) => {
   }
   // Login
   if (!success) {
-    Log.jwt('JWT: Token Error or Credentials present');
     let user = null;
     let device = null;
     let phone = null;
     if (deviceHash) {
+      Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
         deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),

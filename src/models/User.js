@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import CONSTANTS from './../config/constants';
 
 const UserSchema = new Schema(
   {
@@ -19,7 +20,9 @@ const UserSchema = new Schema(
 
 UserSchema.methods = {
   isVerified() {
-    return this.verified;
+    // This assumes that a user can only be created with a device id
+    // therefor all users are verfied if SMS_VERIFICATIOn is disabled
+    return CONSTANTS.SMS_VERIFICATION ? this.verified : true;
   },
 };
 

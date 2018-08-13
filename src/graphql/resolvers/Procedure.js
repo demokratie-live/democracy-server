@@ -336,6 +336,7 @@ export default {
             },
           },
         });
+      Log.debug(`Voted: ${!!voted}`);
       return !!voted;
     },
     votedGovernment: procedure =>
