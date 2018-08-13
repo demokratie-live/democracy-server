@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import RSAKey from 'react-native-rsa';
-import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 import { createTokens, headerToken } from '../../express/auth';
 /* import { isLoggedin } from '../../express/auth/permissions'; */
@@ -33,11 +33,11 @@ export default {
       }
 
       let device = await DeviceModel.findOne({
-        deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
       });
       if (!device) {
         device = await DeviceModel.create({
-          deviceHash: bcrypt.hashSync(deviceHash, CONSTANTS.BCRYPT_SALT),
+          deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
         });
       }
 
