@@ -16,9 +16,16 @@ const VoteSchema = new Schema({
     _id: false,
   }],
   voteResults: {
-    yes: { type: Number, default: 0 },
-    no: { type: Number, default: 0 },
-    abstination: { type: Number, default: 0 },
+    device: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
+    phone: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
   },
 });
 

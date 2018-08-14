@@ -6,39 +6,52 @@ import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
+const queryVotes = async (parent, { procedure },
+  { VoteModel, device, phone }) => {
+  const voted = await VoteModel.aggregate([
+    { $match: { procedure: Types.ObjectId(procedure) } },
+    { $unwind: '$voters' },
+    {
+      $match: {
+        'voters.kind': (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
+        'voters.voter': (CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id), // eslint-disable-line no-nested-ternary
+      },
+    },
+    { $addFields: { voted: true } },
+    {
+      $project: {
+        _id: 1,
+        voteResults: (CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device'),
+        voted: 1,
+      },
+    },
+  ]);
+
+  if (voted.length > 0) {
+    return voted[0];
+  }
+
+  const unvoted = await VoteModel.aggregate([
+    { $match: { procedure: Types.ObjectId(procedure) } },
+    { $addFields: { voted: false } },
+    {
+      $project: {
+        _id: 1,
+        voteResults: (CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device'),
+        voted: 1,
+      },
+    },
+  ]);
+
+  if (unvoted.length > 0) {
+    return unvoted[0];
+  }
+  return { voted: false, voteResults: { yes: null, no: null, abstination: null } };
+};
+
 export default {
   Query: {
-    votes: isLoggedin.createResolver(async (parent, { procedure },
-      { VoteModel, device, phone }) => {
-      const voted = await VoteModel.aggregate([
-        { $match: { procedure: Types.ObjectId(procedure) } },
-        { $unwind: '$voters' },
-        {
-          $match: {
-            'voters.kind': (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-            'voters.voter': (CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id), // eslint-disable-line no-nested-ternary
-          },
-        },
-        { $addFields: { voted: true } },
-        { $project: { _id: 1, voteResults: 1, voted: 1 } },
-      ]);
-
-      if (voted) {
-        return voted;
-      }
-
-      const unvoted = await VoteModel.aggregate([
-        { $match: { procedure: Types.ObjectId(procedure) } },
-        { $addFields: { voted: false } },
-        { $project: { _id: 1, voteResults: 1, voted: 1 } },
-      ]);
-
-      if (unvoted) {
-        return unvoted;
-      }
-
-      return { voted: false, voteResults: { yes: null, no: null, abstination: null } };
-    }),
+    votes: isLoggedin.createResolver(queryVotes),
   },
 
   Mutation: {
@@ -93,13 +106,13 @@ export default {
         };
         switch (selection) {
           case 'YES':
-            voteUpdate.$inc = { 'voteResults.yes': 1 };
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.yes': 1 } : { 'voteResults.device.yes': 1 };
             break;
           case 'NO':
-            voteUpdate.$inc = { 'voteResults.no': 1 };
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.no': 1 } : { 'voteResults.device.no': 1 };
             break;
           case 'ABSTINATION':
-            voteUpdate.$inc = { 'voteResults.abstination': 1 };
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.abstination': 1 } : { 'voteResults.device.abstination': 1 };
             break;
 
           default:
@@ -118,39 +131,7 @@ export default {
           device,
         },
       );
-      return this.Query.votes(parent, { procedureId }, { VoteModel, device, phone });
-      /* return VoteModel.aggregate([
-        { $match: { procedure: procedure._id } },
-        {
-          $addFields: {
-            voted: {
-              kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              voter: { $in: [CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, '$voters'] }, // eslint-disable-line no-nested-ternary
-            },
-          },
-        },
-        {
-          $group: {
-            _id: '$procedure',
-            yes: { $sum: '$voteResults.yes' },
-            no: { $sum: '$voteResults.no' },
-            abstination: { $sum: '$voteResults.abstination' },
-            voted: { $first: '$voted' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            voted: 1,
-            voteResults: {
-              yes: '$yes',
-              no: '$no',
-              abstination: '$abstination',
-            },
-          },
-        },
-      ]).then(result =>
-        result[0] || { voted: false, voteResults: { yes: null, no: null, abstination: null } }); */
+      return queryVotes(parent, { procedureId }, { VoteModel, device, phone });
     }),
   },
 };

@@ -69,7 +69,10 @@ module.exports.up = async function (done) { // eslint-disable-line
       const newVote = await VoteModel.create({ // eslint-disable-line no-await-in-loop
         procedure: oldVote.procedure,
         state: oldVote.state,
-        voteResults: oldVote.voteResults,
+        voteResults: {
+          device: oldVote.voteResults,
+          phone: { yes: 0, no: 0, abstination: 0 },
+        },
         voters,
       });
       await newVote.save(); // eslint-disable-line no-await-in-loop
