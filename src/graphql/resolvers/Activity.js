@@ -5,8 +5,8 @@ import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
 export default {
   Query: {
-    activityIndex: isLoggedin.createResolver(async (parent, { procedureId },
-      { ProcedureModel, ActivityModel, user }) => {
+    activityIndex: isLoggedin.createResolver(async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
+      Log.graphql('Activity.query.activityIndex');
       const procedure = await ProcedureModel.findOne({ procedureId });
       const activityIndex = await ActivityModel.find({ procedure }).count();
       const active = await ActivityModel.findOne({
@@ -21,13 +21,10 @@ export default {
   },
 
   Mutation: {
-    increaseActivity: isVerified.createResolver(async (parent,
-      { procedureId }, {
-        ProcedureModel,
-        ActivityModel,
-        device,
-        phone,
-      }) => {
+    increaseActivity: isVerified.createResolver(async (parent, { procedureId }, {
+      ProcedureModel, ActivityModel, device, phone,
+    }) => {
+      Log.graphql('Activity.mutation.increaseActivity');
       let searchQuery;
       if (Types.ObjectId.isValid(procedureId)) {
         searchQuery = { _id: Types.ObjectId(procedureId) };

@@ -17,6 +17,7 @@ export default {
       },
       { ProcedureModel },
     ) => {
+      Log.graphql('Procedure.query.procedures');
       let currentStates = [];
 
       const filterQuery = {};
@@ -163,10 +164,13 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
-    proceduresById: async (parent, { ids }, { ProcedureModel }) =>
-      ProcedureModel.find({ _id: { $in: ids } }),
+    proceduresById: async (parent, { ids }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.proceduresById');
+      return ProcedureModel.find({ _id: { $in: ids } });
+    },
 
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
+      Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
@@ -182,6 +186,7 @@ export default {
     },
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProceduresAutocomplete');
       let autocomplete = [];
 
       // Search by procedureID or Document id
@@ -260,6 +265,7 @@ export default {
 
     // DEPRECATED
     searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProcedures');
       const { hits } = await elasticsearch.search({
         index: 'procedures',
         type: 'procedure',
@@ -298,8 +304,8 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: isLoggedin.createResolver(async (parent, args,
-      { device, ProcedureModel }) => {
+    notifiedProcedures: isLoggedin.createResolver(async (parent, args, { device, ProcedureModel }) => {
+      Log.graphql('Procedure.query.notifiedProcedures');
       const procedures = await ProcedureModel.find({
         _id: { $in: device.notificationSettings.procedures },
       });
@@ -313,42 +319,60 @@ export default {
 
   Procedure: {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
+      Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
-      const active = (CONSTANTS.SMS_VERIFICATION && !phone) ? false :
-        await ActivityModel.findOne({
-          actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-          kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-          procedure,
-        });
+      const active =
+        CONSTANTS.SMS_VERIFICATION && !phone
+          ? false
+          : await ActivityModel.findOne({
+            actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            procedure,
+          });
       return {
         activityIndex,
         active: !!active,
       };
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
-      const voted = (CONSTANTS.SMS_VERIFICATION && !phone) ? false :
-        await VoteModel.findOne({
-          procedure: procedure._id,
-          voters: {
-            $elemMatch: {
-              kind: (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-              voter: (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
+      Log.graphql('Procedure.field.voted');
+      const voted =
+        CONSTANTS.SMS_VERIFICATION && !phone
+          ? false
+          : await VoteModel.findOne({
+            procedure: procedure._id,
+            voters: {
+              $elemMatch: {
+                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              },
             },
-          },
-        });
+          });
       Log.debug(`Voted: ${!!voted}`);
       return !!voted;
     },
-    votedGovernment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
+    votedGovernment: (procedure) => {
+      Log.graphql('Procedure.field.votedGovernment');
+      return (
+        procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+      );
+    },
     // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
     // required for client <= 0.7.5
-    votedGoverment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
+    votedGoverment: (procedure) => {
+      Log.graphql('Procedure.field.votedGoverment');
+      return (
+        procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+      );
+    },
+    completed: (procedure) => {
+      Log.graphql('Procedure.field.completed');
+      return procedureStates.COMPLETED.includes(procedure.currentStatus);
+    },
     listType: (procedure) => {
+      Log.graphql('Procedure.field.listType');
       if (
         procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
         (procedure.currentStatus === 'Überwiesen' &&

@@ -1,9 +1,11 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+
 import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
     mostSearched: async (parent, args, { SearchTermModel }) => {
+      Log.graphql('SearchTerm.query.mostSearched');
       const result = await SearchTermModel.aggregate([
         { $unwind: '$times' },
         {
@@ -21,6 +23,7 @@ export default {
   },
   Mutation: {
     finishSearch: isLoggedin.createResolver(async (parent, { term }, { SearchTermModel }) => {
+      Log.graphql('SearchTerm.mutation.finishSearchs');
       if (term && term.trim().length >= 3) {
         SearchTermModel.findOneAndUpdate(
           {

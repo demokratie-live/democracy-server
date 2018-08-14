@@ -8,7 +8,8 @@ import CONSTANTS from '../../config/constants';
 
 export default {
   Query: {
-    me: /* isLoggedin.createResolver( */async (parent, args, { UserModel, user, device }) => {
+    me: /* isLoggedin.createResolver( */ async (parent, args, { UserModel, user, device }) => {
+      Log.graphql('User.query.me');
       if (!user) {
         return null;
       }
@@ -17,10 +18,11 @@ export default {
       const dbUser = await UserModel.findById(user._id);
       const { deviceHash } = device;
       return { ...dbUser.toObject(), deviceHash };
-    }/* ) */,
+    } /* ) */,
   },
   Mutation: {
     signUp: async (parent, { deviceHashEncrypted }, { res, UserModel, DeviceModel }) => {
+      Log.graphql('User.mutation.signUp');
       if (!CONSTANTS.JWT_BACKWARD_COMPATIBILITY) {
         return null;
       }
@@ -33,11 +35,17 @@ export default {
       }
 
       let device = await DeviceModel.findOne({
-        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+        deviceHash: crypto
+          .createHash('sha256')
+          .update(deviceHash)
+          .digest('hex'),
       });
       if (!device) {
         device = await DeviceModel.create({
-          deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+          deviceHash: crypto
+            .createHash('sha256')
+            .update(deviceHash)
+            .digest('hex'),
         });
       }
 

@@ -4,6 +4,7 @@
 import ms from 'ms';
 import _ from 'lodash';
 import crypto from 'crypto';
+
 import CONSTANTS from '../../config/constants';
 import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
@@ -13,26 +14,29 @@ const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
   new Date(Math.min(
     expires,
     latestCodeTime +
-    (((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount) * 1000),
+        (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
   ));
 
 export default {
   Query: {
-    notificationSettings: isLoggedin.createResolver(async (parent, args, { device }) =>
-      device.notificationSettings),
+    notificationSettings: isLoggedin.createResolver(async (parent, args, { device }) => {
+      Log.graphql('Device.query.notificationSettings');
+      return device.notificationSettings;
+    }),
   },
 
   Mutation: {
     // ************
     // REQUEST CODE
     // ************
-    requestCode: isLoggedin.createResolver(async (parent, { newPhone, oldPhoneHash }, {
-      user,
-      device,
-      phone,
-      PhoneModel,
-      VerificationModel,
-    }) => {
+    requestCode: isLoggedin.createResolver(async (
+      parent,
+      { newPhone, oldPhoneHash },
+      {
+        user, device, phone, PhoneModel, VerificationModel,
+      },
+    ) => {
+      Log.graphql('Device.mutation.requestCode');
       // Check for SMS Verification
       if (!CONSTANTS.SMS_VERIFICATION) {
         return {
@@ -51,16 +55,27 @@ export default {
       // check newPhone prefix & length, 3 prefix, min. length 10
       if (newPhone.substr(0, 3) !== '+49' || newPhone.length < 13) {
         return {
-          reason: 'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
+          reason:
+              'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
           succeeded: false,
         };
       }
 
       // Check for invalid transfere
-      const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
-      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
-      const oldPhoneDBHash = oldPhoneHash ?
-        crypto.createHash('sha256').update(oldPhoneHash).digest('hex') : null;
+      const newPhoneHash = crypto
+        .createHash('sha256')
+        .update(newPhone)
+        .digest('hex');
+      const newPhoneDBHash = crypto
+        .createHash('sha256')
+        .update(newPhoneHash)
+        .digest('hex');
+      const oldPhoneDBHash = oldPhoneHash
+        ? crypto
+          .createHash('sha256')
+          .update(oldPhoneHash)
+          .digest('hex')
+        : null;
       if (newPhoneHash === oldPhoneHash) {
         return {
           reason: 'newPhoneHash equals oldPhoneHash',
@@ -69,8 +84,7 @@ export default {
       }
 
       // Check for valid oldPhoneHash
-      if ((oldPhoneHash && !user.isVerified()) ||
-        (oldPhoneHash && !phone)) {
+      if ((oldPhoneHash && !user.isVerified()) || (oldPhoneHash && !phone)) {
         return {
           reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
@@ -89,7 +103,7 @@ export default {
       // Genrate Code
       const minVal = 100000;
       const maxVal = 999999;
-      const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
+        const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
 
       const now = new Date();
       // Check if there is still a valid Code
@@ -100,19 +114,23 @@ export default {
         // ***********
         // Find Code Count & latest Code Time
         const codesCount = activeCode.codes.length;
-        const latestCode = activeCode.codes.reduce((max, p) =>
-          (p.time > max.time ? p : max), activeCode.codes[0]);
+        const latestCode = activeCode.codes.reduce(
+          (max, p) => (p.time > max.time ? p : max),
+          activeCode.codes[0],
+        );
 
-        // Check code time
-        if ((latestCode.time.getTime() +
-          (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount)) >=
-          now.getTime()) {
+          // Check code time
+        if (
+          latestCode.time.getTime() +
+              ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
+            now.getTime()
+        ) {
           return {
             reason: 'You have to wait till you can request another Code',
             resendTime: calculateResendTime({
               latestCodeTime: latestCode.time.getTime(),
               codesCount,
-              expires: (new Date(activeCode.expires)).getTime(),
+              expires: new Date(activeCode.expires).getTime(),
             }),
             expireTime: activeCode.expires,
             succeeded: false,
@@ -151,7 +169,7 @@ export default {
           resendTime: calculateResendTime({
             latestCodeTime: now.getTime(),
             codesCount: codesCount + 1,
-            expires: (new Date(activeCode.expires)).getTime(),
+            expires: new Date(activeCode.expires).getTime(),
           }),
           expireTime: activeCode.expires,
         };
@@ -168,8 +186,11 @@ export default {
         phoneHash: newPhoneDBHash,
       });
       let allowNewUser = false; // Is only set if there was a user registered
-      if (verificationPhone && verificationPhone.updatedAt < (
-        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
+      if (
+        verificationPhone &&
+          verificationPhone.updatedAt <
+            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+      ) {
         // Older then 6 Months
         allowNewUser = true;
       }
@@ -207,9 +228,14 @@ export default {
     // ********************
     // REQUEST VERIFICATION
     // ********************
-    requestVerification: isLoggedin.createResolver(async (parent, { code, newPhoneHash, newUser }, {
-      res, user, device, phone, UserModel, PhoneModel, VerificationModel,
-    }) => {
+    requestVerification: isLoggedin.createResolver(async (
+      parent,
+      { code, newPhoneHash, newUser },
+      {
+        res, user, device, phone, UserModel, PhoneModel, VerificationModel,
+      },
+    ) => {
+      Log.graphql('Device.mutation.requestVerification');
       // Check for SMS Verification
       if (!CONSTANTS.SMS_VERIFICATION) {
         return {
@@ -218,8 +244,11 @@ export default {
         };
       }
 
-      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
-      // Find Verification
+      const newPhoneDBHash = crypto
+        .createHash('sha256')
+        .update(newPhoneHash)
+        .digest('hex');
+        // Find Verification
       const verifications = await VerificationModel.findOne({
         phoneHash: newPhoneDBHash,
       });
@@ -235,7 +264,7 @@ export default {
       const verification = verifications.verifications.find(({ expires, codes }) =>
         now < expires && codes.find(({ code: dbCode }) => code === dbCode));
 
-      // Code valid?
+        // Code valid?
       if (!verification) {
         return {
           reason: 'Invalid Code or Code expired',
@@ -252,7 +281,10 @@ export default {
       }
 
       // User has phoneHash, but no oldPhoneHash?
-      if (verification.oldPhoneHash && (!phone || phone.phoneHash !== verification.oldPhoneHash)) {
+      if (
+        verification.oldPhoneHash &&
+          (!phone || phone.phoneHash !== verification.oldPhoneHash)
+      ) {
         return {
           reason: 'User phoneHash and oldPhoneHash inconsistent',
           succeeded: false,
@@ -272,9 +304,13 @@ export default {
       let newPhone = await PhoneModel.findOne({
         phoneHash: newPhoneDBHash,
       });
-      // Phone exists & New User?
-      if (newPhone && newUser && newPhone.updatedAt < (
-        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))) {
+        // Phone exists & New User?
+      if (
+        newPhone &&
+          newUser &&
+          newPhone.updatedAt <
+            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+      ) {
         // Allow new User - Invalidate newPhone
         newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
         await newPhone.save();
@@ -286,8 +322,12 @@ export default {
         // Find old Phone
         const oldPhone = await PhoneModel.findOne({ phoneHash: verification.oldPhoneHash });
         // We found an old phone and no new User is requested
-        if (oldPhone && (!newUser || oldPhone.updatedAt >= (
-          new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))))) {
+        if (
+          oldPhone &&
+            (!newUser ||
+              oldPhone.updatedAt >=
+                new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))
+        ) {
           newPhone = oldPhone;
           newPhone.phoneHash = newPhoneHash;
           await newPhone.save();
@@ -333,6 +373,7 @@ export default {
     }),
 
     addToken: isLoggedin.createResolver(async (parent, { token, os }, { device }) => {
+      Log.graphql('Device.mutation.addToken');
       if (!device.pushTokens.some(t => t.token === token)) {
         device.pushTokens.push({ token, os });
         await device.save();
@@ -349,6 +390,7 @@ export default {
       },
       { device },
     ) => {
+      Log.graphql('Device.mutation.updateNotificationSettings');
       device.notificationSettings = {
         ...device.notificationSettings,
         ..._.omitBy(
@@ -367,8 +409,8 @@ export default {
       return device.notificationSettings;
     }),
 
-    toggleNotification: isLoggedin.createResolver(async (parent,
-      { procedureId }, { device, ProcedureModel }) => {
+    toggleNotification: isLoggedin.createResolver(async (parent, { procedureId }, { device, ProcedureModel }) => {
+      Log.graphql('Device.mutation.toggleNotification');
       const procedure = await ProcedureModel.findOne({ procedureId });
 
       const index = device.notificationSettings.procedures.indexOf(procedure._id);
