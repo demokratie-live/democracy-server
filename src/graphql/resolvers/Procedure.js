@@ -347,8 +347,7 @@ export default {
                 voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
               },
             },
-          },
-        });
+          });
       return !!voted;
     },
     votedGovernment: (procedure) => {
