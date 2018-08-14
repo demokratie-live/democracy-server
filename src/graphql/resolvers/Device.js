@@ -14,7 +14,7 @@ const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
   new Date(Math.min(
     expires,
     latestCodeTime +
-        (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
+    (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
   ));
 
 export default {
@@ -56,7 +56,7 @@ export default {
       if (newPhone.substr(0, 3) !== '+49' || newPhone.length < 13) {
         return {
           reason:
-              'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
+            'newPhone is invalid - does not have the required length of min. 14 digits or does not start with countrycode 0049',
           succeeded: false,
         };
       }
@@ -103,7 +103,7 @@ export default {
       // Genrate Code
       const minVal = 100000;
       const maxVal = 999999;
-        const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
+      const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
 
       const now = new Date();
       // Check if there is still a valid Code
@@ -119,11 +119,11 @@ export default {
           activeCode.codes[0],
         );
 
-          // Check code time
+        // Check code time
         if (
           latestCode.time.getTime() +
-              ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
-            now.getTime()
+          (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount) >=
+          now.getTime()
         ) {
           return {
             reason: 'You have to wait till you can request another Code',
@@ -154,7 +154,7 @@ export default {
           time: now,
           SMSID,
         });
-        verification.save();
+        await verification.save();
 
         // Check Status here to make sure the Verification request is saved
         if (!status) {
@@ -188,8 +188,8 @@ export default {
       let allowNewUser = false; // Is only set if there was a user registered
       if (
         verificationPhone &&
-          verificationPhone.updatedAt <
-            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+        verificationPhone.updatedAt <
+        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
       ) {
         // Older then 6 Months
         allowNewUser = true;
@@ -248,7 +248,7 @@ export default {
         .createHash('sha256')
         .update(newPhoneHash)
         .digest('hex');
-        // Find Verification
+      // Find Verification
       const verifications = await VerificationModel.findOne({
         phoneHash: newPhoneDBHash,
       });
@@ -264,7 +264,7 @@ export default {
       const verification = verifications.verifications.find(({ expires, codes }) =>
         now < expires && codes.find(({ code: dbCode }) => code === dbCode));
 
-        // Code valid?
+      // Code valid?
       if (!verification) {
         return {
           reason: 'Invalid Code or Code expired',
@@ -283,7 +283,7 @@ export default {
       // User has phoneHash, but no oldPhoneHash?
       if (
         verification.oldPhoneHash &&
-          (!phone || phone.phoneHash !== verification.oldPhoneHash)
+        (!phone || phone.phoneHash !== verification.oldPhoneHash)
       ) {
         return {
           reason: 'User phoneHash and oldPhoneHash inconsistent',
@@ -304,12 +304,12 @@ export default {
       let newPhone = await PhoneModel.findOne({
         phoneHash: newPhoneDBHash,
       });
-        // Phone exists & New User?
+      // Phone exists & New User?
       if (
         newPhone &&
-          newUser &&
-          newPhone.updatedAt <
-            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+        newUser &&
+        newPhone.updatedAt <
+        new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
       ) {
         // Allow new User - Invalidate newPhone
         newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
@@ -324,9 +324,9 @@ export default {
         // We found an old phone and no new User is requested
         if (
           oldPhone &&
-            (!newUser ||
-              oldPhone.updatedAt >=
-                new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))
+          (!newUser ||
+            oldPhone.updatedAt >=
+            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))
         ) {
           newPhone = oldPhone;
           newPhone.phoneHash = newPhoneHash;

@@ -94,14 +94,14 @@ export const auth = async (req, res, next) => {
         req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
         // Set new timestamps
         req.user.markModified('updatedAt');
-        req.user.save();
+        await req.user.save();
         if (req.device) {
           req.device.markModified('updatedAt');
-          req.device.save();
+          await req.device.save();
         }
         if (req.phone) {
           req.phone.markModified('updatedAt');
-          req.phone.save();
+          await req.phone.save();
         }
       }
       success = true;
@@ -120,14 +120,14 @@ export const auth = async (req, res, next) => {
           req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
           // Set new timestamps
           req.user.markModified('updatedAt');
-          req.user.save();
+          await req.user.save();
           if (req.device) {
             req.device.markModified('updatedAt');
-            req.device.save();
+            await req.device.save();
           }
           if (req.phone) {
             req.phone.markModified('updatedAt');
-            req.phone.save();
+            await req.phone.save();
           }
         }
         success = true;
