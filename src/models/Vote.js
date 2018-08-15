@@ -30,5 +30,12 @@ const VoteSchema = new Schema({
 });
 
 VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
+VoteSchema.index({ _id: 1, 'voters.kind': 1, 'voters. voter': 1 }, { unique: true });
+
+mongoose.model('Vote').ensureIndexes((err) => {
+  if (err) {
+    Log.error(JSON.stringify({ err }));
+  }
+});
 
 export default mongoose.model('Vote', VoteSchema);

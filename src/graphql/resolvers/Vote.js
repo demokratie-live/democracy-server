@@ -99,7 +99,7 @@ export default {
       }
       const hasVoted = vote.voters.some(({ kind, voter }) =>
         kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
-        voter === (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
+        voter.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
         const voteUpdate = {
           $push: {
