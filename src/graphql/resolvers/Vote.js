@@ -100,31 +100,34 @@ export default {
       const hasVoted = vote.voters.some(({ kind, voter }) =>
         kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
         voter.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
-      if (!hasVoted) {
-        const voteUpdate = {
-          $push: {
-            voters: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-            },
-          },
-        };
-        switch (selection) {
-          case 'YES':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.yes': 1 } : { 'voteResults.device.yes': 1 };
-            break;
-          case 'NO':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.no': 1 } : { 'voteResults.device.no': 1 };
-            break;
-          case 'ABSTINATION':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.abstination': 1 } : { 'voteResults.device.abstination': 1 };
-            break;
-
-          default:
-            break;
-        }
-        await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
+      if (hasVoted) {
+        Log.warn('User tried to vote twice - vote was not counted!');
+        throw new Error('You have already voted');
       }
+      const voteUpdate = {
+        $push: {
+          voters: {
+            kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          },
+        },
+      };
+      switch (selection) {
+        case 'YES':
+          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.yes': 1 } : { 'voteResults.device.yes': 1 };
+          break;
+        case 'NO':
+          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.no': 1 } : { 'voteResults.device.no': 1 };
+          break;
+        case 'ABSTINATION':
+          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.abstination': 1 } : { 'voteResults.device.abstination': 1 };
+          break;
+
+        default:
+          break;
+      }
+      await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
+
       await Activity.Mutation.increaseActivity(
         parent,
         { procedureId },
