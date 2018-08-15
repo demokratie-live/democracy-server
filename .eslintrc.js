@@ -3,7 +3,7 @@ module.exports = {
   plugins: ["prettier"],
   rules: {
     "prettier/prettier": ["error"],
-    "newline-per-chained-call": [2]
+    "newline-per-chained-call": [2],
     'linebreak-style': 0,
   },
   globals: {
