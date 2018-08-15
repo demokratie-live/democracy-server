@@ -11,6 +11,8 @@ export default {
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'elasticsearch',
   APN_TOPIC: (() => {
     switch (process.env.STAGE) {
+      case 'internal':
+        return 'de.democracy-deutschland.clientapp.internal';
       case 'alpha':
         return 'de.democracy-deutschland.clientapp.alpha';
       case 'beta':

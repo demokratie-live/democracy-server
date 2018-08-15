@@ -4,7 +4,8 @@
 
 - [Add] Sorting for Procedures
 - [GraphQL] add Query: getProceduresById
-- [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462) 
+- [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462)
+- [Fix] add internal lane topic for push notifications
 
 ### 0.1.12
 
