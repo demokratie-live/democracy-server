@@ -347,5 +347,35 @@ export default {
       }
       return 'PREPARATION';
     },
+    currentStatusHistory: ({ currentStatusHistory }) => {
+      const cleanHistory = [...new Set(currentStatusHistory)];
+      const referStatusIndex = cleanHistory.findIndex(status => status === 'Überwiesen');
+      if (referStatusIndex !== -1) {
+        cleanHistory.splice(referStatusIndex, 0, '1. Beratung');
+      }
+
+      const resultStaties = [
+        'Angenommen',
+        'Abgelehnt',
+        'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
+        'Abgeschlossen',
+        'Verkündet',
+        'Verabschiedet',
+        'Bundesrat hat zugestimmt',
+        'Bundesrat hat Einspruch eingelegt',
+        'Bundesrat hat Zustimmung versagt',
+        'Bundesrat hat Vermittlungsausschuss nicht angerufen',
+        'Im Vermittlungsverfahren',
+        'Vermittlungsvorschlag liegt vor',
+        'Für mit dem Grundgesetz unvereinbar erklärt',
+        'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
+        'Zustimmung versagt',
+      ];
+      const resultStatusIndex = cleanHistory.findIndex(status => resultStaties.includes(status));
+      if (resultStatusIndex !== -1) {
+        cleanHistory.splice(resultStatusIndex, 0, '2. Beratung / 3. Beratung');
+      }
+      return cleanHistory;
+    },
   },
 };
