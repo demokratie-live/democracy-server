@@ -14,7 +14,7 @@ const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
   new Date(Math.min(
     expires,
     latestCodeTime +
-    (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
+    (((ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount) * 1000),
   ));
 
 export default {
@@ -409,7 +409,8 @@ export default {
       return device.notificationSettings;
     }),
 
-    toggleNotification: isLoggedin.createResolver(async (parent, { procedureId }, { device, ProcedureModel }) => {
+    toggleNotification: isLoggedin.createResolver(async (parent, { procedureId },
+      { device, ProcedureModel }) => {
       Log.graphql('Device.mutation.toggleNotification');
       const procedure = await ProcedureModel.findOne({ procedureId });
 

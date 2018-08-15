@@ -8,7 +8,7 @@ import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
 const queryVotes = async (parent, { procedure },
   { VoteModel, device, phone }) => {
-    Log.graphql('Vote.query.votes');
+  Log.graphql('Vote.query.votes');
   const voted = await VoteModel.aggregate([
     { $match: { procedure: Types.ObjectId(procedure) } },
     { $unwind: '$voters' },
@@ -32,6 +32,8 @@ const queryVotes = async (parent, { procedure },
     return voted[0];
   }
 
+  // To hide Vote results here needs to be another query
+  // checking the procedure if the government has voted already
   const unvoted = await VoteModel.aggregate([
     { $match: { procedure: Types.ObjectId(procedure) } },
     { $addFields: { voted: false } },
@@ -69,10 +71,10 @@ export default {
       if (
         !(
           procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-            (procedure.currentStatus === 'Überwiesen' &&
-              procedure.voteDate &&
-              new Date(procedure.voteDate) >= new Date()) ||
-            procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+          (procedure.currentStatus === 'Überwiesen' &&
+            procedure.voteDate &&
+            new Date(procedure.voteDate) >= new Date()) ||
+          procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
         )
       ) {
         throw new Error('Not votable');
@@ -80,9 +82,9 @@ export default {
       let state;
       if (
         procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-          (procedure.currentStatus === 'Überwiesen' &&
-            procedure.voteDate &&
-            new Date(procedure.voteDate) >= new Date())
+        (procedure.currentStatus === 'Überwiesen' &&
+          procedure.voteDate &&
+          new Date(procedure.voteDate) >= new Date())
       ) {
         state = 'VOTING';
       } else if (
@@ -97,7 +99,7 @@ export default {
       }
       const hasVoted = vote.voters.some(({ kind, voter }) =>
         kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
-            voter === (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
+        voter === (CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
       if (!hasVoted) {
         const voteUpdate = {
           $push: {

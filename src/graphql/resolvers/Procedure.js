@@ -172,6 +172,7 @@ export default {
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
       Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
+      // TODO fail here of procedure is null
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status)
@@ -181,7 +182,7 @@ export default {
       return {
         ...procedure.toObject(),
         notify: !!(device && device.notificationSettings.procedures.indexOf(procedure._id) > -1),
-        verified: user.isVerified(),
+        verified: user ? user.isVerified() : false,
       };
     },
 
@@ -304,7 +305,8 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: isLoggedin.createResolver(async (parent, args, { device, ProcedureModel }) => {
+    notifiedProcedures: isLoggedin.createResolver(async (parent, args,
+      { device, ProcedureModel }) => {
       Log.graphql('Procedure.query.notifiedProcedures');
       const procedures = await ProcedureModel.find({
         _id: { $in: device.notificationSettings.procedures },
@@ -337,7 +339,7 @@ export default {
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       Log.graphql('Procedure.field.voted');
       const voted =
-        CONSTANTS.SMS_VERIFICATION && !phone
+        ((CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device))
           ? false
           : await VoteModel.findOne({
             procedure: procedure._id,
@@ -350,6 +352,14 @@ export default {
           });
       return !!voted;
     },
+    /* communityResults: async (procedure, args, { VoteModel }) => {
+      Log.graphql('Procedure.field.voteResults');
+      // if(!votedGovernment && !voted){
+      //   return { yes: null, no: null, abstination: null }
+      // }
+      const result = await VoteModel.findOne({ procedure: procedure._id }, { voteResults: 1 });
+      return CONSTANTS.SMS_VERIFICATION ? result.voteResults.phone : result.voteResults.device;
+    }, */
     votedGovernment: (procedure) => {
       Log.graphql('Procedure.field.votedGovernment');
       return (
