@@ -1,7 +1,9 @@
 module.exports = {
-  extends: 'airbnb-base',
+  extends: ["airbnb", "prettier"],
+  plugins: ["prettier"],
   rules: {
-    'newline-per-chained-call': [2],
+    "prettier/prettier": ["error"],
+    "newline-per-chained-call": [2]
     'linebreak-style': 0,
   },
   globals: {
