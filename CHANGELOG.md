@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.xx
+### 0.1.14
 
 - [Changed] JWT Header based authentification
 - [Added] DEBUG environment variable
