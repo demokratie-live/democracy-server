@@ -1,10 +1,14 @@
 # Changelog
 
+### 0.1.14
+
+- [Add] Logger
+
 ### 0.1.13
 
 - [Add] Sorting for Procedures
 - [GraphQL] add Query: getProceduresById
-- [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462) 
+- [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462)
 
 ### 0.1.12
 

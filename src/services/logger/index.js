@@ -48,6 +48,7 @@ if (constants.LOGGING.DISCORD && constants.LOGGING.DISCORD_WEBHOOK) {
   transports.push(new DiscordLogger({
     webhooks: constants.LOGGING.DISCORD_WEBHOOK,
     level: constants.LOGGING.DISCORD,
+    inline: { server: 'Democracy' },
   }));
 }
 const myLevels = {
