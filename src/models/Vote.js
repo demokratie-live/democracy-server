@@ -8,14 +8,34 @@ const VoteSchema = new Schema({
     required: true,
   },
   state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
-  users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  voters: [{
+    kind: String,
+    voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+    // Todo: This is not working
+    // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
+    _id: false,
+  }],
   voteResults: {
-    yes: { type: Number, default: 0 },
-    no: { type: Number, default: 0 },
-    abstination: { type: Number, default: 0 },
+    device: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
+    phone: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
   },
 });
 
 VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
+VoteSchema.index({ _id: 1, 'voters.kind': 1, 'voters.voter': 1 }, { unique: true });
 
 export default mongoose.model('Vote', VoteSchema);
+
+mongoose.model('Vote').ensureIndexes((err) => {
+  if (err) {
+    Log.error(JSON.stringify({ err }));
+  }
+});

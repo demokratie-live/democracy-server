@@ -1,11 +1,16 @@
 /* eslint-disable no-console */
 import mongoose from 'mongoose';
+import { inspect } from 'util';
 
 import CONSTANTS from './constants';
 
 mongoose.Promise = global.Promise;
 
-// mongoose.set('debug', true);
+if (CONSTANTS.LOGGING.MONGO) {
+  mongoose.set('debug', (...rest) => {
+    Log[CONSTANTS.LOGGING.MONGO](inspect(rest));
+  });
+}
 (async () => {
   try {
     mongoose.connect(CONSTANTS.db.url, {});
@@ -13,8 +18,8 @@ mongoose.Promise = global.Promise;
     mongoose.createConnection(CONSTANTS.db.url, {});
   }
 
-  mongoose.connection.once('open', () => console.log('MongoDB is running')).on('error', (e) => {
-    throw e;
+  mongoose.connection.once('open', () => Log.info('MongoDB is running')).on('error', (e) => {
+    Log.error(JSON.stringify(e));
   });
 })();
 

@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.1.xx
+
+- [Changed] JWT Header based authentification
+- [Added] DEBUG environment variable
+- [Added] Permissions for User-only and VerifiedUser-only requests
+- [Added] IP-Whitelist controll for Bundestag.io hooks
+- [Added] SMS Verification
+
 ### 0.1.13
 
 - [Add] Sorting for Procedures

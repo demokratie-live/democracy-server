@@ -6,6 +6,8 @@ import CONSTANTS from '../../config/constants';
 
 import elasticsearch from '../../services/search';
 
+import { isLoggedin } from '../../express/auth/permissions';
+
 export default {
   Query: {
     procedures: async (
@@ -15,6 +17,7 @@ export default {
       },
       { ProcedureModel },
     ) => {
+      Log.graphql('Procedure.query.procedures');
       let currentStates = [];
 
       const filterQuery = {};
@@ -161,11 +164,15 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
-    proceduresById: async (parent, { ids }, { ProcedureModel }) =>
-      ProcedureModel.find({ _id: { $in: ids } }),
+    proceduresById: async (parent, { ids }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.proceduresById');
+      return ProcedureModel.find({ _id: { $in: ids } });
+    },
 
-    procedure: async (parent, { id }, { user, ProcedureModel }) => {
+    procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
+      Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
+      // TODO fail here of procedure is null
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status)
@@ -174,11 +181,13 @@ export default {
 
       return {
         ...procedure.toObject(),
-        notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        notify: !!(device && device.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        verified: user ? user.isVerified() : false,
       };
     },
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProceduresAutocomplete');
       let autocomplete = [];
 
       // Search by procedureID or Document id
@@ -257,6 +266,7 @@ export default {
 
     // DEPRECATED
     searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProcedures');
       const { hits } = await elasticsearch.search({
         index: 'procedures',
         type: 'procedure',
@@ -295,47 +305,83 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
+    notifiedProcedures: isLoggedin.createResolver(async (parent, args,
+      { device, ProcedureModel }) => {
+      Log.graphql('Procedure.query.notifiedProcedures');
       const procedures = await ProcedureModel.find({
-        _id: { $in: user.notificationSettings.procedures },
+        _id: { $in: device.notificationSettings.procedures },
       });
 
       return procedures.map(procedure => ({
         ...procedure.toObject(),
         notify: true,
       }));
-    },
+    }),
   },
 
   Procedure: {
-    activityIndex: async (procedure, args, { ActivityModel, user }) => {
+    activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
+      Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
-      const active = await ActivityModel.findOne({
-        user,
-        procedure,
-      });
+      const active =
+        CONSTANTS.SMS_VERIFICATION && !phone
+          ? false
+          : await ActivityModel.findOne({
+            actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            procedure,
+          });
       return {
         activityIndex,
         active: !!active,
       };
     },
-    voted: async (procedure, args, { VoteModel, user }) => {
-      const voted = await VoteModel.findOne({ procedure, users: user });
+    voted: async (procedure, args, { VoteModel, device, phone }) => {
+      Log.graphql('Procedure.field.voted');
+      const voted =
+        ((CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device))
+          ? false
+          : await VoteModel.findOne({
+            procedure: procedure._id,
+            voters: {
+              $elemMatch: {
+                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              },
+            },
+          });
       return !!voted;
     },
-    votedGovernment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
+    /* communityResults: async (procedure, args, { VoteModel }) => {
+      Log.graphql('Procedure.field.voteResults');
+      // if(!votedGovernment && !voted){
+      //   return { yes: null, no: null, abstination: null }
+      // }
+      const result = await VoteModel.findOne({ procedure: procedure._id }, { voteResults: 1 });
+      return CONSTANTS.SMS_VERIFICATION ? result.voteResults.phone : result.voteResults.device;
+    }, */
+    votedGovernment: (procedure) => {
+      Log.graphql('Procedure.field.votedGovernment');
+      return (
+        procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+      );
+    },
     // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
     // required for client <= 0.7.5
-    votedGoverment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    completed: procedure => procedureStates.COMPLETED.includes(procedure.currentStatus),
+    votedGoverment: (procedure) => {
+      Log.graphql('Procedure.field.votedGoverment');
+      return (
+        procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+      );
+    },
+    completed: (procedure) => {
+      Log.graphql('Procedure.field.completed');
+      return procedureStates.COMPLETED.includes(procedure.currentStatus);
+    },
     listType: (procedure) => {
+      Log.graphql('Procedure.field.listType');
       if (
         procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
         (procedure.currentStatus === 'Überwiesen' &&
