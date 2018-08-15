@@ -7,13 +7,14 @@
 - [Added] Permissions for User-only and VerifiedUser-only requests
 - [Added] IP-Whitelist controll for Bundestag.io hooks
 - [Added] SMS Verification
+- [Added] Logger
 
 ### 0.1.13
 
 - [Add] Sorting for Procedures
 - [GraphQL] add Query: getProceduresById
 - [Fixed] Start even if no valid APPLE_APN_KEY is present [#462](https://github.com/demokratie-live/democracy-client/issues/462)
-- [Fix] add internal lane topic for push notifications
+- [Fixed] add internal lane topic for push notifications
 
 ### 0.1.12
 
