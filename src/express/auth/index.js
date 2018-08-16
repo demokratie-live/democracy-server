@@ -73,7 +73,11 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 
 export const auth = async (req, res, next) => {
   Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
-  const token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
+  let token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
+  // In some cases the old Client transmitts the token via authorization header as 'Bearer [token]'
+  if (CONSTANTS.JWT_BACKWARD_COMPATIBILITY && !token && req.headers.authorization) {
+    token = req.headers.authorization.substr(7);
+  }
   const deviceHash =
     req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
   const phoneHash =
