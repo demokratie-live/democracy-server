@@ -40,7 +40,7 @@ const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload
 
           if (apnProvider) {
             apnProvider.send(note, token).then(result => {
-              Log.Notification({
+              Log.notification({
                 type: 'apnProvider.send',
                 data: util.inspect(result, false, null),
               });
