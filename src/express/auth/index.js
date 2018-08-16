@@ -6,7 +6,7 @@ import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
 import PhoneModel from '../../models/Phone';
 
-export const createTokens = async (user) => {
+export const createTokens = async user => {
   const token = jwt.sign(
     {
       user,
@@ -30,7 +30,7 @@ export const createTokens = async (user) => {
   return Promise.all([token, refreshToken]);
 };
 
-const refreshTokens = async (refreshToken) => {
+const refreshTokens = async refreshToken => {
   // Verify Token
   try {
     jwt.verify(refreshToken, CONSTANTS.AUTH_JWT_SECRET);
@@ -74,8 +74,10 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 export const auth = async (req, res, next) => {
   Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
   const token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
-  const deviceHash = req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
-  const phoneHash = req.headers['x-phone-hash'] || (CONSTANTS.DEBUG ? req.query.phoneHash || null : null);
+  const deviceHash =
+    req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
+  const phoneHash =
+    req.headers['x-phone-hash'] || (CONSTANTS.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
     Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
@@ -109,7 +111,8 @@ export const auth = async (req, res, next) => {
     } catch (err) {
       // Check for JWT Refresh Ability
       Log.jwt(`JWT: Token Error: ${err}`);
-      const refreshToken = req.headers['x-refresh-token'] || (CONSTANTS.DEBUG ? req.cookies.debugRefreshToken : null);
+      const refreshToken =
+        req.headers['x-refresh-token'] || (CONSTANTS.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
@@ -145,18 +148,29 @@ export const auth = async (req, res, next) => {
       Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
-        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+        deviceHash: crypto
+          .createHash('sha256')
+          .update(deviceHash)
+          .digest('hex'),
       });
-      phone = phoneHash ? await PhoneModel.findOne({
-        phoneHash: crypto.createHash('sha256').update(phoneHash).digest('hex'),
-      }) : null;
+      phone = phoneHash
+        ? await PhoneModel.findOne({
+            phoneHash: crypto
+              .createHash('sha256')
+              .update(phoneHash)
+              .digest('hex'),
+          })
+        : null;
       user = await UserModel.findOne({ device, phone });
       if (!user) {
         Log.jwt('JWT: Create new User');
         // Device
         if (!device) {
           device = new DeviceModel({
-            deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+            deviceHash: crypto
+              .createHash('sha256')
+              .update(deviceHash)
+              .digest('hex'),
           });
           await device.save();
         }

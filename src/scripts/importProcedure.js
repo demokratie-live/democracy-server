@@ -28,24 +28,25 @@ export default async (bIoProcedure, { push = false }) => {
   if (bIoProcedure && bIoProcedure.history) {
     const [lastHistory] = newBIoProcedure.history.slice(-1);
     // Conditions on which Procedure is voted upon
-    const btWithDecisions = bIoProcedure.history.filter(({ initiator, decision }) =>
-      // Beschluss liegt vor
-      // TODO: decision should not be an array
-      (decision &&
-          decision.find(({ tenor }) =>
-            tenor === 'Ablehnung der Vorlage' ||
+    const btWithDecisions = bIoProcedure.history.filter(
+      ({ initiator, decision }) =>
+        // Beschluss liegt vor
+        // TODO: decision should not be an array
+        (decision &&
+          decision.find(
+            ({ tenor }) =>
+              tenor === 'Ablehnung der Vorlage' ||
               tenor === 'Annahme der Vorlage' ||
               tenor === 'Erklärung der Vorlage für erledigt' ||
-              tenor === 'Annahme in Ausschussfassung')) ||
+              tenor === 'Annahme in Ausschussfassung',
+          )) ||
         // Zurückgezogen
         initiator === 'Amtliche Mitteilung: Rücknahme' ||
-        initiator === 'Rücknahme');
+        initiator === 'Rücknahme',
+    );
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-    } else if (
-      bIoProcedure.customData &&
-      bIoProcedure.customData.expectedVotingDate
-    ) {
+    } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
       newBIoProcedure.voteDate = new Date(bIoProcedure.customData.expectedVotingDate);
     }
 
@@ -69,24 +70,20 @@ export default async (bIoProcedure, { push = false }) => {
         no: bIoProcedure.customData.voteResults.no,
       };
     } else {
-      bIoProcedure.history.some((h) => {
+      bIoProcedure.history.some(h => {
         if (h.decision) {
-          return h.decision.some((decision) => {
+          return h.decision.some(decision => {
             if (decision.type === 'Namentliche Abstimmung') {
               const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
               const voteResultsProto = decision.comment.match(voteResultsRegEx);
-              const vResults = voteResultsProto
-                ? voteResultsProto[0].split(':')
-                : null;
+              const vResults = voteResultsProto ? voteResultsProto[0].split(':') : null;
               voteResults = {
                 yes: vResults ? vResults[0] : null,
                 no: vResults ? vResults[1] : null,
                 abstination: vResults ? vResults[2] : null,
                 notVote:
                   deputiesNumber[bIoProcedure.period] -
-                  (vResults
-                    ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0)
-                    : 0),
+                  (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
               };
               return true;
             }
@@ -117,17 +114,19 @@ export default async (bIoProcedure, { push = false }) => {
       upsert: true,
       new: true,
     },
-  ).then((newDoc) => {
+  ).then(newDoc => {
     if (push) {
       /**
        * PUSH NOTIFICATIONS
        */
       // New Procedures
       if (!oldProcedure) {
-        Log.push(JSON.stringify({
-          type: 'new Procedure',
-          ids: newBIoProcedure.procedureId,
-        }));
+        Log.push(
+          JSON.stringify({
+            type: 'new Procedure',
+            ids: newBIoProcedure.procedureId,
+          }),
+        );
         PushNotifiaction.create({
           procedureId: newBIoProcedure.procedureId,
           type: 'new',
@@ -136,27 +135,31 @@ export default async (bIoProcedure, { push = false }) => {
       } else {
         // Updated Procedures
         const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
-        const updatedValues = _.compact(_.map(diffs.updated, (value, key) => {
-          switch (key) {
-            case 'currentStatus':
-            case 'importantDocuments':
-            case 'voteResults':
-              return key;
+        const updatedValues = _.compact(
+          _.map(diffs.updated, (value, key) => {
+            switch (key) {
+              case 'currentStatus':
+              case 'importantDocuments':
+              case 'voteResults':
+                return key;
 
-            case 'updatedAt':
-            case 'bioUpdateAt':
-              return null;
+              case 'updatedAt':
+              case 'bioUpdateAt':
+                return null;
 
-            default:
-              return null;
-          }
-        }));
+              default:
+                return null;
+            }
+          }),
+        );
         if (updatedValues.length > 0) {
-          Log.import(JSON.stringify({
-            type: 'updated Procedure',
-            ids: newBIoProcedure.procedureId,
-            diffs,
-          }));
+          Log.import(
+            JSON.stringify({
+              type: 'updated Procedure',
+              ids: newBIoProcedure.procedureId,
+              diffs,
+            }),
+          );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'update',
@@ -168,18 +171,19 @@ export default async (bIoProcedure, { push = false }) => {
           (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
             oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
             !(
-              oldProcedure.currentStatus === 'Überwiesen' &&
-              newBIoProcedure.voteDate > new Date()
+              oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
             )) ||
           (newBIoProcedure.currentStatus === 'Überwiesen' &&
             newBIoProcedure.voteDate > new Date() &&
             !oldProcedure.voteDate)
         ) {
           // moved to Vote Procedures
-          Log.import(JSON.stringify({
-            type: 'new Vote',
-            ids: newBIoProcedure.procedureId,
-          }));
+          Log.import(
+            JSON.stringify({
+              type: 'new Vote',
+              ids: newBIoProcedure.procedureId,
+            }),
+          );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'newVote',

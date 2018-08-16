@@ -54,7 +54,7 @@ ProcedureSchema.index(
 
 export default mongoose.model('Procedure', ProcedureSchema);
 
-mongoose.model('Procedure').ensureIndexes((err) => {
+mongoose.model('Procedure').ensureIndexes(err => {
   if (!err) {
     Log.info('SearchIndexs for Procedures created');
   } else {

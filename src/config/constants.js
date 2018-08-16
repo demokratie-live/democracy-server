@@ -20,7 +20,7 @@ export default {
       case 'production':
         return 'de.democracy-deutschland.clientapp';
       default:
-        console.error('ERROR: no STAGE defined!');
+        console.error('ERROR: no STAGE defined!'); // eslint-disable-line no-console
         return 'de.democracy-deutschland.clientapp';
     }
   })(),
@@ -30,10 +30,13 @@ export default {
   AUTH_JWT_TTL: process.env.AUTH_JWT_TTL || '1d',
   AUTH_JWT_REFRESH_TTL: process.env.AUTH_JWT_REFRESH_TTL || '7d',
   ENGINE_API_KEY: process.env.ENGINE_API_KEY || null,
-  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES ? process.env.WHITELIST_DATA_SOURCES.split(',') : ['::ffff:127.0.0.1', '::1'],
+  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES
+    ? process.env.WHITELIST_DATA_SOURCES.split(',')
+    : ['::ffff:127.0.0.1', '::1'],
   SMS_VERIFICATION: !(process.env.SMS_VERIFICATION === 'false'),
   SMS_VERIFICATION_CODE_TTL: process.env.SMS_VERIFICATION_CODE_TTL || '1d',
-  SMS_VERIFICATION_CODE_RESEND_BASETIME: process.env.SMS_VERIFICATION_CODE_RESEND_BASETIME || '120s',
+  SMS_VERIFICATION_CODE_RESEND_BASETIME:
+    process.env.SMS_VERIFICATION_CODE_RESEND_BASETIME || '120s',
   SMS_VERIFICATION_NEW_USER_DELAY: process.env.SMS_VERIFICATION_NEW_USER_DELAY || '24w',
   JWT_BACKWARD_COMPATIBILITY: process.env.JWT_BACKWARD_COMPATIBILITY === 'true',
   SMS_PROVIDER_KEY: process.env.SMS_PROVIDER_KEY,

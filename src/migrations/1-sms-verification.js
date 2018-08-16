@@ -1,3 +1,4 @@
+/* eslint no-await-in-loop: 0 */
 import crypto from 'crypto';
 
 import UserModel from './../models/User';
@@ -37,36 +38,44 @@ module.exports.up = async function (done) { // eslint-disable-line
 
     // Transform oldUsers -> Users + Devices
     const userCursor = oldUsers.find();
-    while (await userCursor.hasNext()) { // eslint-disable-line no-await-in-loop
-      const oldUser = await userCursor.next(); // eslint-disable-line no-await-in-loop
+    while (await userCursor.hasNext()) {
+      const oldUser = await userCursor.next();
       // New Device
-      const device = await DeviceModel.create({ // eslint-disable-line no-await-in-loop
-        deviceHash: crypto.createHash('sha256').update(oldUser.deviceHash).digest('hex'),
+      const device = await DeviceModel.create({
+        deviceHash: crypto
+          .createHash('sha256')
+          .update(oldUser.deviceHash)
+          .digest('hex'),
         pushTokens: oldUser.pushTokens,
         notificationSettings: oldUser.notificationSettings,
       });
-      await device.save(); // eslint-disable-line no-await-in-loop
+      await device.save();
 
       // New User
-      const newUser = await UserModel.create({ device }); // eslint-disable-line no-await-in-loop
-      await newUser.save(); // eslint-disable-line no-await-in-loop
+      const newUser = await UserModel.create({ device });
+      await newUser.save();
     }
 
     // Transform oldVotes -> Votes
     const voteCursor = oldVotes.find();
-    while (await voteCursor.hasNext()) { // eslint-disable-line no-await-in-loop
-      const oldVote = await voteCursor.next(); // eslint-disable-line no-await-in-loop
+    while (await voteCursor.hasNext()) {
+      const oldVote = await voteCursor.next();
       // Transform Voters
-      const voters = await Promise.all(oldVote.users.map(async (id) => { // eslint-disable-line
-        const oldVoter = await oldUsers.findOne({ _id: id }); // eslint-disable-line
-        const device = await DeviceModel.findOne({ // eslint-disable-line no-await-in-loop
-          deviceHash: crypto.createHash('sha256').update(oldVoter.deviceHash).digest('hex'),
-        });
-        return { kind: 'Device', voter: device._id };// eslint-disable-line no-underscore-dangle
-      }));
+      const voters = await Promise.all(
+        oldVote.users.map(async id => {
+          const oldVoter = await oldUsers.findOne({ _id: id }); // eslint-disable-line no-underscore-dangle
+          const device = await DeviceModel.findOne({
+            deviceHash: crypto
+              .createHash('sha256')
+              .update(oldVoter.deviceHash)
+              .digest('hex'),
+          });
+          return { kind: 'Device', voter: device._id }; // eslint-disable-line no-underscore-dangle
+        }),
+      );
 
       // New Vote
-      const newVote = await VoteModel.create({ // eslint-disable-line no-await-in-loop
+      const newVote = await VoteModel.create({
         procedure: oldVote.procedure,
         state: oldVote.state,
         voteResults: {
@@ -75,26 +84,29 @@ module.exports.up = async function (done) { // eslint-disable-line
         },
         voters,
       });
-      await newVote.save(); // eslint-disable-line no-await-in-loop
+      await newVote.save();
     }
 
     // Transform oldActivities -> Activities
     const activityCursor = oldActivities.find();
-    while (await activityCursor.hasNext()) { // eslint-disable-line no-await-in-loop
-      const oldActivity = await activityCursor.next(); // eslint-disable-line no-await-in-loop
-      const oldActor = await oldUsers.findOne({ // eslint-disable-line no-await-in-loop
+    while (await activityCursor.hasNext()) {
+      const oldActivity = await activityCursor.next();
+      const oldActor = await oldUsers.findOne({
         _id: oldActivity.user,
       });
-      const device = await DeviceModel.findOne({ // eslint-disable-line no-await-in-loop
-        deviceHash: crypto.createHash('sha256').update(oldActor.deviceHash).digest('hex'),
+      const device = await DeviceModel.findOne({
+        deviceHash: crypto
+          .createHash('sha256')
+          .update(oldActor.deviceHash)
+          .digest('hex'),
       });
       // New Activity
-      const newActivity = await ActivityModel.create({ // eslint-disable-line no-await-in-loop
+      const newActivity = await ActivityModel.create({
         procedure: oldActivity.procedure,
         kind: 'Device',
         actor: device,
       });
-      await newActivity.save(); // eslint-disable-line no-await-in-loop
+      await newActivity.save();
     }
 
     done();

@@ -8,13 +8,15 @@ const VoteSchema = new Schema({
     required: true,
   },
   state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
-  voters: [{
-    kind: String,
-    voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
-    // Todo: This is not working
-    // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
-    _id: false,
-  }],
+  voters: [
+    {
+      kind: String,
+      voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+      // Todo: This is not working
+      // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
+      _id: false,
+    },
+  ],
   voteResults: {
     device: {
       yes: { type: Number, default: 0 },
@@ -34,7 +36,7 @@ VoteSchema.index({ _id: 1, 'voters.kind': 1, 'voters.voter': 1 }, { unique: true
 
 export default mongoose.model('Vote', VoteSchema);
 
-mongoose.model('Vote').ensureIndexes((err) => {
+mongoose.model('Vote').ensureIndexes(err => {
   if (err) {
     Log.error(JSON.stringify({ err }));
   }

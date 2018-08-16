@@ -6,23 +6,22 @@ import Activity from './Activity';
 import procedureStates from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 
-const queryVotes = async (parent, { procedure },
-  { VoteModel, device, phone }) => {
+const queryVotes = async (parent, { procedure }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
   const voted = await VoteModel.aggregate([
     { $match: { procedure: Types.ObjectId(procedure) } },
     { $unwind: '$voters' },
     {
       $match: {
-        'voters.kind': (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device'),
-        'voters.voter': (CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id), // eslint-disable-line no-nested-ternary
+        'voters.kind': CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+        'voters.voter': CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
       },
     },
     { $addFields: { voted: true } },
     {
       $project: {
         _id: 1,
-        voteResults: (CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device'),
+        voteResults: CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device',
         voted: 1,
       },
     },
@@ -40,7 +39,7 @@ const queryVotes = async (parent, { procedure },
     {
       $project: {
         _id: 1,
-        voteResults: (CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device'),
+        voteResults: CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device',
         voted: 1,
       },
     },
@@ -58,88 +57,96 @@ export default {
   },
 
   Mutation: {
-    vote: isVerified.createResolver(async (
-      parent,
-      { procedure: procedureId, selection },
-      {
-        VoteModel, ProcedureModel, ActivityModel, user, device, phone,
-      },
-    ) => {
-      Log.graphql('Vote.mutation.vote');
-      // TODO check if procedure is votable
-      const procedure = await ProcedureModel.findById(procedureId);
-      if (
-        !(
+    vote: isVerified.createResolver(
+      async (
+        parent,
+        { procedure: procedureId, selection },
+        { VoteModel, ProcedureModel, ActivityModel, user, device, phone },
+      ) => {
+        Log.graphql('Vote.mutation.vote');
+        // TODO check if procedure is votable
+        const procedure = await ProcedureModel.findById(procedureId);
+        if (
+          !(
+            procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+            (procedure.currentStatus === 'Überwiesen' &&
+              procedure.voteDate &&
+              new Date(procedure.voteDate) >= new Date()) ||
+            procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+          )
+        ) {
+          throw new Error('Not votable');
+        }
+        let state;
+        if (
           procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
           (procedure.currentStatus === 'Überwiesen' &&
             procedure.voteDate &&
-            new Date(procedure.voteDate) >= new Date()) ||
+            new Date(procedure.voteDate) >= new Date())
+        ) {
+          state = 'VOTING';
+        } else if (
           procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
-        )
-      ) {
-        throw new Error('Not votable');
-      }
-      let state;
-      if (
-        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-        (procedure.currentStatus === 'Überwiesen' &&
-          procedure.voteDate &&
-          new Date(procedure.voteDate) >= new Date())
-      ) {
-        state = 'VOTING';
-      } else if (
-        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
-      ) {
-        state = 'COMPLETED';
-      }
+        ) {
+          state = 'COMPLETED';
+        }
 
-      let vote = await VoteModel.findOne({ procedure });
-      if (!vote) {
-        vote = await VoteModel.create({ procedure, state });
-      }
-      const hasVoted = vote.voters.some(({ kind, voter }) =>
-        kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
-        voter.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id));
-      if (hasVoted) {
-        Log.warn('User tried to vote twice - vote was not counted!');
-        throw new Error('You have already voted');
-      }
-      const voteUpdate = {
-        $push: {
-          voters: {
-            kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-            voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+        let vote = await VoteModel.findOne({ procedure });
+        if (!vote) {
+          vote = await VoteModel.create({ procedure, state });
+        }
+        const hasVoted = vote.voters.some(
+          ({ kind, voter }) =>
+            kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
+            voter.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
+        );
+        if (hasVoted) {
+          Log.warn('User tried to vote twice - vote was not counted!');
+          throw new Error('You have already voted');
+        }
+        const voteUpdate = {
+          $push: {
+            voters: {
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
           },
-        },
-      };
-      switch (selection) {
-        case 'YES':
-          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.yes': 1 } : { 'voteResults.device.yes': 1 };
-          break;
-        case 'NO':
-          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.no': 1 } : { 'voteResults.device.no': 1 };
-          break;
-        case 'ABSTINATION':
-          voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION ? { 'voteResults.phone.abstination': 1 } : { 'voteResults.device.abstination': 1 };
-          break;
+        };
+        switch (selection) {
+          case 'YES':
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
+              ? { 'voteResults.phone.yes': 1 }
+              : { 'voteResults.device.yes': 1 };
+            break;
+          case 'NO':
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
+              ? { 'voteResults.phone.no': 1 }
+              : { 'voteResults.device.no': 1 };
+            break;
+          case 'ABSTINATION':
+            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
+              ? { 'voteResults.phone.abstination': 1 }
+              : { 'voteResults.device.abstination': 1 };
+            break;
 
-        default:
-          break;
-      }
-      await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
+          default:
+            break;
+        }
+        await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
 
-      await Activity.Mutation.increaseActivity(
-        parent,
-        { procedureId },
-        {
-          ProcedureModel,
-          ActivityModel,
-          user,
-          phone,
-          device,
-        },
-      );
-      return queryVotes(parent, { procedureId }, { VoteModel, device, phone });
-    }),
+        await Activity.Mutation.increaseActivity(
+          parent,
+          { procedureId },
+          {
+            ProcedureModel,
+            ActivityModel,
+            user,
+            phone,
+            device,
+          },
+        );
+        return queryVotes(parent, { procedureId }, { VoteModel, device, phone });
+      },
+    ),
   },
 };

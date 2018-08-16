@@ -12,9 +12,7 @@ export default {
   Query: {
     procedures: async (
       parent,
-      {
-        type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
-      },
+      { type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {} },
       { ProcedureModel },
     ) => {
       Log.graphql('Procedure.query.procedures');
@@ -175,7 +173,8 @@ export default {
       // TODO fail here of procedure is null
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
-        status => procedure.currentStatus === status)
+        status => procedure.currentStatus === status,
+      )
         ? 'VOTING'
         : 'PREPARATION';
 
@@ -305,18 +304,19 @@ export default {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: isLoggedin.createResolver(async (parent, args,
-      { device, ProcedureModel }) => {
-      Log.graphql('Procedure.query.notifiedProcedures');
-      const procedures = await ProcedureModel.find({
-        _id: { $in: device.notificationSettings.procedures },
-      });
+    notifiedProcedures: isLoggedin.createResolver(
+      async (parent, args, { device, ProcedureModel }) => {
+        Log.graphql('Procedure.query.notifiedProcedures');
+        const procedures = await ProcedureModel.find({
+          _id: { $in: device.notificationSettings.procedures },
+        });
 
-      return procedures.map(procedure => ({
-        ...procedure.toObject(),
-        notify: true,
-      }));
-    }),
+        return procedures.map(procedure => ({
+          ...procedure.toObject(),
+          notify: true,
+        }));
+      },
+    ),
   },
 
   Procedure: {
@@ -327,10 +327,10 @@ export default {
         CONSTANTS.SMS_VERIFICATION && !phone
           ? false
           : await ActivityModel.findOne({
-            actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-            kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-            procedure,
-          });
+              actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              procedure,
+            });
       return {
         activityIndex,
         active: !!active,
@@ -339,17 +339,17 @@ export default {
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       Log.graphql('Procedure.field.voted');
       const voted =
-        ((CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device))
+        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
           ? false
           : await VoteModel.findOne({
-            procedure: procedure._id,
-            voters: {
-              $elemMatch: {
-                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              procedure: procedure._id,
+              voters: {
+                $elemMatch: {
+                  kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                  voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+                },
               },
-            },
-          });
+            });
       return !!voted;
     },
     /* communityResults: async (procedure, args, { VoteModel }) => {
@@ -360,7 +360,7 @@ export default {
       const result = await VoteModel.findOne({ procedure: procedure._id }, { voteResults: 1 });
       return CONSTANTS.SMS_VERIFICATION ? result.voteResults.phone : result.voteResults.device;
     }, */
-    votedGovernment: (procedure) => {
+    votedGovernment: procedure => {
       Log.graphql('Procedure.field.votedGovernment');
       return (
         procedure.voteResults &&
@@ -369,18 +369,18 @@ export default {
     },
     // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
     // required for client <= 0.7.5
-    votedGoverment: (procedure) => {
+    votedGoverment: procedure => {
       Log.graphql('Procedure.field.votedGoverment');
       return (
         procedure.voteResults &&
         (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
       );
     },
-    completed: (procedure) => {
+    completed: procedure => {
       Log.graphql('Procedure.field.completed');
       return procedureStates.COMPLETED.includes(procedure.currentStatus);
     },
-    listType: (procedure) => {
+    listType: procedure => {
       Log.graphql('Procedure.field.listType');
       if (
         procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||

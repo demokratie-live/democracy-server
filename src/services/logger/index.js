@@ -7,27 +7,24 @@ const alignedWithColorsAndTime = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp(),
   winston.format.align(),
-  winston.format.printf((info) => {
-    const {
-      timestamp, level, message, ...args
-    } = info;
-
+  winston.format.printf(info => {
+    const { timestamp, level, message, ...args } = info;
     const ts = timestamp.slice(0, 19).replace('T', ' ');
     return `${ts} [${level}]: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
+      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
+    }`;
   }),
 );
 const alignedWithTime = winston.format.combine(
   winston.format.timestamp(),
   winston.format.align(),
-  winston.format.printf((info) => {
-    const {
-      timestamp, level, message, ...args
-    } = info;
+  winston.format.printf(info => {
+    const { timestamp, level, message, ...args } = info;
 
     const ts = timestamp.slice(0, 19).replace('T', ' ');
     return `${ts} [${level}]: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
+      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
+    }`;
   }),
 );
 
@@ -43,11 +40,13 @@ const transports = [
   }),
 ];
 if (constants.LOGGING.DISCORD && constants.LOGGING.DISCORD_WEBHOOK) {
-  transports.push(new DiscordLogger({
-    webhooks: constants.LOGGING.DISCORD_WEBHOOK,
-    level: constants.LOGGING.DISCORD,
-    inline: { server: 'Democracy' },
-  }));
+  transports.push(
+    new DiscordLogger({
+      webhooks: constants.LOGGING.DISCORD_WEBHOOK,
+      level: constants.LOGGING.DISCORD,
+      inline: { server: 'Democracy' },
+    }),
+  );
 }
 const myLevels = {
   levels: {

@@ -16,7 +16,6 @@ const VerificationSchema = new Schema(
         ],
         SMSStatus: { type: Number },
         expires: { type: Date, required: true },
-
       },
     ],
   },

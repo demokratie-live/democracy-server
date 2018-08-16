@@ -40,7 +40,7 @@ import { migrate } from './migrations/scripts';
 // Async Warpping Function
 (async () => {
   // Migrations
-  await migrate().catch((err) => {
+  await migrate().catch(err => {
     Log.error(JSON.stringify({ err, message: 'Migration not successful - I die now!' }));
     process.exit();
   });
@@ -126,7 +126,7 @@ import { migrate } from './migrations/scripts';
   }
 
   const graphqlServer = createServer(app);
-  graphqlServer.listen(CONSTANTS.PORT, (err) => {
+  graphqlServer.listen(CONSTANTS.PORT, err => {
     if (err) {
       Log.error(JSON.stringify({ err }));
     } else {
@@ -135,10 +135,12 @@ import { migrate } from './migrations/scripts';
       const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
 
       const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
-      Log.info(JSON.stringify({
-        cronjob: cronjob.running,
-        cronjob2: cronjob2.running,
-      }));
+      Log.info(
+        JSON.stringify({
+          cronjob: cronjob.running,
+          cronjob2: cronjob2.running,
+        }),
+      );
     }
   });
 })();

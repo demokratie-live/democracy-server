@@ -12,12 +12,7 @@ import DeviceModel from '../../models/Device';
 import ProcedureModel from '../../models/Procedure';
 import CONSTANTS from '../../config/constants';
 
-const sendNotifications = ({
-  tokenObjects,
-  title = 'DEMOCRACY',
-  message,
-  payload,
-}) => {
+const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload }) => {
   const androidNotificationTokens = [];
 
   const devices = tokenObjects.reduce((prev, { token, os }) => {
@@ -44,7 +39,7 @@ const sendNotifications = ({
           note.payload = payload;
 
           if (apnProvider) {
-            apnProvider.send(note, token).then((result) => {
+            apnProvider.send(note, token).then(result => {
               Log.Notification({
                 type: 'apnProvider.send',
                 data: util.inspect(result, false, null),
@@ -79,7 +74,9 @@ const sendNotifications = ({
       { registrationTokens: androidNotificationTokens },
       (err, response) => {
         if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
-        else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
+        else {
+          Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
+        }
       },
     );
   }
@@ -227,9 +224,7 @@ const procedureUpdate = async ({ procedureId }) => {
 
 export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations };
 
-export default async ({
-  title, message, device, payload,
-}) => {
+export default async ({ title, message, device, payload }) => {
   let deviceId;
   if (_.isObject(device)) {
     deviceId = device._id;
@@ -254,11 +249,13 @@ export default async ({
             note.payload = payload;
 
             if (apnProvider) {
-              apnProvider.send(note, token).then((result) => {
-                Log.notification(JSON.stringify({
-                  type: 'apnProvider.send',
-                  data: util.inspect(result, false, null),
-                }));
+              apnProvider.send(note, token).then(result => {
+                Log.notification(
+                  JSON.stringify({
+                    type: 'apnProvider.send',
+                    data: util.inspect(result, false, null),
+                  }),
+                );
               });
             } else {
               Log.error('ERROR: apnProvider not present');
@@ -289,11 +286,15 @@ export default async ({
         { registrationTokens: androidNotificationTokens },
         (err, response) => {
           if (err) {
-            Log.error(JSON.stringify({
-              type: 'gcmProvider',
-              err,
-            }));
-          } else { Log.notification(JSON.stringify({ type: 'gcmProvider', response })); }
+            Log.error(
+              JSON.stringify({
+                type: 'gcmProvider',
+                err,
+              }),
+            );
+          } else {
+            Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
+          }
         },
       );
     }

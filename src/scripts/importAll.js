@@ -7,7 +7,9 @@ import importProcedure from './importProcedure';
 export default async (req, res) => {
   const client = createClient();
   Log.import('Start Importing');
-  const { data: { allProcedures } } = await client.query({
+  const {
+    data: { allProcedures },
+  } = await client.query({
     query: getAllProcedures,
     // variables: {},
   });

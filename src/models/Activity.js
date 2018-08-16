@@ -13,7 +13,7 @@ const ActivitySchema = new Schema(
 
 ActivitySchema.index({ actor: 1, procedure: 1 }, { unique: true });
 
-ActivitySchema.post('save', async (doc) => {
+ActivitySchema.post('save', async doc => {
   const activities = await mongoose
     .model('Activity')
     .find({ procedure: doc.procedure._id, kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device' })

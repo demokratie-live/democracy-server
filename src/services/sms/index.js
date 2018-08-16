@@ -1,7 +1,7 @@
 import request from 'request';
 import CONSTANTS from '../../config/constants';
 
-export const statusSMS = async (SMSID) => {
+export const statusSMS = async SMSID => {
   const url = 'https://www.smsflatrate.net/status.php';
 
   const qs = {

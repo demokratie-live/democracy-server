@@ -1,19 +1,19 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import CONSTANTS from '../../config/constants';
 
-const createExpressResolver = (resolver) => {
+const createExpressResolver = resolver => {
   const baseResolver = resolver;
-  baseResolver.createResolver = (childResolver) => {
+  baseResolver.createResolver = childResolver => {
     const newResolver = async (req, res) =>
-      (await resolver(req, res) ? childResolver(req, res) : null);
+      (await resolver(req, res)) ? childResolver(req, res) : null;
     return createExpressResolver(newResolver);
   };
   return baseResolver;
 };
 
-const createGraphQLResolver = (resolver) => {
+const createGraphQLResolver = resolver => {
   const baseResolver = resolver;
-  baseResolver.createResolver = (childResolver) => {
+  baseResolver.createResolver = childResolver => {
     const newResolver = async (parent, args, context, info) => {
       await resolver(parent, args, context, info);
       return childResolver(parent, args, context, info);

@@ -13,12 +13,15 @@ if (CONSTANTS.LOGGING.MONGO) {
 }
 (async () => {
   try {
-    mongoose.connect(CONSTANTS.db.url, {});
+    mongoose.connect(
+      CONSTANTS.db.url,
+      {},
+    );
   } catch (err) {
     mongoose.createConnection(CONSTANTS.db.url, {});
   }
 
-  mongoose.connection.once('open', () => Log.info('MongoDB is running')).on('error', (e) => {
+  mongoose.connection.once('open', () => Log.info('MongoDB is running')).on('error', e => {
     Log.error(JSON.stringify(e));
   });
 })();

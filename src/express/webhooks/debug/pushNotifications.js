@@ -7,7 +7,7 @@ export default async (req, res) => {
     res.send('message is missing');
   }
   const devices = await DeviceModel.find();
-  devices.forEach((device) => {
+  devices.forEach(device => {
     pushNotify({
       title: title || 'DEMOCRACY',
       message,
