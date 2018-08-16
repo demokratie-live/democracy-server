@@ -324,7 +324,7 @@ export default {
       Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
       const active =
-        ((CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device))
+        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
           ? false
           : await ActivityModel.findOne({
               actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
