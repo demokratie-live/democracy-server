@@ -20,7 +20,7 @@ export default {
       case 'production':
         return 'de.democracy-deutschland.clientapp';
       default:
-        Log.error('ERROR: no STAGE defined!');
+        console.error('ERROR: no STAGE defined!');
         return 'de.democracy-deutschland.clientapp';
     }
   })(),
