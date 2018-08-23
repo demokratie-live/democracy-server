@@ -7,6 +7,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
+import cors from 'cors';
 
 import './config/db';
 import constants from './config/constants';
@@ -29,6 +30,13 @@ import PushNotifiactionModel from './models/PushNotifiaction';
 import SearchTermModel from './models/SearchTerms';
 
 const app = express();
+
+// enable cors
+const corsOptions = {
+origin: '*',
+    // credentials: true, // <-- REQUIRED backend setting
+};
+app.use(cors(corsOptions));
 
 const schema = makeExecutableSchema({
   typeDefs,
