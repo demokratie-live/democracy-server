@@ -11,11 +11,21 @@ export default {
     procedures: async (
       parent,
       {
-        type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
+        listTypes: listTypeParam, type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
       },
       { ProcedureModel },
     ) => {
-      let currentStates = [];
+      let listTypes = listTypeParam;
+      if (type) {
+        switch (type) {
+          case 'VOTING':
+            listTypes = ['IN_VOTE', 'PAST'];
+            break;
+          default:
+            listTypes = [type];
+            break;
+        }
+      }
 
       const filterQuery = {};
       if (filter.type && filter.type.length > 0) {
@@ -25,24 +35,11 @@ export default {
         filterQuery.subjectGroups = { $in: filter.subjectGroups };
       }
 
-      let sortQuery = {};
-      switch (type) {
-        case 'PREPARATION':
-          currentStates = procedureStates.PREPARATION;
-          break;
-        case 'VOTING':
-          currentStates = procedureStates.VOTING.concat(procedureStates.COMPLETED);
-          break;
-        case 'HOT':
-          currentStates = [];
-          break;
 
-        default:
-          break;
-      }
+      let sortQuery = {};
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
-      if (type === 'PREPARATION') {
+      if (listTypes.indexOf('PREPARATION') > -1) {
         switch (sort) {
           case 'activities':
             sortQuery = { activities: -1, lastUpdateDate: -1, title: 1 };
@@ -59,7 +56,7 @@ export default {
             break;
         }
         return ProcedureModel.find({
-          currentStatus: { $in: currentStates },
+          currentStatus: { $in: procedureStates.PREPARATION },
           period,
           voteDate: { $not: { $type: 'date' } },
           ...filterQuery,
@@ -68,7 +65,8 @@ export default {
           .limit(pageSize)
           .skip(offset);
       }
-      if (type === 'HOT') {
+
+      if (listTypes.indexOf('HOT') > -1) {
         const oneWeekAgo = new Date();
         const hotProcedures = await ProcedureModel.find({
           period,
@@ -101,9 +99,40 @@ export default {
           break;
       }
 
-      const activeVotings = await ProcedureModel.aggregate([
-        {
-          $match: {
+      let activeVotings = [];
+      if (listTypes.indexOf('IN_VOTE') > -1) {
+        activeVotings = await ProcedureModel.aggregate([
+          {
+            $match: {
+              $or: [
+                {
+                  currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                  voteDate: { $not: { $type: 'date' } },
+                },
+                {
+                  currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                  voteDate: { $gte: new Date() },
+                },
+              ],
+              period,
+              ...filterQuery,
+            },
+          },
+          {
+            $addFields: {
+              nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
+            },
+          },
+          { $sort: sortQuery },
+          { $skip: offset },
+          { $limit: pageSize },
+        ]);
+      }
+
+      let pastVotings = [];
+      if (listTypes.indexOf('PAST') > -1) {
+        if (activeVotings.length < pageSize) {
+          const activeVotingsCount = await ProcedureModel.find({
             $or: [
               {
                 currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
@@ -116,46 +145,20 @@ export default {
             ],
             period,
             ...filterQuery,
-          },
-        },
-        {
-          $addFields: {
-            nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
-          },
-        },
-        { $sort: sortQuery },
-        { $skip: offset },
-        { $limit: pageSize },
-      ]);
+          }).count();
 
-      let pastVotings = [];
-      if (activeVotings.length < pageSize) {
-        const activeVotingsCount = await ProcedureModel.find({
-          $or: [
-            {
-              currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
-              voteDate: { $not: { $type: 'date' } },
-            },
-            {
-              currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
-              voteDate: { $gte: new Date() },
-            },
-          ],
-          period,
-          ...filterQuery,
-        }).count();
-
-        pastVotings = await ProcedureModel.find({
-          $or: [
-            { voteDate: { $lt: new Date() } },
-            { currentStatus: { $in: procedureStates.COMPLETED } },
-          ],
-          period,
-          ...filterQuery,
-        })
-          .sort(sortQuery)
-          .skip(Math.max(offset - activeVotingsCount, 0))
-          .limit(pageSize - activeVotings.length);
+          pastVotings = await ProcedureModel.find({
+            $or: [
+              { voteDate: { $lt: new Date() } },
+              { currentStatus: { $in: procedureStates.COMPLETED } },
+            ],
+            period,
+            ...filterQuery,
+          })
+            .sort(sortQuery)
+            .skip(Math.max(offset - activeVotingsCount, 0))
+            .limit(pageSize - activeVotings.length);
+        }
       }
 
       return [...activeVotings, ...pastVotings];
