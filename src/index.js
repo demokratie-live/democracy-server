@@ -121,6 +121,11 @@ import { migrate } from './migrations/scripts';
   if (CONSTANTS.DEBUG) {
     // Push Notification test
     app.get('/push-test', debugPushNotifications);
+    // Push Notification send pending
+    app.get('/push-pending', async (req, res) => {
+      await sendNotifications();
+      res.send('sent pending pushs');
+    });
     // Bundestag.io Import All
     app.get('/webhooks/bundestagio/import-all', debugImportAll);
   }
