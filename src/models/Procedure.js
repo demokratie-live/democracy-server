@@ -23,6 +23,7 @@ const ProcedureSchema = new Schema(
     bioUpdateAt: Date, // Date of last dip21 changes on bundestag.io
     subjectGroups: [String],
     importantDocuments: [Document],
+    activities: { type: Number, default: 0 },
     voteResults: {
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
