@@ -1,37 +1,31 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import mongoose, { Schema } from 'mongoose';
-import jwt from 'jsonwebtoken';
+import CONSTANTS from './../config/constants';
 
 const UserSchema = new Schema(
   {
-    deviceHash: { type: String, required: true, unique: true },
-    pushTokens: [
-      {
-        token: String,
-        os: String,
-      },
-    ],
-    notificationSettings: {
-      enabled: { type: Boolean, default: true },
-      disableUntil: Date,
-      newVote: { type: Boolean, default: true },
-      newPreperation: { type: Boolean, default: false },
-      procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
-      tags: [],
+    device: {
+      type: Schema.Types.ObjectId,
+      ref: 'Device',
+      required: true,
     },
+    phone: {
+      type: Schema.Types.ObjectId,
+      ref: 'Phone',
+      default: null,
+    },
+    verified: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
 
 UserSchema.methods = {
-  createToken() {
-    return jwt.sign(
-      {
-        _id: this._id,
-      },
-      process.env.AUTH_JWT_SECRET,
-    );
+  isVerified() {
+    // This assumes that a user can only be created with a device id
+    // therefor all users are verfied if SMS_VERIFICATIOn is disabled
+    return CONSTANTS.SMS_VERIFICATION ? this.verified : true;
   },
 };
+
+UserSchema.index({ device: 1, phone: 1 }, { unique: true });
 
 export default mongoose.model('User', UserSchema);
