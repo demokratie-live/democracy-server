@@ -1,14 +1,13 @@
 FROM node:9.8.0
 
-# TMP - Yarn fix
-RUN mkdir -p /opt/yarn/bin && ln -s /opt/yarn/yarn-v1.5.1/bin/yarn /opt/yarn/bin/yarn
+RUN mkdir -p /app
+
+ADD .yarn_cache /usr/local/share/.cache/yarn/v1/
+
+ADD ./package.json ./yarn.* /tmp/
+RUN cd /tmp && yarn
+RUN cd /app && ln -s /tmp/node_modules 
+
+ADD . /app/
 
 WORKDIR /app
-
-COPY . .
-
-RUN yarn install
-
-RUN yarn build
-
-ENTRYPOINT [ "yarn", "serve" ]
