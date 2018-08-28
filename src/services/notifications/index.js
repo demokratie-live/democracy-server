@@ -8,13 +8,11 @@ import util from 'util';
 import apnProvider from './apn';
 import gcmProvider from './gcm';
 
-import UserModel from '../../models/User';
+import DeviceModel from '../../models/Device';
 import ProcedureModel from '../../models/Procedure';
-import CONFIG from '../../config/constants';
+import CONSTANTS from '../../config/constants';
 
-const sendNotifications = ({
-  tokenObjects, title = 'DEMOCRACY', message, payload,
-}) => {
+const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload }) => {
   const androidNotificationTokens = [];
 
   const devices = tokenObjects.reduce((prev, { token, os }) => {
@@ -36,16 +34,19 @@ const sendNotifications = ({
             body: message,
           };
 
-          note.topic = CONFIG.APN_TOPIC;
+          note.topic = CONSTANTS.APN_TOPIC;
 
           note.payload = payload;
 
           if (apnProvider) {
-            apnProvider.send(note, token).then((result) => {
-              console.log('apnProvider.send', util.inspect(result, false, null));
+            apnProvider.send(note, token).then(result => {
+              Log.notification({
+                type: 'apnProvider.send',
+                data: util.inspect(result, false, null),
+              });
             });
           } else {
-            console.log('ERROR: apnProvider not present');
+            Log.error('ERROR: apnProvider not present');
           }
         }
         break;
@@ -72,8 +73,10 @@ const sendNotifications = ({
       gcmMessage,
       { registrationTokens: androidNotificationTokens },
       (err, response) => {
-        if (err) console.error('gcmProvider', err);
-        else console.log('gcmProvider', response);
+        if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
+        else {
+          Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
+        }
       },
     );
   }
@@ -81,11 +84,11 @@ const sendNotifications = ({
 
 const newVote = async ({ procedureId }) => {
   const procedure = await ProcedureModel.findOne({ procedureId });
-  const users = await UserModel.find({
+  const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
     'notificationSettings.newVote': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   const title = 'Jetzt Abstimmen!';
   sendNotifications({
     tokenObjects,
@@ -101,16 +104,18 @@ const newVote = async ({ procedureId }) => {
 };
 
 const newVotes = async ({ procedureIds }) => {
-  const users = await UserModel.find({
+  const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
     'notificationSettings.newVote': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   const title = 'Jetzt Abstimmen!';
   let message = `Es gibt ${procedureIds.length} neue Abstimmungen.`;
   let type = 'procedureBulk';
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -132,11 +137,11 @@ const newVotes = async ({ procedureIds }) => {
 
 const newPreperation = async ({ procedureId }) => {
   const procedure = await ProcedureModel.findOne({ procedureId });
-  const users = await UserModel.find({
+  const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
     'notificationSettings.newPreperation': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   let title;
   switch (procedure.type) {
     case 'Gesetzgebung':
@@ -163,17 +168,19 @@ const newPreperation = async ({ procedureId }) => {
 };
 
 const newPreperations = async ({ procedureIds }) => {
-  const users = await UserModel.find({
+  const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
     'notificationSettings.newPreperation': true,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   const title = 'Neu in Vorbereitung!';
   let message = `${procedureIds.length} Elemente neu in Vorbereitung`;
   let type = 'procedureBulk';
 
   if (procedureIds.length === 1) {
-    const procedure = await ProcedureModel.findOne({ procedureId: procedureIds[0] });
+    const procedure = await ProcedureModel.findOne({
+      procedureId: procedureIds[0],
+    });
     message = `${procedure.title}`;
     type = 'procedure';
   }
@@ -195,11 +202,11 @@ const newPreperations = async ({ procedureIds }) => {
 
 const procedureUpdate = async ({ procedureId }) => {
   const procedure = await ProcedureModel.findOne({ procedureId });
-  const users = await UserModel.find({
+  const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
     'notificationSettings.procedures': procedure._id,
   });
-  const tokenObjects = users.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokenObjects = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
   const title = 'Update!';
   sendNotifications({
     tokenObjects,
@@ -217,17 +224,15 @@ const procedureUpdate = async ({ procedureId }) => {
 
 export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations };
 
-export default async ({
-  title, message, user, payload,
-}) => {
-  let userId;
-  if (_.isObject(user)) {
-    userId = user._id;
+export default async ({ title, message, device, payload }) => {
+  let deviceId;
+  if (_.isObject(device)) {
+    deviceId = device._id;
   }
-  const userObj = await UserModel.findById(userId);
-  if (userObj) {
+  const deviceObj = await DeviceModel.findById(deviceId);
+  if (deviceObj) {
     const androidNotificationTokens = [];
-    userObj.pushTokens.forEach(({ token, os }) => {
+    deviceObj.pushTokens.forEach(({ token, os }) => {
       switch (os) {
         case 'ios':
           {
@@ -238,17 +243,22 @@ export default async ({
               body: message,
             };
 
-            note.topic = CONFIG.APN_TOPIC;
+            note.topic = CONSTANTS.APN_TOPIC;
             note.contentAvailable = 1;
 
             note.payload = payload;
 
             if (apnProvider) {
-              apnProvider.send(note, token).then((result) => {
-                console.log('apnProvider.send', util.inspect(result, false, null));
+              apnProvider.send(note, token).then(result => {
+                Log.notification(
+                  JSON.stringify({
+                    type: 'apnProvider.send',
+                    data: util.inspect(result, false, null),
+                  }),
+                );
               });
             } else {
-              console.log('ERROR: apnProvider not present');
+              Log.error('ERROR: apnProvider not present');
             }
           }
           break;
@@ -275,8 +285,16 @@ export default async ({
         gcmMessage,
         { registrationTokens: androidNotificationTokens },
         (err, response) => {
-          if (err) console.error('gcmProvider', err);
-          else console.log('gcmProvider', response);
+          if (err) {
+            Log.error(
+              JSON.stringify({
+                type: 'gcmProvider',
+                err,
+              }),
+            );
+          } else {
+            Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
+          }
         },
       );
     }

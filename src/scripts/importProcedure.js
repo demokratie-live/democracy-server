@@ -28,18 +28,22 @@ export default async (bIoProcedure, { push = false }) => {
   if (bIoProcedure && bIoProcedure.history) {
     const [lastHistory] = newBIoProcedure.history.slice(-1);
     // Conditions on which Procedure is voted upon
-    const btWithDecisions = bIoProcedure.history.filter(({ initiator, decision }) =>
-      // Beschluss liegt vor
-      // TODO: decision should not be an array
-      (decision &&
-          decision.find(({ tenor }) =>
-            tenor === 'Ablehnung der Vorlage' ||
+    const btWithDecisions = bIoProcedure.history.filter(
+      ({ initiator, decision }) =>
+        // Beschluss liegt vor
+        // TODO: decision should not be an array
+        (decision &&
+          decision.find(
+            ({ tenor }) =>
+              tenor === 'Ablehnung der Vorlage' ||
               tenor === 'Annahme der Vorlage' ||
               tenor === 'Erklärung der Vorlage für erledigt' ||
-              tenor === 'Annahme in Ausschussfassung')) ||
+              tenor === 'Annahme in Ausschussfassung',
+          )) ||
         // Zurückgezogen
         initiator === 'Amtliche Mitteilung: Rücknahme' ||
-        initiator === 'Rücknahme');
+        initiator === 'Rücknahme',
+    );
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
     } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
@@ -69,9 +73,9 @@ export default async (bIoProcedure, { push = false }) => {
         partyVotes: bIoProcedure.customData.voteResults.partyVotes,
       };
     } else {
-      bIoProcedure.history.some((h) => {
+      bIoProcedure.history.some(h => {
         if (h.decision) {
-          return h.decision.some((decision) => {
+          return h.decision.some(decision => {
             if (decision.type === 'Namentliche Abstimmung') {
               const voteResultsRegEx = /(\d{1,3}:\d{1,3}:\d{1,3})/;
               const voteResultsProto = decision.comment.match(voteResultsRegEx);
@@ -100,7 +104,9 @@ export default async (bIoProcedure, { push = false }) => {
     newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
   }
 
-  const oldProcedure = await Procedure.findOne({ procedureId: newBIoProcedure.procedureId });
+  const oldProcedure = await Procedure.findOne({
+    procedureId: newBIoProcedure.procedureId,
+  });
 
   return Procedure.findOneAndUpdate(
     { procedureId: newBIoProcedure.procedureId },
@@ -111,14 +117,19 @@ export default async (bIoProcedure, { push = false }) => {
       upsert: true,
       new: true,
     },
-  ).then((newDoc) => {
+  ).then(newDoc => {
     if (push) {
       /**
        * PUSH NOTIFICATIONS
        */
       // New Procedures
       if (!oldProcedure) {
-        console.log('PUSH NOTIFICATIONS', 'new Procedure', newBIoProcedure.procedureId);
+        Log.push(
+          JSON.stringify({
+            type: 'new Procedure',
+            ids: newBIoProcedure.procedureId,
+          }),
+        );
         PushNotifiaction.create({
           procedureId: newBIoProcedure.procedureId,
           type: 'new',
@@ -127,27 +138,30 @@ export default async (bIoProcedure, { push = false }) => {
       } else {
         // Updated Procedures
         const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
-        const updatedValues = _.compact(_.map(diffs.updated, (value, key) => {
-          switch (key) {
-            case 'currentStatus':
-            case 'importantDocuments':
-            case 'voteResults':
-              return key;
+        const updatedValues = _.compact(
+          _.map(diffs.updated, (value, key) => {
+            switch (key) {
+              case 'currentStatus':
+              case 'importantDocuments':
+              case 'voteResults':
+                return key;
 
-            case 'updatedAt':
-            case 'bioUpdateAt':
-              return null;
+              case 'updatedAt':
+              case 'bioUpdateAt':
+                return null;
 
-            default:
-              return null;
-          }
-        }));
+              default:
+                return null;
+            }
+          }),
+        );
         if (updatedValues.length > 0) {
-          console.log(
-            'PUSH NOTIFICATIONS',
-            'updated Procedure',
-            newBIoProcedure.procedureId,
-            diffs,
+          Log.import(
+            JSON.stringify({
+              type: 'updated Procedure',
+              ids: newBIoProcedure.procedureId,
+              diffs,
+            }),
           );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
@@ -167,7 +181,12 @@ export default async (bIoProcedure, { push = false }) => {
             !oldProcedure.voteDate)
         ) {
           // moved to Vote Procedures
-          console.log('PUSH NOTIFICATIONS', 'new Vote', newBIoProcedure.procedureId);
+          Log.import(
+            JSON.stringify({
+              type: 'new Vote',
+              ids: newBIoProcedure.procedureId,
+            }),
+          );
           PushNotifiaction.create({
             procedureId: newBIoProcedure.procedureId,
             type: 'newVote',
