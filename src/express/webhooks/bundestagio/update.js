@@ -1,3 +1,7 @@
+/**
+ * /webhooks/bundestagio/update
+ */
+
 import webhook from '../../../scripts/webhook';
 
 export default async (req, res) => {
