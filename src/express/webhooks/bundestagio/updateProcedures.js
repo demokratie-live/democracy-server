@@ -11,7 +11,7 @@ export default async (req, res) => {
       data: { procedureIds, name },
     } = req.body;
     const updated = await importProcedures(procedureIds);
-      Log.info(`Updated ${name}: ${updated}`);
+    Log.info(`Updated ${name}: ${updated}`);
     res.send({
       updated,
       succeeded: true,

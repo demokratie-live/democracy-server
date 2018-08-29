@@ -64,7 +64,6 @@ export default async (bIoProcedure, { push = false }) => {
         bIoProcedure.customData.voteResults.abstination ||
         bIoProcedure.customData.voteResults.no)
     ) {
-      console.log(bIoProcedure.customData.voteResults.partyVotes);
       voteResults = {
         yes: bIoProcedure.customData.voteResults.yes,
         abstination: bIoProcedure.customData.voteResults.abstination,
