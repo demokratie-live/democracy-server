@@ -64,19 +64,15 @@ export default async (bIoProcedure, { push = false }) => {
         bIoProcedure.customData.voteResults.abstination ||
         bIoProcedure.customData.voteResults.no)
     ) {
-      if (
-        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
-        bIoProcedure.customData.voteResults.votingRecommendation === false
-      )
-        voteResults = {
-          yes: bIoProcedure.customData.voteResults.yes,
-          abstination: bIoProcedure.customData.voteResults.abstination,
-          no: bIoProcedure.customData.voteResults.no,
-          notVoted: bIoProcedure.customData.voteResults.notVoted,
-          decisionText: bIoProcedure.customData.voteResults.decisionText,
-          namedVote: bIoProcedure.namedVote,
-          partyVotes: bIoProcedure.customData.voteResults.partyVotes,
-        };
+      voteResults = {
+        yes: bIoProcedure.customData.voteResults.yes,
+        abstination: bIoProcedure.customData.voteResults.abstination,
+        no: bIoProcedure.customData.voteResults.no,
+        notVoted: bIoProcedure.customData.voteResults.notVoted,
+        decisionText: bIoProcedure.customData.voteResults.decisionText,
+        namedVote: bIoProcedure.namedVote,
+        partyVotes: bIoProcedure.customData.voteResults.partyVotes,
+      };
 
       // toggle votingData (Yes & No) if needed
       if (
@@ -87,15 +83,21 @@ export default async (bIoProcedure, { push = false }) => {
           ...voteResults,
           yes: voteResults.no,
           no: voteResults.yes,
-          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => ({
-            ...rest,
-            main: main === 'YES' ? 'NO' : 'YES',
-            deviants: {
-              ...deviants,
-              yes: deviants.no,
-              no: deviants.yes,
-            },
-          })),
+          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
+            let mainDecision = main;
+            if (main !== 'ABSTINATION') {
+              mainDecision = main === 'YES' ? 'NO' : 'YES';
+            }
+            return {
+              ...rest,
+              main: mainDecision,
+              deviants: {
+                ...deviants,
+                yes: deviants.no,
+                no: deviants.yes,
+              },
+            };
+          }),
         };
       }
     } else {
