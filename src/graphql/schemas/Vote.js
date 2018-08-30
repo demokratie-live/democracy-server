@@ -11,6 +11,8 @@ export default `
     no: Int
     abstination: Int
     notVoted: Int
+    decisionText: String
+    namedVote: Boolean
     partyVotes: [PartyVote]
   }
 

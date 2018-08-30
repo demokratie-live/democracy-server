@@ -29,6 +29,8 @@ const ProcedureSchema = new Schema(
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
       notVoted: { type: Number, required: true },
+      decisionText: String,
+      namedVote: Boolean,
       partyVotes: [
         {
           party: { type: String, required: true },

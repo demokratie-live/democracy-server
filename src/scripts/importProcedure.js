@@ -64,14 +64,42 @@ export default async (bIoProcedure, { push = false }) => {
         bIoProcedure.customData.voteResults.abstination ||
         bIoProcedure.customData.voteResults.no)
     ) {
-      voteResults = {
-        yes: bIoProcedure.customData.voteResults.yes,
-        abstination: bIoProcedure.customData.voteResults.abstination,
-        no: bIoProcedure.customData.voteResults.no,
-        notVoted: bIoProcedure.customData.voteResults.notVoted,
-        partyVotes: bIoProcedure.customData.voteResults.partyVotes,
-      };
+      if (
+        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
+        bIoProcedure.customData.voteResults.votingRecommendation === false
+      )
+        voteResults = {
+          yes: bIoProcedure.customData.voteResults.yes,
+          abstination: bIoProcedure.customData.voteResults.abstination,
+          no: bIoProcedure.customData.voteResults.no,
+          notVoted: bIoProcedure.customData.voteResults.notVoted,
+          decisionText: bIoProcedure.customData.voteResults.decisionText,
+          namedVote: bIoProcedure.namedVote,
+          partyVotes: bIoProcedure.customData.voteResults.partyVotes,
+        };
+
+      // toggle votingData (Yes & No) if needed
+      if (
+        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
+        bIoProcedure.customData.voteResults.votingRecommendation === false
+      ) {
+        voteResults = {
+          ...voteResults,
+          yes: voteResults.no,
+          no: voteResults.yes,
+          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => ({
+            ...rest,
+            main: main === 'YES' ? 'NO' : 'YES',
+            deviants: {
+              ...deviants,
+              yes: deviants.no,
+              no: deviants.yes,
+            },
+          })),
+        };
+      }
     } else {
+      // TODO: check if is needed after adding named-poll-scraper!
       bIoProcedure.history.some(h => {
         if (h.decision) {
           return h.decision.some(decision => {
