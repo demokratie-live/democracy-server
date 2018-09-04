@@ -11,6 +11,7 @@ export default `
     no: Int
     abstination: Int
     notVoted: Int
+    notVote: Int @deprecated
     decisionText: String
     namedVote: Boolean
     partyVotes: [PartyVote]

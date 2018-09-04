@@ -8,6 +8,7 @@
 - [Added] IP-Whitelist controll for Bundestag.io hooks
 - [Added] SMS Verification
 - [Added] Logger
+- [Added] FractionResults
 
 ### 0.1.13
 
