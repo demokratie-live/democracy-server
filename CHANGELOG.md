@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Changed] Filter performance for not-/voted
+
 ### 0.1.14
 
 - [Changed] JWT Header based authentification
