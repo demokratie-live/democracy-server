@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Added] Queries for statistic
+
 ### 0.1.14
 
 - [Changed] JWT Header based authentification
