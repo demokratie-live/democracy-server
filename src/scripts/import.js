@@ -15,8 +15,7 @@ export default async procedureIds => {
     fetchPolicy: 'network-only',
   });
   // Start Inserting
-  const promises = await procedures.map(procedure => importProcedure(procedure, { push: true }));
-
+  const promises = procedures.map(procedure => importProcedure(procedure, { push: true }));
   const result = await Promise.all(promises);
 
   return result.length;

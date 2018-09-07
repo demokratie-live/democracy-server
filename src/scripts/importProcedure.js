@@ -55,7 +55,7 @@ export default async (bIoProcedure, { push = false }) => {
       yes: null,
       no: null,
       abstination: null,
-      notVote: null,
+      notVoted: null,
     };
     if (
       bIoProcedure.customData &&
@@ -68,8 +68,40 @@ export default async (bIoProcedure, { push = false }) => {
         yes: bIoProcedure.customData.voteResults.yes,
         abstination: bIoProcedure.customData.voteResults.abstination,
         no: bIoProcedure.customData.voteResults.no,
+        notVoted: bIoProcedure.customData.voteResults.notVoted,
+        decisionText: bIoProcedure.customData.voteResults.decisionText,
+        namedVote: bIoProcedure.namedVote,
+        partyVotes: bIoProcedure.customData.voteResults.partyVotes,
       };
+
+      // toggle votingData (Yes & No) if needed
+      if (
+        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
+        bIoProcedure.customData.voteResults.votingRecommendation === false
+      ) {
+        voteResults = {
+          ...voteResults,
+          yes: voteResults.no,
+          no: voteResults.yes,
+          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
+            let mainDecision = main;
+            if (main !== 'ABSTINATION') {
+              mainDecision = main === 'YES' ? 'NO' : 'YES';
+            }
+            return {
+              ...rest,
+              main: mainDecision,
+              deviants: {
+                ...deviants,
+                yes: deviants.no,
+                no: deviants.yes,
+              },
+            };
+          }),
+        };
+      }
     } else {
+      // TODO: check if is needed after adding named-poll-scraper!
       bIoProcedure.history.some(h => {
         if (h.decision) {
           return h.decision.some(decision => {
@@ -81,7 +113,7 @@ export default async (bIoProcedure, { push = false }) => {
                 yes: vResults ? vResults[0] : null,
                 no: vResults ? vResults[1] : null,
                 abstination: vResults ? vResults[2] : null,
-                notVote:
+                notVoted:
                   deputiesNumber[bIoProcedure.period] -
                   (vResults ? vResults.reduce((pv, cv) => pv + parseInt(cv, 10), 0) : 0),
               };

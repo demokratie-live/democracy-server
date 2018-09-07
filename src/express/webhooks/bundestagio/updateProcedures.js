@@ -8,10 +8,10 @@ export default async (req, res) => {
   Log.info('Bundestag.io authenticated: Update Procedures');
   try {
     const {
-      data: { procedureIds },
+      data: { procedureIds, name },
     } = req.body;
     const updated = await importProcedures(procedureIds);
-    Log.info(`Updated Agenda: ${updated}`);
+    Log.info(`Updated ${name}: ${updated}`);
     res.send({
       updated,
       succeeded: true,

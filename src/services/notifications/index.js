@@ -97,6 +97,7 @@ const newVote = async ({ procedureId }) => {
     payload: {
       procedureId,
       action: 'procedureDetails',
+      type: 'procedure',
       title,
       message: procedure.title,
     },
@@ -161,6 +162,7 @@ const newPreperation = async ({ procedureId }) => {
     payload: {
       procedureId,
       action: 'procedureDetails',
+      type: 'procedure',
       title,
       message: procedure.title,
     },
@@ -215,6 +217,7 @@ const procedureUpdate = async ({ procedureId }) => {
     payload: {
       procedureId,
       action: 'procedureDetails',
+      type: 'procedure',
       title,
       message: procedure.title,
     },
