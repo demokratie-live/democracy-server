@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.x
+
+- [Added] Catch all errors and log them
+
 ### 0.1.14
 
 - [Changed] JWT Header based authentification
