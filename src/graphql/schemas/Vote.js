@@ -10,7 +10,24 @@ export default `
     yes: Int
     no: Int
     abstination: Int
-    notVote: Int
+    notVoted: Int
+    notVote: Int @deprecated
+    decisionText: String
+    namedVote: Boolean
+    partyVotes: [PartyVote]
+  }
+
+  type PartyVote {
+    party: String!
+    main: VoteSelection
+    deviants: Deviants
+  }
+
+  type Deviants {
+    yes: Int
+    abstination: Int
+    no: Int
+    notVoted: Int
   }
 
   type Vote {
