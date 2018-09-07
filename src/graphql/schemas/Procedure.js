@@ -39,6 +39,7 @@ input ProcedureFilter {
   subjectGroups: [String]
   status: [String]
   type: [String]
+  activity: [String]
 }
 
 type Query {
