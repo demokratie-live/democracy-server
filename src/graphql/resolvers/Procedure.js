@@ -391,15 +391,6 @@ export default {
         (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
       );
     },
-    // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
-    // required for client <= 0.7.5
-    votedGoverment: procedure => {
-      Log.graphql('Procedure.field.votedGoverment');
-      return (
-        procedure.voteResults &&
-        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
-      );
-    },
     completed: procedure => {
       Log.graphql('Procedure.field.completed');
       return procedureStates.COMPLETED.includes(procedure.currentStatus);

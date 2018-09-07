@@ -23,7 +23,6 @@ type Procedure {
   voteResults: VoteResult
   voted: Boolean
   votedGovernment: Boolean
-  votedGoverment: Boolean
   completed: Boolean
   notify: Boolean
   listType: ProcedureType

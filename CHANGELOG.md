@@ -3,6 +3,7 @@
 ### 0.1.X
 
 - [Changed] Filter performance for not-/voted
+- [Removed] Deprecated graphql field goverment [#438](https://github.com/demokratie-live/democracy-client/issues/438)
 
 ### 0.1.14
 
