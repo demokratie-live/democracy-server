@@ -1,5 +1,8 @@
 # Changelog
 
+### 0.1.x
+- [Fixed] Search Button fix [#248](https://github.com/demokratie-live/democracy-client/issues/248)
+
 ### 0.1.14
 
 - [Changed] JWT Header based authentification
