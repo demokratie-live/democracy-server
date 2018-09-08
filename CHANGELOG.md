@@ -2,7 +2,7 @@
 
 ### 0.1.x
 
-- [Fix] Remove id from Procedure.voteResults.PartyVotes subobject to fix unnessesary Push notifications
+- [Fix] Remove id from Procedure.voteResults.PartyVotes subobject to fix unnecessary Push notifications
 
 ### 0.1.14
 
