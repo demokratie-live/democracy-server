@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Fix] more dynamic connection whitelisting
+
 ### 0.1.14
 
 - [Changed] JWT Header based authentification
