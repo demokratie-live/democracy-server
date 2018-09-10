@@ -27,7 +27,7 @@ const createGraphQLResolver = resolver => {
 export const isDataSource = createExpressResolver((req, res) => {
   if (
     !CONSTANTS.WHITELIST_DATA_SOURCES.some(
-      address => req.connection.remoteAddress.indexOf(address) !== -1,
+      address => address.length > 3 && req.connection.remoteAddress.indexOf(address) !== -1,
     )
   ) {
     Log.warn('Permission denied: isDataSource = false');
