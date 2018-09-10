@@ -33,6 +33,7 @@ const ProcedureSchema = new Schema(
       namedVote: Boolean,
       partyVotes: [
         {
+          _id: false,
           party: { type: String, required: true },
           main: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
 

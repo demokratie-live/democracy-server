@@ -5,6 +5,7 @@
 - [Changed] Filter performance for not-/voted
 - [Removed] Deprecated graphql field goverment [#438](https://github.com/demokratie-live/democracy-client/issues/438)
 - [Fixed] Search Button fix [#248](https://github.com/demokratie-live/democracy-client/issues/248)
+- [Fix] Remove id from Procedure.voteResults.PartyVotes subobject to fix unnecessary Push notifications
 
 ### 0.1.14
 
