@@ -25,7 +25,11 @@ const createGraphQLResolver = resolver => {
 
 // User has Data Source flag (note: its not required to have an actual user for this)
 export const isDataSource = createExpressResolver((req, res) => {
-  if (!CONSTANTS.WHITELIST_DATA_SOURCES.includes(req.connection.remoteAddress)) {
+  if (
+    !CONSTANTS.WHITELIST_DATA_SOURCES.some(
+      address => req.connection.remoteAddress.indexOf(address) !== -1,
+    )
+  ) {
     Log.warn('Permission denied: isDataSource = false');
     res.send({
       error: 'Permission denied',
