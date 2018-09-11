@@ -1,7 +1,8 @@
 # Changelog
 
-### 0.1.x
+### 0.1.X
 
+- [Fix] more dynamic connection whitelisting
 - [Fix] Remove id from Procedure.voteResults.PartyVotes subobject to fix unnecessary Push notifications
 
 ### 0.1.14
