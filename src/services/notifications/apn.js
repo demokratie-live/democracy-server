@@ -16,17 +16,12 @@ if (!apnProvider) {
     };
 
     if (_.filter(options.token, option => !option).length > 0) {
-      apnProvider = new Proxy(
-        {},
-        {
-          get: console.log,
-        },
-      );
+      apnProvider = new Proxy({}, {});
     } else {
       apnProvider = new apn.Provider(options);
     }
   } else {
-    console.log('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
+    Log.error('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
   }
 }
 

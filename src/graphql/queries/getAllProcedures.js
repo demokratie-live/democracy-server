@@ -29,12 +29,17 @@ export default gql`
         url
         number
       }
+      namedVote
       customData {
         expectedVotingDate
         voteResults {
           yes
           no
           abstination
+          notVoted
+          decisionText
+          votingDocument
+          votingRecommendation
         }
       }
     }

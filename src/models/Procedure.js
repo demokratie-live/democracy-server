@@ -28,7 +28,23 @@ const ProcedureSchema = new Schema(
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
-      notVote: { type: Number, required: true },
+      notVoted: { type: Number, required: true },
+      decisionText: String,
+      namedVote: Boolean,
+      partyVotes: [
+        {
+          _id: false,
+          party: { type: String, required: true },
+          main: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
+
+          deviants: {
+            yes: { type: Number, required: true },
+            no: { type: Number, required: true },
+            abstination: { type: Number, required: true },
+            notVoted: { type: Number, required: true },
+          },
+        },
+      ],
     },
   },
   { timestamps: true },
@@ -54,10 +70,10 @@ ProcedureSchema.index(
 
 export default mongoose.model('Procedure', ProcedureSchema);
 
-mongoose.model('Procedure').ensureIndexes((err) => {
+mongoose.model('Procedure').ensureIndexes(err => {
   if (!err) {
-    console.log('SearchIndexs for Procedures created');
+    Log.info('SearchIndexs for Procedures created');
   } else {
-    console.log({ err });
+    Log.error(JSON.stringify({ err }));
   }
 });
