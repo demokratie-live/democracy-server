@@ -13,11 +13,16 @@ export default {
     procedures: async (
       parent,
       {
-        listTypes: listTypeParam, type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {},
+        listTypes: listTypeParam,
+        type,
+        offset = 0,
+        pageSize = 99,
+        sort = 'lastUpdateDate',
+        filter = {},
       },
       { ProcedureModel },
-                       ) => {
-        Log.graphql('Procedure.query.procedures');
+    ) => {
+      Log.graphql('Procedure.query.procedures');
       let listTypes = listTypeParam;
       if (type) {
         switch (type) {
@@ -135,20 +140,23 @@ export default {
       let pastVotings = [];
       if (listTypes.indexOf('PAST') > -1) {
         if (activeVotings.length < pageSize) {
-          const activeVotingsCount = await ProcedureModel.find({
-            $or: [
-              {
-                currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
-                voteDate: { $not: { $type: 'date' } },
-              },
-              {
-                currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
-                voteDate: { $gte: new Date() },
-              },
-            ],
-            period,
-            ...filterQuery,
-          }).count();
+          const activeVotingsCount =
+            listTypes.indexOf('IN_VOTE') > -1
+              ? await ProcedureModel.find({
+                  $or: [
+                    {
+                      currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                      voteDate: { $not: { $type: 'date' } },
+                    },
+                    {
+                      currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                      voteDate: { $gte: new Date() },
+                    },
+                  ],
+                  period,
+                  ...filterQuery,
+                }).count()
+              : 0;
 
           pastVotings = await ProcedureModel.find({
             $or: [
