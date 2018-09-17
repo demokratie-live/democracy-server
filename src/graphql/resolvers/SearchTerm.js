@@ -22,8 +22,11 @@ export default {
     },
   },
   Mutation: {
-    finishSearch: isLoggedin.createResolver(async (parent, { term }, { SearchTermModel }) => {
+    finishSearch: isLoggedin.createResolver(async (parent, { term }, { SearchTermModel, user }) => {
       Log.graphql('SearchTerm.mutation.finishSearchs');
+      if (user && user.isVerified()) {
+        return { term };
+      }
       if (term && term.trim().length >= 3) {
         SearchTermModel.findOneAndUpdate(
           {

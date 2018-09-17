@@ -23,7 +23,6 @@ type Procedure {
   voteResults: VoteResult
   voted: Boolean
   votedGovernment: Boolean
-  votedGoverment: Boolean
   completed: Boolean
   notify: Boolean
   listType: ProcedureType
@@ -39,6 +38,7 @@ input ProcedureFilter {
   subjectGroups: [String]
   status: [String]
   type: [String]
+  activity: [String]
 }
 
 type Query {

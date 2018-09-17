@@ -13,9 +13,9 @@ export default {
     procedures: async (
       parent,
       { type, offset = 0, pageSize = 99, sort = 'lastUpdateDate', filter = {} },
-      { ProcedureModel },
+      { ProcedureModel, user, VoteModel, device, phone },
     ) => {
-      Log.graphql('Procedure.query.procedures');
+      Log.graphql(`Procedure.query.procedures`);
       let currentStates = [];
 
       const filterQuery = {};
@@ -24,6 +24,30 @@ export default {
       }
       if (filter.subjectGroups && filter.subjectGroups.length > 0) {
         filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
+      if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
+        const votedProcedures = await VoteModel.find(
+          {
+            voters: {
+              $elemMatch: {
+                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              },
+            },
+          },
+          { procedure: 1 },
+        ).populate({ path: 'procedure', select: 'procedureId -_id' });
+        if (filter.activity.indexOf('notVoted') !== -1) {
+          if (Array.isArray(votedProcedures)) {
+            filterQuery.procedureId = {
+              $nin: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+            };
+          }
+        } else if (filter.activity.indexOf('voted') !== -1) {
+          filterQuery.procedureId = {
+            $in: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+          };
+        }
       }
 
       let sortQuery = {};
@@ -362,15 +386,6 @@ export default {
     }, */
     votedGovernment: procedure => {
       Log.graphql('Procedure.field.votedGovernment');
-      return (
-        procedure.voteResults &&
-        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
-      );
-    },
-    // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
-    // required for client <= 0.7.5
-    votedGoverment: procedure => {
-      Log.graphql('Procedure.field.votedGoverment');
       return (
         procedure.voteResults &&
         (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)

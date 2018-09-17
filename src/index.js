@@ -11,7 +11,7 @@ import cookieParser from 'cookie-parser';
 
 import './services/logger';
 
-import './config/db';
+import DB from './config/db';
 import CONSTANTS from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
@@ -37,13 +37,17 @@ import SearchTermModel from './models/SearchTerms';
 import { isDataSource } from './express/auth/permissions';
 import { migrate } from './migrations/scripts';
 
-// Async Warpping Function
-(async () => {
+const main = async () => {
   // Migrations
   await migrate().catch(err => {
-    Log.error(JSON.stringify({ err, message: 'Migration not successful - I die now!' }));
-    process.exit();
+    // Log the original error
+    Log.error(err.stack);
+    // throw own error
+    throw new Error('Migration not successful - I die now!');
   });
+
+  // Start regular DB Connection
+  await DB();
 
   // Express Server
   const app = express();
@@ -143,4 +147,14 @@ import { migrate } from './migrations/scripts';
       );
     }
   });
+};
+
+// Async Wrapping Function
+// Catches all errors
+(async () => {
+  try {
+    await main();
+  } catch (error) {
+    Log.error(error.stack);
+  }
 })();
