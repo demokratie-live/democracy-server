@@ -199,24 +199,6 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
-    votedProcedures: async (parent, args, { ProcedureModel, VoteModel, phone, device, user }) => {
-      if (!user || !user.isVerified()) {
-        return [];
-      }
-      const votedProcedures = await VoteModel.find(
-        {
-          voters: {
-            $elemMatch: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-            },
-          },
-        },
-        { procedure: 1 },
-      ).then(data => data.map(({ procedure }) => procedure));
-      return ProcedureModel.find({ _id: { $in: votedProcedures } });
-    },
-
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
       Log.graphql('Procedure.query.proceduresById');
       return ProcedureModel.find({ _id: { $in: ids } });

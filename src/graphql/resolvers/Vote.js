@@ -54,27 +54,6 @@ const queryVotes = async (parent, { procedure }, { VoteModel, device, phone }) =
 export default {
   Query: {
     votes: isLoggedin.createResolver(queryVotes),
-    voteStatistic: isVerified.createResolver(
-      async (parent, args, { VoteModel, ProcedureModel, device, phone }) => {
-        Log.graphql('Vote.query.voteStatistic');
-        const votedProcedures = await VoteModel.find(
-          {
-            voters: {
-              $elemMatch: {
-                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-              },
-            },
-          },
-          { procedure: 1 },
-        ).count();
-        Log.debug(votedProcedures);
-        return {
-          proceduresCount: ProcedureModel.find().count(),
-          votedProcedures,
-        };
-      },
-    ),
   },
 
   Mutation: {
