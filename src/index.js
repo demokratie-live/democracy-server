@@ -7,6 +7,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
 import './services/logger';
@@ -37,6 +38,12 @@ import SearchTermModel from './models/SearchTerms';
 import { isDataSource } from './express/auth/permissions';
 import { migrate } from './migrations/scripts';
 
+// enable cors
+const corsOptions = {
+origin: '*',
+    // credentials: true, // <-- REQUIRED backend setting
+};
+
 const main = async () => {
   // Migrations
   await migrate().catch(err => {
@@ -54,6 +61,8 @@ const main = async () => {
   if (CONSTANTS.DEBUG) {
     app.use(cookieParser());
   }
+
+  app.use(cors(corsOptions));
 
   const schema = makeExecutableSchema({
     typeDefs,
