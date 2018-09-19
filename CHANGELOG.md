@@ -8,6 +8,7 @@
 - [Fix] Remove id from Procedure.voteResults.PartyVotes subobject to fix unnecessary Push notifications
 - [Fix] more dynamic connection whitelisting
 - [Added] Catch all errors and log them
+- [Added] Queries for statistic
 
 ### 0.1.14
 
