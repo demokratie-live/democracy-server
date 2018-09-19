@@ -46,8 +46,6 @@ type Query {
   procedures(type: ProcedureType!, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
-  votedProcedures: [Procedure]
-  notVotedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
   searchProceduresAutocomplete(term: String!): SearchProcedures
 }
