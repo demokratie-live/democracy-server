@@ -40,8 +40,8 @@ import { migrate } from './migrations/scripts';
 
 // enable cors
 const corsOptions = {
-origin: '*',
-    // credentials: true, // <-- REQUIRED backend setting
+  origin: '*',
+  // credentials: true, // <-- REQUIRED backend setting
 };
 
 const main = async () => {

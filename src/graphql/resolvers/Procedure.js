@@ -67,7 +67,6 @@ export default {
         }
       }
 
-
       let sortQuery = {};
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
