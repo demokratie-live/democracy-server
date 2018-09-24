@@ -1,4 +1,6 @@
 import request from 'request';
+import _ from 'lodash';
+
 import CONSTANTS from '../../config/constants';
 
 export const statusSMS = async SMSID => {
@@ -9,6 +11,9 @@ export const statusSMS = async SMSID => {
   };
 
   return new Promise((resolve, reject) => {
+    if (CONSTANTS.SMS_SIMULATE) {
+      return resolve(true);
+    }
     request({ url, qs }, (err, response, body) => {
       if (err) {
         Log.error(JSON.stringify(err));
@@ -138,6 +143,9 @@ export const sendSMS = async (phone, code) => {
   };
 
   return new Promise((resolve, reject) => {
+    if (CONSTANTS.SMS_SIMULATE) {
+      return resolve({ status: true, statusCode: 100, SMSID: _.uniqueId() });
+    }
     request({ url, qs }, (err, response, body) => {
       let status = false;
       let statusCode = null;
