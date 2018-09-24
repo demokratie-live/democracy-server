@@ -207,6 +207,9 @@ export default {
       Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // TODO fail here of procedure is null
+      if (!procedure) {
+        return null;
+      }
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status,
