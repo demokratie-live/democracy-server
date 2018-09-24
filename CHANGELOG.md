@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Added] Queries for statistic
+
 ### 0.1.15
 
 - [Changed] Filter performance for not-/voted
