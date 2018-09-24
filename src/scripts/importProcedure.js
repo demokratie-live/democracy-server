@@ -85,7 +85,7 @@ export default async (bIoProcedure, { push = false }) => {
                 partyName = 'AfD';
                 break;
               case 'Die Linke':
-                partyName = 'Link';
+                partyName = 'Linke';
                 break;
               case 'B90/Grüne':
                 partyName = 'Grüne';
