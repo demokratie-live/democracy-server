@@ -35,6 +35,11 @@ export default `
     voted: Boolean
     voteResults: VoteResult
   }
+
+  type VoteStatistic {
+    proceduresCount: Int
+    votedProcedures: Int
+  }
   
   type Mutation {
     vote(procedure: ID!, selection: VoteSelection!): Vote
@@ -42,5 +47,6 @@ export default `
   
   type Query {
     votes(procedure: ID!): Vote
+    voteStatistic: VoteStatistic
   }
   `;

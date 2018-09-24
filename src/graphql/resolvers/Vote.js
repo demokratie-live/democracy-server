@@ -54,6 +54,47 @@ const queryVotes = async (parent, { procedure }, { VoteModel, device, phone }) =
 export default {
   Query: {
     votes: isLoggedin.createResolver(queryVotes),
+    voteStatistic: async (parent, args, { user, ProcedureModel, VoteModel, phone, device }) => {
+      Log.graphql('Vote.query.voteStatistic', user.isVerified());
+      if (!user.isVerified()) {
+        return null;
+      }
+
+      const period = { $gte: CONSTANTS.MIN_PERIOD };
+
+      const proceduresCount = ProcedureModel.find({
+        period,
+        $or: [
+          { voteDate: { $type: 'date' } },
+          { currentStatus: { $in: procedureStates.COMPLETED } },
+          {
+            currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+            voteDate: { $not: { $type: 'date' } },
+          },
+          {
+            currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+            voteDate: { $gte: new Date() },
+          },
+        ],
+      }).count();
+
+      const votedProcedures = await VoteModel.find(
+        {
+          voters: {
+            $elemMatch: {
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
+          },
+        },
+        { procedure: 1 },
+      ).count();
+
+      return {
+        proceduresCount,
+        votedProcedures,
+      };
+    },
   },
 
   Mutation: {
