@@ -71,34 +71,63 @@ export default async (bIoProcedure, { push = false }) => {
         notVoted: bIoProcedure.customData.voteResults.notVoted,
         decisionText: bIoProcedure.customData.voteResults.decisionText,
         namedVote: bIoProcedure.namedVote,
-        partyVotes: bIoProcedure.customData.voteResults.partyVotes,
       };
 
-      // toggle votingData (Yes & No) if needed
-      if (
-        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
-        bIoProcedure.customData.voteResults.votingRecommendation === false
-      ) {
-        voteResults = {
-          ...voteResults,
-          yes: voteResults.no,
-          no: voteResults.yes,
-          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
-            let mainDecision = main;
-            if (main !== 'ABSTINATION') {
-              mainDecision = main === 'YES' ? 'NO' : 'YES';
+      if (bIoProcedure.customData.voteResults.partyVotes) {
+        voteResults.partyVotes = bIoProcedure.customData.voteResults.partyVotes.map(
+          ({ party, ...rest }) => {
+            let partyName = party;
+            switch (party) {
+              case 'CDU/CSU':
+                partyName = 'Union';
+                break;
+              case 'AFD':
+                partyName = 'AfD';
+                break;
+              case 'Die Linke':
+                partyName = 'Link';
+                break;
+              case 'B90/Grüne':
+                partyName = 'Grüne';
+                break;
+
+              default:
+                break;
             }
+            console.log(partyName);
             return {
               ...rest,
-              main: mainDecision,
-              deviants: {
-                ...deviants,
-                yes: deviants.no,
-                no: deviants.yes,
-              },
+              party: partyName,
             };
-          }),
-        };
+          },
+        );
+
+        // toggle votingData (Yes & No) if needed
+        if (
+          bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
+          bIoProcedure.customData.voteResults.votingRecommendation === false
+        ) {
+          voteResults = {
+            ...voteResults,
+            yes: voteResults.no,
+            no: voteResults.yes,
+            partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
+              let mainDecision = main;
+              if (main !== 'ABSTINATION') {
+                mainDecision = main === 'YES' ? 'NO' : 'YES';
+              }
+              return {
+                ...rest,
+                main: mainDecision,
+                deviants: {
+                  ...deviants,
+                  yes: deviants.no,
+                  no: deviants.yes,
+                },
+              };
+            }),
+          };
+        }
       }
     } else {
       // TODO: check if is needed after adding named-poll-scraper!
