@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.15
+### 0.1.16
 
 - [Fix] Named polls party names
 
