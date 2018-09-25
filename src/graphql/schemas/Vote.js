@@ -4,6 +4,7 @@ export default `
     YES
     NO
     ABSTINATION
+    NOTVOTED
   }
 
   type VoteResult {
