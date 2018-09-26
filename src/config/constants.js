@@ -40,6 +40,7 @@ export default {
   SMS_VERIFICATION_NEW_USER_DELAY: process.env.SMS_VERIFICATION_NEW_USER_DELAY || '24w',
   JWT_BACKWARD_COMPATIBILITY: process.env.JWT_BACKWARD_COMPATIBILITY === 'true',
   SMS_PROVIDER_KEY: process.env.SMS_PROVIDER_KEY,
+  SMS_SIMULATE: process.env.SMS_SIMULATE || false,
   LOGGING: {
     CONSOLE: process.env.LOGGING_CONSOLE || false,
     FILE: process.env.LOGGING_FILE || false,

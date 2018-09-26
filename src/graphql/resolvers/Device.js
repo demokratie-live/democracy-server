@@ -104,7 +104,11 @@ export default {
         // Genrate Code
         const minVal = 100000;
         const maxVal = 999999;
-      const code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
+
+        let code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
+        if (CONSTANTS.SMS_SIMULATE) {
+          code = '000000';
+        }
 
         const now = new Date();
         // Check if there is still a valid Code
