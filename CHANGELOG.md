@@ -3,6 +3,7 @@
 ### 0.1.16
 
 - [Fix] Named polls party names
+- [Added] Queries for statistic
 
 ### 0.1.15
 

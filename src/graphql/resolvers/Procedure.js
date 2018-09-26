@@ -198,6 +198,26 @@ export default {
       return [...activeVotings, ...pastVotings];
     },
 
+    votedProcedures: async (parent, args, { VoteModel, phone, device, user }) => {
+      Log.graphql('Procedure.query.votedProcedures');
+      if (!user.isVerified()) {
+        return null;
+      }
+      const votedProcedures = await VoteModel.find(
+        {
+          voters: {
+            $elemMatch: {
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
+          },
+        },
+        { procedure: 1 },
+      ).populate({ path: 'procedure' });
+
+      return votedProcedures.map(({ procedure }) => procedure);
+    },
+
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
       Log.graphql('Procedure.query.proceduresById');
       return ProcedureModel.find({ _id: { $in: ids } });
@@ -207,6 +227,9 @@ export default {
       Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // TODO fail here of procedure is null
+      if (!procedure) {
+        return null;
+      }
       // eslint-disable-next-line
       const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status,
