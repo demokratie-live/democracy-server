@@ -12,7 +12,8 @@ export const statusSMS = async SMSID => {
 
   return new Promise((resolve, reject) => {
     if (CONSTANTS.SMS_SIMULATE) {
-      return resolve(true);
+      resolve(true);
+      return;
     }
     request({ url, qs }, (err, response, body) => {
       if (err) {
@@ -144,7 +145,8 @@ export const sendSMS = async (phone, code) => {
 
   return new Promise((resolve, reject) => {
     if (CONSTANTS.SMS_SIMULATE) {
-      return resolve({ status: true, statusCode: 100, SMSID: _.uniqueId() });
+      resolve({ status: true, statusCode: 100, SMSID: _.uniqueId() });
+      return;
     }
     request({ url, qs }, (err, response, body) => {
       let status = false;

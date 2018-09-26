@@ -94,7 +94,6 @@ export default async (bIoProcedure, { push = false }) => {
               default:
                 break;
             }
-            console.log(partyName);
             return {
               ...rest,
               party: partyName,
