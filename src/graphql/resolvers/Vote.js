@@ -54,6 +54,19 @@ const queryVotes = async (parent, { procedure }, { VoteModel, device, phone }) =
 export default {
   Query: {
     votes: isLoggedin.createResolver(queryVotes),
+    communityVotes: async (parent, { procedure: procedureId }, { VoteModel, ProcedureModel }) => {
+      Log.graphql('Vote.query.communityVotes');
+      const procedure = await ProcedureModel.findOne({ procedureId }, { _id: 1 });
+
+      const voteProcedure = await VoteModel.findOne(
+        { procedure: procedure._id },
+        { voteResults: 1 },
+      );
+      if (voteProcedure) {
+        return { ...voteProcedure.voteResults[CONSTANTS.SMS_VERIFICATION ? 'phone' : 'device'] };
+      }
+      return null;
+    },
     voteStatistic: async (parent, args, { user, ProcedureModel, VoteModel, phone, device }) => {
       Log.graphql('Vote.query.voteStatistic', user.isVerified());
       if (!user.isVerified()) {

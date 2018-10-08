@@ -48,6 +48,7 @@ export default `
   
   type Query {
     votes(procedure: ID!): Vote
+    communityVotes(procedure: ID!): VoteResult
     voteStatistic: VoteStatistic
   }
   `;
