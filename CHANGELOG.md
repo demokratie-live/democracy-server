@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Added] Query CommunityVotes for browser version
+
 ### 0.1.16
 
 - [Fix] Named polls party names
