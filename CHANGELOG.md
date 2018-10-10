@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.1.7
+### 0.1.17
 
 - [Added] Query CommunityVotes for browser version
 
