@@ -128,6 +128,7 @@ const getImage = subjectGroup => {
   if (subjectGroups[subjectGroup] && subjectGroups[subjectGroup].image) {
     return subjectGroups[subjectGroup].image;
   }
+  return null;
 };
 
 export { subjectGroups, getDisplayTitle, getImage };
@@ -136,4 +137,5 @@ export default subjectGroup => {
   if (subjectGroups[subjectGroup]) {
     return subjectGroups[subjectGroup].icon;
   }
+  return null;
 };
