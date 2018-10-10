@@ -9,6 +9,7 @@ const ProcedureSchema = new Schema(
     period: { type: Number, required: true },
     title: { type: String, required: true },
     currentStatus: String,
+    currentStatusHistory: [String],
     abstract: String,
     tags: [String],
     state: {
@@ -22,11 +23,28 @@ const ProcedureSchema = new Schema(
     bioUpdateAt: Date, // Date of last dip21 changes on bundestag.io
     subjectGroups: [String],
     importantDocuments: [Document],
+    activities: { type: Number, default: 0 },
     voteResults: {
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
-      notVote: { type: Number, required: true },
+      notVoted: { type: Number, required: true },
+      decisionText: String,
+      namedVote: Boolean,
+      partyVotes: [
+        {
+          _id: false,
+          party: { type: String, required: true },
+          main: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
+
+          deviants: {
+            yes: { type: Number, required: true },
+            no: { type: Number, required: true },
+            abstination: { type: Number, required: true },
+            notVoted: { type: Number, required: true },
+          },
+        },
+      ],
     },
   },
   { timestamps: true },
@@ -52,10 +70,10 @@ ProcedureSchema.index(
 
 export default mongoose.model('Procedure', ProcedureSchema);
 
-mongoose.model('Procedure').ensureIndexes((err) => {
+mongoose.model('Procedure').ensureIndexes(err => {
   if (!err) {
-    console.log('SearchIndexs for Procedures created');
+    Log.info('SearchIndexs for Procedures created');
   } else {
-    console.log({ err });
+    Log.error(JSON.stringify({ err }));
   }
 });

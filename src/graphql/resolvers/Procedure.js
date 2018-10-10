@@ -1,177 +1,477 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+import _ from 'lodash';
 
 import procedureStates from '../../config/procedureStates';
 import CONSTANTS from '../../config/constants';
 
+import elasticsearch from '../../services/search';
+
+import { isLoggedin } from '../../express/auth/permissions';
+
 export default {
   Query: {
-    procedures: async (parent, { type, offset, pageSize }, { ProcedureModel }) => {
-      let currentStates = [];
-      switch (type) {
-        case 'PREPARATION':
-          currentStates = procedureStates.PREPARATION;
-          break;
-        case 'VOTING':
-          currentStates = procedureStates.VOTING.concat(procedureStates.COMPLETED);
-          break;
-        case 'HOT':
-          currentStates = [];
+    procedures: async (
+      parent,
+      {
+        listTypes: listTypeParam,
+        type,
+        offset = 0,
+        pageSize = 99,
+        sort = 'lastUpdateDate',
+        filter = {},
+      },
+      { ProcedureModel, user, VoteModel, device, phone },
+    ) => {
+      Log.graphql('Procedure.query.procedures');
+      let listTypes = listTypeParam;
+      if (type) {
+        switch (type) {
+          case 'VOTING':
+            listTypes = ['IN_VOTE', 'PAST'];
+            break;
+          default:
+            listTypes = [type];
+            break;
+        }
+      }
+
+      const filterQuery = {};
+      if (filter.type && filter.type.length > 0) {
+        filterQuery.type = { $in: filter.type };
+      }
+      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
+      if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
+        const votedProcedures = await VoteModel.find(
+          {
+            voters: {
+              $elemMatch: {
+                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              },
+            },
+          },
+          { procedure: 1 },
+        ).populate({ path: 'procedure', select: 'procedureId -_id' });
+        if (filter.activity.indexOf('notVoted') !== -1) {
+          if (Array.isArray(votedProcedures)) {
+            filterQuery.procedureId = {
+              $nin: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+            };
+          }
+        } else if (filter.activity.indexOf('voted') !== -1) {
+          filterQuery.procedureId = {
+            $in: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+          };
+        }
+      }
+
+      let sortQuery = {};
+
+      const period = { $gte: CONSTANTS.MIN_PERIOD };
+      if (listTypes.indexOf('PREPARATION') > -1) {
+        switch (sort) {
+          case 'activities':
+            sortQuery = { activities: -1, lastUpdateDate: -1, title: 1 };
+            break;
+          case 'created':
+            sortQuery = { submissionDate: -1, lastUpdateDate: -1, title: 1 };
+            break;
+
+          default:
+            sortQuery = {
+              lastUpdateDate: -1,
+              title: 1,
+            };
+            break;
+        }
+        return ProcedureModel.find({
+          currentStatus: { $in: procedureStates.PREPARATION },
+          period,
+          voteDate: { $not: { $type: 'date' } },
+          ...filterQuery,
+        })
+          .sort(sortQuery)
+          .limit(pageSize)
+          .skip(offset);
+      }
+
+      if (listTypes.indexOf('HOT') > -1) {
+        const oneWeekAgo = new Date();
+        const hotProcedures = await ProcedureModel.find({
+          period,
+          activities: { $gt: 0 },
+          $or: [
+            { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
+            { voteDate: { $not: { $type: 'date' } } },
+          ],
+          ...filterQuery,
+        })
+          .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
+          .skip(offset)
+          .limit(pageSize);
+
+        return hotProcedures;
+      }
+
+      switch (sort) {
+        case 'activities':
+          sortQuery = { activities: -1, lastUpdateDate: -1, title: 1 };
           break;
 
         default:
+          sortQuery = {
+            nlt: 1,
+            voteDate: -1,
+            lastUpdateDate: -1,
+            title: 1,
+          };
           break;
       }
 
-      const period = { $gte: CONSTANTS.MIN_PERIOD };
-      let sort = { voteDate: -1, lastUpdateDate: -1 };
-      if (type === 'PREPARATION') {
-        sort = { lastUpdateDate: -1 };
-        return ProcedureModel.find({ currentStatus: { $in: currentStates }, period })
-          .sort(sort)
-          .skip(offset)
-          .limit(pageSize);
-      }
-      if (type === 'HOT') {
-        const oneWeekAgo = new Date();
-        sort = {};
-        const schemaProps = Object.keys(ProcedureModel.schema.obj).reduce(
-          (obj, prop) => ({ ...obj, [prop]: { $first: `$${prop}` } }),
-          {},
-        );
-        const hotProcedures = await ProcedureModel.aggregate([
+      let activeVotings = [];
+      if (listTypes.indexOf('IN_VOTE') > -1) {
+        activeVotings = await ProcedureModel.aggregate([
           {
             $match: {
-              period,
               $or: [
-                { voteDate: { $gt: oneWeekAgo.setDate(oneWeekAgo.getDate() - 7) } },
-                { voteDate: null },
+                {
+                  currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                  voteDate: { $not: { $type: 'date' } },
+                },
+                {
+                  currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                  voteDate: { $gte: new Date() },
+                },
               ],
+              period,
+              ...filterQuery,
             },
           },
-          {
-            $lookup: {
-              from: 'activities',
-              localField: '_id',
-              foreignField: 'procedure',
-              as: 'activityIndex',
-            },
-          },
-          { $unwind: '$activityIndex' },
-          {
-            $group: {
-              _id: '$_id',
-              ...schemaProps,
-              activities: { $sum: 1 },
-            },
-          },
-          { $sort: { activities: -1 } },
           {
             $addFields: {
-              listType: {
-                $cond: {
-                  if: { $in: ['$currentStatus', procedureStates.VOTING.concat(procedureStates.COMPLETED)] },
-                  then: 'VOTING',
-                  else: 'PREPARATION',
+              nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
+            },
+          },
+          { $sort: sortQuery },
+          { $skip: offset },
+          { $limit: pageSize },
+        ]);
+      }
+
+      let pastVotings = [];
+      if (listTypes.indexOf('PAST') > -1) {
+        if (activeVotings.length < pageSize) {
+          const activeVotingsCount =
+            listTypes.indexOf('IN_VOTE') > -1
+              ? await ProcedureModel.find({
+                  $or: [
+                    {
+                      currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                      voteDate: { $not: { $type: 'date' } },
+                    },
+                    {
+                      currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                      voteDate: { $gte: new Date() },
+                    },
+                  ],
+                  period,
+                  ...filterQuery,
+                }).count()
+              : 0;
+
+          pastVotings = await ProcedureModel.find({
+            $or: [
+              { voteDate: { $lt: new Date() } },
+              { currentStatus: { $in: procedureStates.COMPLETED } },
+            ],
+            period,
+            ...filterQuery,
+          })
+            .sort(sortQuery)
+            .skip(Math.max(offset - activeVotingsCount, 0))
+            .limit(pageSize - activeVotings.length);
+        }
+      }
+
+      return [...activeVotings, ...pastVotings];
+    },
+
+    votedProcedures: async (parent, args, { VoteModel, phone, device, user }) => {
+      Log.graphql('Procedure.query.votedProcedures');
+      if (!user.isVerified()) {
+        return null;
+      }
+      const votedProcedures = await VoteModel.find(
+        {
+          voters: {
+            $elemMatch: {
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
+          },
+        },
+        { procedure: 1 },
+      ).populate({ path: 'procedure' });
+
+      return votedProcedures.map(({ procedure }) => procedure);
+    },
+
+    proceduresById: async (parent, { ids }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.proceduresById');
+      return ProcedureModel.find({ _id: { $in: ids } });
+    },
+
+    procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
+      Log.graphql('Procedure.query.procedure');
+      const procedure = await ProcedureModel.findOne({ procedureId: id });
+      // TODO fail here of procedure is null
+      if (!procedure) {
+        return null;
+      }
+      // eslint-disable-next-line
+      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+        status => procedure.currentStatus === status,
+      )
+        ? 'VOTING'
+        : 'PREPARATION';
+
+      return {
+        ...procedure.toObject(),
+        notify: !!(device && device.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        verified: user ? user.isVerified() : false,
+      };
+    },
+
+    searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProceduresAutocomplete');
+      let autocomplete = [];
+
+      // Search by procedureID or Document id
+      const directProcedures = await ProcedureModel.find({
+        $or: [
+          { procedureId: term },
+          {
+            'importantDocuments.number': term,
+          },
+        ],
+      });
+      if (directProcedures.length > 0) {
+        return {
+          procedures: directProcedures,
+          autocomplete,
+        };
+      }
+
+      const { hits, suggest } = await elasticsearch.search({
+        index: 'procedures',
+        type: 'procedure',
+        body: {
+          query: {
+            function_score: {
+              query: {
+                bool: {
+                  must: [
+                    {
+                      term: { period: 19 },
+                    },
+                    {
+                      query_string: {
+                        query: "type:'Antrag' OR type:'Gesetzgebung'",
+                      },
+                    },
+                    {
+                      multi_match: {
+                        query: `*${term}*`,
+                        fields: ['title^3', 'tags^2.5', 'abstract^2'],
+                        fuzziness: 'AUTO',
+                        prefix_length: 3,
+                      },
+                    },
+                  ],
                 },
               },
             },
           },
 
-          { $skip: offset },
-          { $limit: pageSize },
-        ]);
+          suggest: {
+            autocomplete: {
+              text: `${term}`,
+              term: {
+                field: 'title',
+                suggest_mode: 'popular',
+              },
+            },
+          },
+        },
+      });
 
-        return hotProcedures;
+      // prepare procedures
+      const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
+      const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
+
+      // prepare autocomplete
+      if (suggest.autocomplete[0]) {
+        autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
       }
-
-      const activeVotings = await ProcedureModel.find({
-        voteDate: { $exists: false },
-        currentStatus: { $in: currentStates },
-        period,
-      })
-        .sort({ lastUpdateDate: -1 })
-        .skip(offset)
-        .limit(pageSize);
-
-      return ProcedureModel.find({
-        voteDate: { $exists: true },
-        currentStatus: { $in: currentStates },
-        period,
-      })
-        .sort(sort)
-        .skip(offset - activeVotings.length > 0 ? offset - activeVotings.length : 0)
-        .limit(pageSize - activeVotings.length)
-        .then(finishedVotings => [...activeVotings, ...finishedVotings]);
-    },
-
-    procedure: async (parent, { id }, { user, ProcedureModel }) => {
-      const procedure = await ProcedureModel.findOne({ procedureId: id });
-      const listType = (procedureStates.VOTING.concat(procedureStates.COMPLETED))
-        .some(status => procedure.currentStatus === status)
-        ? 'VOTING'
-        : 'PREPARATION';
       return {
-        ...procedure.toObject(),
-        listType,
-        notify: !!(user && user.notificationSettings.procedures.indexOf(procedure._id) > -1),
+        procedures:
+          _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId)) || [],
+        autocomplete,
       };
     },
 
-    searchProcedures: (parent, { term }, { ProcedureModel }) =>
-      ProcedureModel.find(
-        {
-          $or: [
-            { procedureId: { $regex: term, $options: 'i' } },
-            { title: { $regex: term, $options: 'i' } },
-            { abstract: { $regex: term, $options: 'i' } },
-            { tags: { $regex: term, $options: 'i' } },
-            { subjectGroups: { $regex: term, $options: 'i' } },
-          ],
-          period: { $gte: CONSTANTS.MIN_PERIOD },
+    // DEPRECATED
+    searchProcedures: async (parent, { term }, { ProcedureModel }) => {
+      Log.graphql('Procedure.query.searchProcedures');
+      const { hits } = await elasticsearch.search({
+        index: 'procedures',
+        type: 'procedure',
+        body: {
+          query: {
+            function_score: {
+              query: {
+                bool: {
+                  must: [
+                    {
+                      term: { period: 19 },
+                    },
+                    {
+                      query_string: {
+                        query: "type:'Antrag' OR type:'Gesetzgebung'",
+                      },
+                    },
+                    {
+                      multi_match: {
+                        query: `*${term}*`,
+                        fields: ['title^3', 'tags^2.5', 'abstract^2'],
+                        fuzziness: 'AUTO',
+                        prefix_length: 3,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
         },
-        { score: { $meta: 'textScore' } },
-      ).sort({ score: { $meta: 'textScore' } }),
-
-    notifiedProcedures: async (parent, args, { user, ProcedureModel }) => {
-      if (!user) {
-        throw new Error('no Auth');
-      }
-      const procedures = await ProcedureModel.find({
-        _id: { $in: user.notificationSettings.procedures },
       });
 
-      return procedures.map(procedure => ({
-        ...procedure.toObject(),
-        notify: true,
-      }));
+      // prepare procedures
+      const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
+      return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
+
+    notifiedProcedures: isLoggedin.createResolver(
+      async (parent, args, { device, ProcedureModel }) => {
+        Log.graphql('Procedure.query.notifiedProcedures');
+        const procedures = await ProcedureModel.find({
+          _id: { $in: device.notificationSettings.procedures },
+        });
+
+        return procedures.map(procedure => ({
+          ...procedure.toObject(),
+          notify: true,
+        }));
+      },
+    ),
   },
 
   Procedure: {
-    activityIndex: async (procedure, args, { ActivityModel, user }) => {
-      const activityIndex = await ActivityModel.find({ procedure }).count();
-      const active = await ActivityModel.findOne({
-        user,
-        procedure,
-      });
+    activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
+      Log.graphql('Procedure.field.activityIndex');
+      const activityIndex = procedure.activities || 0;
+      const active =
+        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
+          ? false
+          : await ActivityModel.findOne({
+              actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              procedure,
+            });
       return {
         activityIndex,
         active: !!active,
       };
     },
-    voted: async (procedure, args, { VoteModel, user }) => {
-      const voted = await VoteModel.findOne({ procedure, users: user });
+    voted: async (procedure, args, { VoteModel, device, phone }) => {
+      Log.graphql('Procedure.field.voted');
+      const voted =
+        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
+          ? false
+          : await VoteModel.findOne({
+              procedure: procedure._id,
+              voters: {
+                $elemMatch: {
+                  kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                  voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+                },
+              },
+            });
       return !!voted;
     },
-    votedGovernment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    // TODO: remove(+schema) - this is a duplicate in oder to maintain backwards compatibility
-    // required for client <= 0.7.5
-    votedGoverment: procedure =>
-      procedure.voteResults &&
-      (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no),
-    completed: procedure =>
-      procedureStates.COMPLETED.includes(procedure.currentStatus),
+    /* communityResults: async (procedure, args, { VoteModel }) => {
+      Log.graphql('Procedure.field.voteResults');
+      // if(!votedGovernment && !voted){
+      //   return { yes: null, no: null, abstination: null }
+      // }
+      const result = await VoteModel.findOne({ procedure: procedure._id }, { voteResults: 1 });
+      return CONSTANTS.SMS_VERIFICATION ? result.voteResults.phone : result.voteResults.device;
+    }, */
+    votedGovernment: procedure => {
+      Log.graphql('Procedure.field.votedGovernment');
+      return (
+        procedure.voteResults &&
+        (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
+      );
+    },
+    completed: procedure => {
+      Log.graphql('Procedure.field.completed');
+      return procedureStates.COMPLETED.includes(procedure.currentStatus);
+    },
+    listType: procedure => {
+      Log.graphql('Procedure.field.listType');
+      if (
+        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+        (procedure.currentStatus === 'Überwiesen' &&
+          procedure.voteDate &&
+          new Date(procedure.voteDate) >= new Date()) ||
+        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+      ) {
+        return 'VOTING';
+      }
+      return 'PREPARATION';
+    },
+    currentStatusHistory: ({ currentStatusHistory }) => {
+      const cleanHistory = [...new Set(currentStatusHistory)];
+      const referStatusIndex = cleanHistory.findIndex(status => status === 'Überwiesen');
+      if (referStatusIndex !== -1) {
+        cleanHistory.splice(referStatusIndex, 0, '1. Beratung');
+      }
+
+      const resultStaties = [
+        'Angenommen',
+        'Abgelehnt',
+        'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
+        'Abgeschlossen',
+        'Verkündet',
+        'Verabschiedet',
+        'Bundesrat hat zugestimmt',
+        'Bundesrat hat Einspruch eingelegt',
+        'Bundesrat hat Zustimmung versagt',
+        'Bundesrat hat Vermittlungsausschuss nicht angerufen',
+        'Im Vermittlungsverfahren',
+        'Vermittlungsvorschlag liegt vor',
+        'Für mit dem Grundgesetz unvereinbar erklärt',
+        'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
+        'Zustimmung versagt',
+      ];
+      const resultStatusIndex = cleanHistory.findIndex(status => resultStaties.includes(status));
+      if (resultStatusIndex !== -1) {
+        cleanHistory.splice(resultStatusIndex, 0, '2. Beratung / 3. Beratung');
+      }
+      return cleanHistory;
+    },
   },
 };

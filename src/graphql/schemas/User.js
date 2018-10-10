@@ -1,7 +1,8 @@
 export default `
   type User {
     _id: String!
-    deviceHash: String!
+    verified: Boolean!
+    deviceHash: String @deprecated
   }
   
   type Auth {
@@ -10,7 +11,6 @@ export default `
   
   type Mutation {
     signUp(deviceHashEncrypted: String!): Auth
-    signIn(deviceHashEncrypted: String!): Auth
   }
   
   type Query {

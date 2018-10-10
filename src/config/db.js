@@ -1,21 +1,34 @@
-/* eslint-disable no-console */
 import mongoose from 'mongoose';
+import { inspect } from 'util';
 
 import CONSTANTS from './constants';
 
 mongoose.Promise = global.Promise;
 
-// mongoose.set('debug', true);
-(async () => {
-  try {
-    mongoose.connect(CONSTANTS.db.url, {});
-  } catch (err) {
-    mongoose.createConnection(CONSTANTS.db.url, {});
+export default async () => {
+  // Mongo Debug
+  if (CONSTANTS.LOGGING.MONGO) {
+    mongoose.set('debug', (...rest) => {
+      Log[CONSTANTS.LOGGING.MONGO](inspect(rest));
+    });
   }
 
-  mongoose.connection.once('open', () => console.log('MongoDB is running')).on('error', (e) => {
+  // Connect
+  try {
+    await mongoose.connect(
+      CONSTANTS.db.url,
+      {},
+    );
+  } catch (err) {
+    await mongoose.createConnection(CONSTANTS.db.url, {});
+  }
+
+  // Open
+  mongoose.connection.once('open', () => Log.info('MongoDB is running')).on('error', e => {
+    // Unknown if this ends up in main - therefore we log here
+    Log.error(e.stack);
     throw e;
   });
-})();
+};
 
-export default mongoose;
+export { mongoose };

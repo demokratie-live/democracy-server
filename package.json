@@ -1,16 +1,18 @@
 {
   "name": "democracy-server",
-  "version": "0.1.11",
+  "version": "0.1.17",
   "main": "src/index.js",
   "author": "Manuel Ruck",
   "license": "Apache2",
   "private": true,
   "scripts": {
-    "start": "babel-node src/index.js",
+    "build": "babel ./ -d dist -s --ignore node_modules,dist",
+    "serve": "node dist/src/index.js",
     "dev": "nodemon -L -e js,graphql src/index.js --exec \"node --require dotenv/config --require babel-register\"",
+    "dev:serve": "node -r dotenv/config dist/src/index.js",
     "lint": "eslint .",
-    "build": "babel src -d dist -s",
-    "serve": "node dist/index.js"
+    "migrations:migrate": "node -r dotenv/config -r babel-register src/migrations/scripts/migrate.js",
+    "migrations:create": "node -r dotenv/config -r babel-register src/migrations/scripts/create.js"
   },
   "dependencies": {
     "apn": "^2.2.0",
@@ -19,9 +21,15 @@
     "apollo-engine": "^0.8.8",
     "apollo-link-http": "^1.3.3",
     "apollo-server-express": "^1.1.2",
+    "bcrypt": "^3.0.0",
     "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.4",
+    "cron": "^1.3.0",
     "cross-env": "^5.0.5",
+    "deep-object-diff": "^1.1.0",
     "dotenv": "^5.0.0",
+    "elasticsearch": "^15.0.0",
     "express": "^4.16.1",
     "graphql": "0.11.7",
     "graphql-date": "^1.0.3",
@@ -31,14 +39,19 @@
     "jsonwebtoken": "^8.2.0",
     "lodash": "^4.17.4",
     "merge-graphql-schemas": "^1.3.0",
+    "mongodb-migrations": "^0.8.5",
     "mongoose": "^5.0.3",
+    "ms": "^2.1.1",
     "node-fetch": "^2.0.0",
     "node-gcm": "^0.14.10",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "prettier-eslint": "^8.2.0",
     "react-native-rsa": "^0.0.3",
-    "slugify": "^1.3.0"
+    "slugify": "^1.3.0",
+    "request": "^2.87.0",
+    "winston": "^3.0.0",
+    "winston-discord": "^0.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -53,7 +66,9 @@
     "eslint-config-prettier": "^2.6.0",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-prettier": "^2.6.2",
     "eslint-plugin-react": "^7.4.0",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.12.1",
+    "prettier": "^1.14.2"
   }
 }

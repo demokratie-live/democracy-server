@@ -6,142 +6,164 @@ import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { makeExecutableSchema } from 'graphql-tools';
 import { createServer } from 'http';
 import { Engine } from 'apollo-engine';
+import { CronJob } from 'cron';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
-import './config/db';
-import constants from './config/constants';
+import './services/logger';
+
+import DB from './config/db';
+import CONSTANTS from './config/constants';
 import typeDefs from './graphql/schemas';
 import resolvers from './graphql/resolvers';
-import webhook from './scripts/webhook';
-import { contributeProcedure } from './scripts/hc_webhooks';
-import auth from './express/auth';
+
+import sendNotifications from './scripts/sendNotifications';
+
+import { auth } from './express/auth';
+import BIOupdate from './express/webhooks/bundestagio/update';
+import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures';
+import debugPushNotifications from './express/webhooks/debug/pushNotifications';
+import debugImportAll from './express/webhooks/debug/importAll';
 
 // Models
 import ProcedureModel from './models/Procedure';
 import UserModel from './models/User';
+import DeviceModel from './models/Device';
+import PhoneModel from './models/Phone';
+import VerificationModel from './models/Verification';
 import ActivityModel from './models/Activity';
 import VoteModel from './models/Vote';
+import PushNotifiactionModel from './models/PushNotifiaction';
+import SearchTermModel from './models/SearchTerms';
+import { isDataSource } from './express/auth/permissions';
+import { migrate } from './migrations/scripts';
 
-const app = express();
+// enable cors
+const corsOptions = {
+  origin: '*',
+  // credentials: true, // <-- REQUIRED backend setting
+};
 
-const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
-});
-
-// Apollo Engine
-if (process.env.ENGINE_API_KEY) {
-  const engine = new Engine({
-    engineConfig: { apiKey: process.env.ENGINE_API_KEY },
-    graphqlPort: constants.PORT,
+const main = async () => {
+  // Migrations
+  await migrate().catch(err => {
+    // Log the original error
+    Log.error(err.stack);
+    // throw own error
+    throw new Error('Migration not successful - I die now!');
   });
-  engine.start();
-  app.use(engine.expressMiddleware());
-}
 
-app.use(bodyParser.json());
+  // Start regular DB Connection
+  await DB();
 
-// Authentification
-auth(app);
-
-// Graphiql
-if (constants.GRAPHIQL) {
-  app.use(
-    constants.GRAPHIQL_PATH,
-    graphiqlExpress({
-      endpointURL: constants.GRAPHQL_PATH,
-    }),
-  );
-}
-
-// Graphql
-app.use(constants.GRAPHQL_PATH, (req, res, next) => {
-  graphqlExpress({
-    schema,
-    context: {
-      user: req.user,
-      // Models
-      ProcedureModel,
-      UserModel,
-      ActivityModel,
-      VoteModel,
-    },
-    tracing: true,
-    cacheControl: true,
-  })(req, res, next);
-});
-
-// Bundestag.io Webhook
-app.post('/webhooks/bundestagio/update', async (req, res) => {
-  const { data } = req.body;
-  try {
-    const updated = await webhook(data);
-    res.send({
-      updated,
-      succeeded: true,
-    });
-    console.log(`Updated: ${updated}`);
-  } catch (error) {
-    console.log(error);
-    res.send({
-      error: error.message,
-      succeeded: false,
-    });
+  // Express Server
+  const app = express();
+  if (CONSTANTS.DEBUG) {
+    app.use(cookieParser());
   }
-});
 
-// Human Connection webhook
-app.get('/webhooks/human-connection/contribute', async (req, res) => {
-  const procedures = ['236215'];
-  procedures.map(async (procedureId) => {
-    try {
-      const procedure = await contributeProcedure({
-        procedureId,
-        email: constants.HC_LOGIN_EMAIL,
-        password: constants.HC_LOGIN_PASSWORD,
-      });
-      console.log(procedure);
-      res.send({
-        procedure,
-        succeeded: true,
-      });
-      console.log(`Contributed: ${procedure}`);
-    } catch (error) {
-      console.log(error);
-      res.send({
-        error: error.message,
-        succeeded: false,
-      });
+  app.use(cors(corsOptions));
+
+  const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers,
+  });
+
+  // Apollo Engine
+  if (CONSTANTS.ENGINE_API_KEY) {
+    const engine = new Engine({
+      engineConfig: { apiKey: CONSTANTS.ENGINE_API_KEY },
+      graphqlPort: CONSTANTS.PORT,
+    });
+    engine.start();
+    app.use(engine.expressMiddleware());
+  }
+
+  app.use(bodyParser.json());
+
+  // Authentification
+  app.use(auth);
+
+  // Graphiql
+  if (CONSTANTS.GRAPHIQL) {
+    app.use(
+      CONSTANTS.GRAPHIQL_PATH,
+      graphiqlExpress({
+        endpointURL: CONSTANTS.GRAPHQL_PATH,
+      }),
+    );
+  }
+
+  // Graphql
+  app.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
+    graphqlExpress({
+      schema,
+      context: {
+        // Connection
+        res,
+        // User, Device & Phone
+        user: req.user,
+        device: req.device,
+        phone: req.phone,
+        // Models
+        ProcedureModel,
+        UserModel,
+        DeviceModel,
+        PhoneModel,
+        VerificationModel,
+        ActivityModel,
+        VoteModel,
+        PushNotifiactionModel,
+        SearchTermModel,
+      },
+      tracing: true,
+      cacheControl: true,
+    })(req, res, next);
+  });
+
+  // Bundestag.io
+  // Webhook
+  app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
+  // Webhook update specific procedures
+  app.post(
+    '/webhooks/bundestagio/updateProcedures',
+    isDataSource.createResolver(BIOupdateProcedures),
+  );
+
+  // Debug
+  if (CONSTANTS.DEBUG) {
+    // Push Notification test
+    app.get('/push-test', debugPushNotifications);
+    // Bundestag.io Import All
+    app.get('/webhooks/bundestagio/import-all', debugImportAll);
+  }
+
+  const graphqlServer = createServer(app);
+  graphqlServer.listen(CONSTANTS.PORT, err => {
+    if (err) {
+      Log.error(JSON.stringify({ err }));
+    } else {
+      Log.info(`App is listen on port: ${CONSTANTS.PORT}`);
+
+      const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
+
+      const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
+      Log.info(
+        JSON.stringify({
+          cronjob: cronjob.running,
+          cronjob2: cronjob2.running,
+        }),
+      );
     }
   });
-});
+};
 
-/* // Push Notification test
-import pushNotify from './services/notifications';
-app.get('/push-test', async (req, res) => {
-  const { message } = req.query;
-  const users = await UserModel.find();
-  users.forEach((user) => {
-    pushNotify({
-      title: 'test',
-      message: message || 'Test push notification to all users',
-      user,
-    });
-  });
-  res.send("push's send");
-});
-*/
-
-// ImportAll Darf in Production nicht ausführbar sein!
-// import importAll from './scripts/importAll';
-
-// app.get('/webhooks/bundestagio/import-all', importAll);
-
-// Create & start Server
-const graphqlServer = createServer(app);
-graphqlServer.listen(constants.PORT, (err) => {
-  if (err) {
-    console.error(err);
-  } else {
-    console.log(`App is listen on port: ${constants.PORT}`);
+// Async Wrapping Function
+// Catches all errors
+(async () => {
+  try {
+    await main();
+  } catch (error) {
+    Log.error(error.stack);
   }
-});
+})();
