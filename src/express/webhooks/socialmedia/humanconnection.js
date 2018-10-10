@@ -18,9 +18,7 @@ async function contributeProcedure({ procedureId, email, password }) {
           contentExcerpt: procedure.abstract,
           type: 'post',
           language: 'de',
-          teaserImg: `https://www.democracy-app.de/static/images/sachgebiete/${getImage(
-            procedure.subjectGroups[0],
-          )}_1920.jpg`,
+          teaserImg: `https://www.democracy-app.de${getImage(procedure.subjectGroups[0])}_1920.jpg`,
         },
         {
           slug: slugify(procedure.title, { lower: true }),
