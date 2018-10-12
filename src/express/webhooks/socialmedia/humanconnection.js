@@ -79,26 +79,27 @@ async function contributeProcedure({ procedureId, email, password }) {
 }
 
 export default async (req, res) => {
-  const procedures = ['230576']; // 236215
-  procedures.map(async procedureId => {
-    try {
-      const procedure = await contributeProcedure({
-        procedureId,
-        email: CONSTANTS.HC_LOGIN_EMAIL,
-        password: CONSTANTS.HC_LOGIN_PASSWORD,
-      });
-      Log.info(procedure);
-      res.send({
-        procedure,
-        succeeded: true,
-      });
-      Log.warn(`Contributed: ${procedure}`);
-    } catch (error) {
-      Log.error(error.message);
-      res.send({
-        error: error.message,
-        succeeded: false,
-      });
-    }
-  });
+  const { procedureId } = req.query;
+  if (!procedureId) {
+    throw new Error('No ProcedureId provided - cannot post to Human Connection');
+  }
+  try {
+    const procedure = await contributeProcedure({
+      procedureId,
+      email: CONSTANTS.HC_LOGIN_EMAIL,
+      password: CONSTANTS.HC_LOGIN_PASSWORD,
+    });
+    Log.info(procedure);
+    res.send({
+      procedure,
+      succeeded: true,
+    });
+    Log.warn(`Contributed: ${procedureId}`);
+  } catch (error) {
+    Log.error(error.message);
+    res.send({
+      error: error.message,
+      succeeded: false,
+    });
+  }
 };
