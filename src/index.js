@@ -95,6 +95,26 @@ const main = async () => {
     );
   }
 
+  // Bundestag.io
+  // Webhook
+  app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
+  // Webhook update specific procedures
+  app.post(
+    '/webhooks/bundestagio/updateProcedures',
+    isDataSource.createResolver(BIOupdateProcedures),
+  );
+
+  // Human Connection webhook
+  app.get('/webhooks/human-connection/contribute', isDataSource.createResolver(smHumanConnaction));
+
+  // Debug
+  if (CONSTANTS.DEBUG) {
+    // Push Notification test
+    app.get('/push-test', debugPushNotifications);
+    // Bundestag.io Import All
+    app.get('/webhooks/bundestagio/import-all', debugImportAll);
+  }
+
   // Graphql
   app.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
     graphqlExpress({
@@ -121,26 +141,6 @@ const main = async () => {
       cacheControl: true,
     })(req, res, next);
   });
-
-  // Bundestag.io
-  // Webhook
-  app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
-  // Webhook update specific procedures
-  app.post(
-    '/webhooks/bundestagio/updateProcedures',
-    isDataSource.createResolver(BIOupdateProcedures),
-  );
-
-  // Human Connection webhook
-  app.get('/webhooks/human-connection/contribute', isDataSource.createResolver(smHumanConnaction));
-
-  // Debug
-  if (CONSTANTS.DEBUG) {
-    // Push Notification test
-    app.get('/push-test', debugPushNotifications);
-    // Bundestag.io Import All
-    app.get('/webhooks/bundestagio/import-all', debugImportAll);
-  }
 
   const graphqlServer = createServer(app);
   graphqlServer.listen(CONSTANTS.PORT, err => {
