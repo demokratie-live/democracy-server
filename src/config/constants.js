@@ -5,8 +5,8 @@ export default {
   },
   GRAPHIQL: process.env.GRAPHIQL === 'true',
   GRAPHIQL_PATH: '/graphiql',
-  GRAPHQL_PATH: '/graphql',
-  BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/graphql',
+  GRAPHQL_PATH: '/',
+  BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/',
   NOTIFICATION_ANDROID_SERVER_KEY: process.env.NOTIFICATION_ANDROID_SERVER_KEY || null,
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'elasticsearch',
   APN_TOPIC: (() => {
@@ -48,4 +48,8 @@ export default {
     DISCORD_WEBHOOK: process.env.LOGGING_DISCORD_WEBHOOK || false,
     MONGO: process.env.LOGGING_MONGO || false,
   },
+  HC_BACKEND_URL: process.env.HC_BACKEND_URL || 'http://localhost:3030',
+  HC_ORGANIZATION_SLUG: process.env.HC_ORGANIZATION_SLUG || 'democracy',
+  HC_LOGIN_EMAIL: process.env.HC_LOGIN_EMAIL || 'root@root.root',
+  HC_LOGIN_PASSWORD: process.env.HC_LOGIN_PASSWORD || 'root',
 };
