@@ -24,6 +24,7 @@ import BIOupdate from './express/webhooks/bundestagio/update';
 import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures';
 import debugPushNotifications from './express/webhooks/debug/pushNotifications';
 import debugImportAll from './express/webhooks/debug/importAll';
+import smHumanConnaction from './express/webhooks/socialmedia/humanconnection';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -129,6 +130,9 @@ const main = async () => {
     '/webhooks/bundestagio/updateProcedures',
     isDataSource.createResolver(BIOupdateProcedures),
   );
+
+  // Human Connection webhook
+  app.get('/webhooks/human-connection/contribute', isDataSource.createResolver(smHumanConnaction));
 
   // Debug
   if (CONSTANTS.DEBUG) {
