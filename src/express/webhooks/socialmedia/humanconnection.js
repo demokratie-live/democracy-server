@@ -47,7 +47,9 @@ async function contributeProcedure({ procedureId, email, password }) {
             procedure.abstract
           }\n\n<b>Mehr dazu</b>:\n<a href="https://democracy-app.de/${procedure.type.toLowerCase()}/${
             procedure.procedureId
-          }/${speakingurl(procedure.title)}">democracy-app.de/${procedure.type.toLowerCase()}/${
+          }/${speakingurl(
+            procedure.title,
+          )}" target="_blank">democracy-app.de/${procedure.type.toLowerCase()}/${
             procedure.procedureId
           }/${speakingurl(
             procedure.title,
@@ -67,7 +69,7 @@ async function contributeProcedure({ procedureId, email, password }) {
           slug: slugify(procedure.title, { lower: true }),
           resolveSlugs: {
             categories: ['democracy-politics'],
-            // organization: CONSTANTS.HC_ORGANIZATION_SLUG,
+            organization: CONSTANTS.HC_ORGANIZATION_SLUG,
           },
         },
       );
