@@ -7,6 +7,18 @@ export default `
     NOTVOTED
   }
 
+  type UserVotes {
+    yes: Int
+    no: Int
+    abstination: Int
+  }
+
+  type CommunityVotes {
+    yes: Int
+    no: Int
+    abstination: Int
+  }
+
   type VoteResult {
     yes: Int
     no: Int
@@ -35,6 +47,7 @@ export default `
     _id: ID!
     voted: Boolean
     voteResults: VoteResult
+    votes: UserVotes
   }
 
   type VoteStatistic {
@@ -43,12 +56,13 @@ export default `
   }
   
   type Mutation {
-    vote(procedure: ID!, selection: VoteSelection!): Vote
+    vote(procedure: ID!, selection: VoteSelection!, constituency: String): Vote
   }
   
+
   type Query {
-    votes(procedure: ID!): Vote
-    communityVotes(procedure: ID!): VoteResult
+    votes(procedure: ID!, constituency: String): Vote
+    communityVotes(procedure: ID!): CommunityVotes
     voteStatistic: VoteStatistic
   }
   `;

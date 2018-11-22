@@ -3,52 +3,96 @@ import { Types } from 'mongoose';
 
 import CONSTANTS from '../../config/constants';
 import Activity from './Activity';
-import procedureStates from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
+import procedureStates from '../../config/procedureStates';
 
-const queryVotes = async (parent, { procedure }, { VoteModel, device, phone }) => {
+const queryVotes = async (parent, { procedure, constituency }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
-  const voted = await VoteModel.aggregate([
-    { $match: { procedure: Types.ObjectId(procedure) } },
-    { $unwind: '$voters' },
+  // Has user voted?
+  const voted = await VoteModel.findOne({
+    procedure: Types.ObjectId(procedure),
+    type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+    voters: {
+      voter: CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
+    },
+  });
+
+  // Find sum of all votes for procedure
+  // TODO: We could check here if user has voted - but since the results are available in the Browserversion
+  // this is not nessecary?
+  const votes = await VoteModel.aggregate([
+    // Find Procedure, including type; results in up to two objects for state
     {
       $match: {
-        'voters.kind': CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-        'voters.voter': CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
+        procedure: Types.ObjectId(procedure),
+        type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
       },
     },
-    { $addFields: { voted: true } },
+    // Filter correct constituency
     {
       $project: {
-        _id: 1,
-        voteResults: CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device',
-        voted: 1,
+        procedure: true,
+        votes: {
+          cache: true,
+          constituencies: {
+            $filter: {
+              input: '$votes.constituencies',
+              as: 'constituency',
+              cond: { $eq: ['$$constituency.constituency', constituency] },
+            },
+          },
+        },
+      },
+    },
+    // Unwind constituencies for sum, but preserve null
+    {
+      $unwind: {
+        path: '$votes.constituencies',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    // Sum both objects (state)
+    {
+      $group: {
+        _id: '$procedure',
+        yes: { $sum: '$votes.cache.yes' },
+        no: { $sum: '$votes.cache.no' },
+        abstain: { $sum: '$votes.cache.abstain' },
+        constituencyYes: { $sum: '$votes.constituencies.yes' },
+        constituencyNo: { $sum: '$votes.constituencies.no' },
+        constituencyAbstain: { $sum: '$votes.constituencies.abstain' },
+      },
+    },
+    // Add voted state from previous query
+    { $addFields: { voted: !!voted } },
+    // Build correct result
+    {
+      $project: {
+        _id: true,
+        voted: true,
+        voteResults: {
+          yes: '$yes',
+          no: '$no',
+          abstination: '$abstain',
+          constituencies: [
+            {
+              constituency,
+              yes: '$constituencyYes',
+              no: '$constituencyNo',
+              abstination: '$constituencyAbstain',
+            },
+          ],
+        },
       },
     },
   ]);
-
-  if (voted.length > 0) {
-    return voted[0];
+  if (votes.length > 0) {
+    return votes[0];
   }
-
-  // To hide Vote results here needs to be another query
-  // checking the procedure if the government has voted already
-  const unvoted = await VoteModel.aggregate([
-    { $match: { procedure: Types.ObjectId(procedure) } },
-    { $addFields: { voted: false } },
-    {
-      $project: {
-        _id: 1,
-        voteResults: CONSTANTS.SMS_VERIFICATION ? '$voteResults.phone' : '$voteResults.device',
-        voted: 1,
-      },
-    },
-  ]);
-
-  if (unvoted.length > 0) {
-    return unvoted[0];
-  }
-  return { voted: false, voteResults: { yes: null, no: null, abstination: null } };
+  return {
+    voted: false,
+    voteResults: { yes: null, no: null, abstination: null },
+  };
 };
 
 export default {
@@ -58,12 +102,33 @@ export default {
       Log.graphql('Vote.query.communityVotes');
       const procedure = await ProcedureModel.findOne({ procedureId }, { _id: 1 });
 
-      const voteProcedure = await VoteModel.findOne(
-        { procedure: procedure._id },
-        { voteResults: 1 },
-      );
-      if (voteProcedure) {
-        return { ...voteProcedure.voteResults[CONSTANTS.SMS_VERIFICATION ? 'phone' : 'device'] };
+      // Find sum of all votes for procedure
+      const votes = await VoteModel.aggregate([
+        // Find Procedure
+        {
+          $match: {
+            procedure: procedure._id,
+            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          },
+        },
+        // Sum both objects (state)
+        {
+          $group: {
+            _id: '$procedure',
+            yes: { $sum: '$votes.cache.yes' },
+            no: { $sum: '$votes.cache.no' },
+            abstination: { $sum: '$votes.cache.abstain' },
+          },
+        },
+        // Remove _id from result
+        {
+          $project: {
+            _id: false,
+          },
+        },
+      ]);
+      if (votes.length > 0) {
+        return votes[0];
       }
       return null;
     },
@@ -75,6 +140,8 @@ export default {
 
       const period = { $gte: CONSTANTS.MIN_PERIOD };
 
+      // This query should reference the ProcedureModel Method isCompleted
+      // TODO is that possible?
       const proceduresCount = ProcedureModel.find({
         period,
         $or: [
@@ -93,9 +160,9 @@ export default {
 
       const votedProcedures = await VoteModel.find(
         {
+          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
               voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
@@ -114,80 +181,100 @@ export default {
     vote: isVerified.createResolver(
       async (
         parent,
-        { procedure: procedureId, selection },
+        { procedure: procedureId, selection, constituency },
         { VoteModel, ProcedureModel, ActivityModel, user, device, phone },
       ) => {
         Log.graphql('Vote.mutation.vote');
-        // TODO check if procedure is votable
+        // Find procedure
         const procedure = await ProcedureModel.findById(procedureId);
-        if (
-          !(
-            procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-            (procedure.currentStatus === 'Überwiesen' &&
-              procedure.voteDate &&
-              new Date(procedure.voteDate) >= new Date()) ||
-            procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
-          )
-        ) {
+        // Fail if not existant or not votable
+        if (!procedure || !procedure.isVotable()) {
           throw new Error('Not votable');
         }
-        let state;
-        if (
-          procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-          (procedure.currentStatus === 'Überwiesen' &&
-            procedure.voteDate &&
-            new Date(procedure.voteDate) >= new Date())
-        ) {
-          state = 'VOTING';
-        } else if (
-          procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
-        ) {
-          state = 'COMPLETED';
-        }
-
-        let vote = await VoteModel.findOne({ procedure });
-        if (!vote) {
-          vote = await VoteModel.create({ procedure, state });
-        }
-        const hasVoted = vote.voters.some(
-          ({ kind, voter }) =>
-            kind === (CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device') &&
-            voter.equals(CONSTANTS.SMS_VERIFICATION ? phone._id : device._id),
-        );
+        // User Has Voted?
+        const hasVoted = await VoteModel.findOne({
+          procedure,
+          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          voters: {
+            $elemMatch: {
+              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+            },
+          },
+        });
+        // Fail if user has already voted
         if (hasVoted) {
           Log.warn('User tried to vote twice - vote was not counted!');
           throw new Error('You have already voted');
         }
+        // Decide Bucket to put user-vote in
+        let state = 'COMPLETED';
+        if (procedure.isVoting()) {
+          state = 'VOTING';
+        }
+        // Find & Create Vote Model if needed
+        let vote = await VoteModel.findOne({
+          procedure,
+          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          state,
+        });
+        if (!vote) {
+          vote = await VoteModel.create({
+            procedure,
+            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            state,
+          });
+        }
+        // Add constituency object if needed
+        if (constituency) {
+          VoteModel.findByIdAndUpdate(vote._id, {
+            $addToSet: {
+              'votes.constituencies': {
+                constituency,
+              },
+            },
+          });
+        }
+
+        // Cast Vote
         const voteUpdate = {
           $push: {
             voters: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
               voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         };
+        // Cache needs to be controlled manually
         switch (selection) {
           case 'YES':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
-              ? { 'voteResults.phone.yes': 1 }
-              : { 'voteResults.device.yes': 1 };
+            if (constituency) {
+              voteUpdate.$inc = { 'votes.constituencies.$.yes': 1, 'votes.cache.yes': 1 };
+            } else {
+              voteUpdate.$inc = { 'votes.general.yes': 1, 'votes.cache.yes': 1 };
+            }
             break;
           case 'NO':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
-              ? { 'voteResults.phone.no': 1 }
-              : { 'voteResults.device.no': 1 };
+            if (constituency) {
+              voteUpdate.$inc = { 'votes.constituencies.$.no': 1, 'votes.cache.no': 1 };
+            } else {
+              voteUpdate.$inc = { 'votes.general.no': 1, 'votes.cache.no': 1 };
+            }
             break;
           case 'ABSTINATION':
-            voteUpdate.$inc = CONSTANTS.SMS_VERIFICATION
-              ? { 'voteResults.phone.abstination': 1 }
-              : { 'voteResults.device.abstination': 1 };
+            if (constituency) {
+              voteUpdate.$inc = { 'votes.constituencies.$.abstain': 1, 'votes.cache.abstain': 1 };
+            } else {
+              voteUpdate.$inc = { 'votes.general.abstain': 1, 'votes.cache.abstain': 1 };
+            }
             break;
 
           default:
-            break;
+            throw new Error(`Invlaid Vote Selection: ${selection}`);
         }
-        await VoteModel.findByIdAndUpdate(vote._id, { ...voteUpdate, state });
-
+        await VoteModel.update(
+          { _id: vote._id, 'votes.constituencies.constituency': constituency },
+          { ...voteUpdate },
+        );
+        // Increate Activity
         await Activity.Mutation.increaseActivity(
           parent,
           { procedureId },
@@ -199,7 +286,8 @@ export default {
             device,
           },
         );
-        return queryVotes(parent, { procedureId }, { VoteModel, device, phone });
+        // Return new User Vote Results
+        return queryVotes(parent, { procedureId, constituency }, { VoteModel, device, phone });
       },
     ),
   },
