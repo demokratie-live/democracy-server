@@ -42,9 +42,8 @@ async function contributeProcedure({ procedureId, email, password }) {
       return user.contribute(
         {
           title: procedure.title,
-          // <b>Inhalt</b>\n
           content: `${
-            procedure.abstract
+            procedure.abstract ? procedure.abstract : ''
           }\n\n<b>Mehr dazu</b>:\n<a href="https://democracy-app.de/${procedure.type.toLowerCase()}/${
             procedure.procedureId
           }/${speakingurl(
