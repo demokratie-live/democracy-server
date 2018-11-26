@@ -6,7 +6,7 @@ import Activity from './Activity';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import procedureStates from '../../config/procedureStates';
 
-const queryVotes = async (parent, { procedure, constituency }, { VoteModel, device, phone }) => {
+const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
   // Has user voted?
   const voted = await VoteModel.findOne({
@@ -17,38 +17,13 @@ const queryVotes = async (parent, { procedure, constituency }, { VoteModel, devi
     },
   });
 
-  // Find sum of all votes for procedure
-  // TODO: We could check here if user has voted - but since the results are available in the Browserversion
-  // this is not nessecary?
-  const votes = await VoteModel.aggregate([
+  // Find global result(cache), not including constituencies
+  const votesGlobal = await VoteModel.aggregate([
     // Find Procedure, including type; results in up to two objects for state
     {
       $match: {
         procedure: Types.ObjectId(procedure),
         type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-      },
-    },
-    // Filter correct constituency
-    {
-      $project: {
-        procedure: true,
-        votes: {
-          cache: true,
-          constituencies: {
-            $filter: {
-              input: '$votes.constituencies',
-              as: 'constituency',
-              cond: { $eq: ['$$constituency.constituency', constituency] },
-            },
-          },
-        },
-      },
-    },
-    // Unwind constituencies for sum, but preserve null
-    {
-      $unwind: {
-        path: '$votes.constituencies',
-        preserveNullAndEmptyArrays: true,
       },
     },
     // Sum both objects (state)
@@ -58,9 +33,6 @@ const queryVotes = async (parent, { procedure, constituency }, { VoteModel, devi
         yes: { $sum: '$votes.cache.yes' },
         no: { $sum: '$votes.cache.no' },
         abstain: { $sum: '$votes.cache.abstain' },
-        constituencyYes: { $sum: '$votes.constituencies.yes' },
-        constituencyNo: { $sum: '$votes.constituencies.no' },
-        constituencyAbstain: { $sum: '$votes.constituencies.abstain' },
       },
     },
     // Add voted state from previous query
@@ -74,36 +46,92 @@ const queryVotes = async (parent, { procedure, constituency }, { VoteModel, devi
           yes: '$yes',
           no: '$no',
           abstination: '$abstain',
-          constituencies: [
-            {
-              constituency,
-              yes: '$constituencyYes',
-              no: '$constituencyNo',
-              abstination: '$constituencyAbstain',
-            },
-          ],
         },
       },
     },
   ]);
-  if (votes.length > 0) {
-    return votes[0];
+
+  // Find constituency results if constituencies are given
+  const votesConstituencies =
+    constituencies && constituencies.length > 0
+      ? await VoteModel.aggregate([
+          // Find Procedure, including type; results in up to two objects for state
+          {
+            $match: {
+              procedure: Types.ObjectId(procedure),
+              type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            },
+          },
+          // Filter correct constituency
+          {
+            $project: {
+              votes: {
+                constituencies: {
+                  $filter: {
+                    input: '$votes.constituencies',
+                    as: 'constituency',
+                    cond: { $in: ['$$constituency.constituency', constituencies] },
+                  },
+                },
+              },
+            },
+          },
+          // Unwind constituencies for sum, but preserve null
+          {
+            $unwind: {
+              path: '$votes.constituencies',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          // Sum both objects (state)
+          {
+            $group: {
+              _id: '$votes.constituencies.constituency',
+              yes: { $sum: '$votes.constituencies.yes' },
+              no: { $sum: '$votes.constituencies.no' },
+              abstain: { $sum: '$votes.constituencies.abstain' },
+            },
+          },
+          // Build correct result
+          {
+            $project: {
+              _id: false,
+              constituency: '$_id',
+              yes: '$yes',
+              no: '$no',
+              abstination: '$abstain',
+            },
+          },
+        ])
+      : [];
+  if (votesGlobal.length > 0) {
+    votesGlobal[0].voteResults.constituencies = votesConstituencies;
+    return votesGlobal[0];
   }
   return {
     voted: false,
-    voteResults: { yes: null, no: null, abstination: null },
+    voteResults: { yes: null, no: null, abstination: null, constituencies: [] },
   };
 };
 
 export default {
   Query: {
+    // Used by App
     votes: isLoggedin.createResolver(queryVotes),
-    communityVotes: async (parent, { procedure: procedureId }, { VoteModel, ProcedureModel }) => {
+    // Used by Browserverion -> TODO Remove
+    communityVotes: async (
+      parent,
+      { procedure: procedureId, constituencies },
+      { VoteModel, ProcedureModel },
+    ) => {
       Log.graphql('Vote.query.communityVotes');
       const procedure = await ProcedureModel.findOne({ procedureId }, { _id: 1 });
+      if (!procedure) {
+        throw new Error(`Procedure could not be found. ID: ${procedureId}`);
+      }
 
-      // Find sum of all votes for procedure
-      const votes = await VoteModel.aggregate([
+      // Find global result(cache), not including constituencies
+      const votesGlobal = await VoteModel.aggregate([
         // Find Procedure
         {
           $match: {
@@ -127,8 +155,64 @@ export default {
           },
         },
       ]);
-      if (votes.length > 0) {
-        return votes[0];
+
+      // Find constituency results if constituencies are given
+      const votesConstituencies =
+        constituencies && constituencies.length > 0
+          ? await VoteModel.aggregate([
+              // Find Procedure, including type; results in up to two objects for state
+              {
+                $match: {
+                  procedure: procedure._id,
+                  type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                },
+              },
+              // Filter correct constituency
+              {
+                $project: {
+                  votes: {
+                    constituencies: {
+                      $filter: {
+                        input: '$votes.constituencies',
+                        as: 'constituency',
+                        cond: { $in: ['$$constituency.constituency', constituencies] },
+                      },
+                    },
+                  },
+                },
+              },
+              // Unwind constituencies for sum, but preserve null
+              {
+                $unwind: {
+                  path: '$votes.constituencies',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              // Sum both objects (state)
+              {
+                $group: {
+                  _id: '$votes.constituencies.constituency',
+                  yes: { $sum: '$votes.constituencies.yes' },
+                  no: { $sum: '$votes.constituencies.no' },
+                  abstain: { $sum: '$votes.constituencies.abstain' },
+                },
+              },
+              // Build correct result
+              {
+                $project: {
+                  _id: false,
+                  constituency: '$_id',
+                  yes: '$yes',
+                  no: '$no',
+                  abstination: '$abstain',
+                },
+              },
+            ])
+          : [];
+
+      if (votesGlobal.length > 0) {
+        votesGlobal[0].constituencies = votesConstituencies;
+        return votesGlobal[0];
       }
       return null;
     },
@@ -224,9 +308,9 @@ export default {
             state,
           });
         }
-        // Add constituency object if needed
+        // Add constituency bucket object if needed
         if (constituency) {
-          VoteModel.findByIdAndUpdate(vote._id, {
+          await VoteModel.findByIdAndUpdate(vote._id, {
             $addToSet: {
               'votes.constituencies': {
                 constituency,
@@ -270,10 +354,17 @@ export default {
           default:
             throw new Error(`Invlaid Vote Selection: ${selection}`);
         }
-        await VoteModel.update(
-          { _id: vote._id, 'votes.constituencies.constituency': constituency },
+
+        // Write Vote
+        await VoteModel.updateOne(
+          {
+            _id: vote._id,
+            // Add the constituency bucket selector conditionally
+            ...(constituency && { 'votes.constituencies.constituency': constituency }),
+          },
           { ...voteUpdate },
         );
+
         // Increate Activity
         await Activity.Mutation.increaseActivity(
           parent,
