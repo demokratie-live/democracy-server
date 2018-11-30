@@ -284,10 +284,12 @@ export default async ({ title, message, device, payload }) => {
           payload,
         },
       });
-      gcmProvider.send(
-        gcmMessage,
-        { registrationTokens: androidNotificationTokens },
-        (err, response) => {
+
+      // Split array with tokens to smaler send packages
+      while (androidNotificationTokens.length > 0) {
+        const registrationTokens = androidNotificationTokens.splice(0, 100);
+
+        gcmProvider.send(gcmMessage, { registrationTokens }, (err, response) => {
           if (err) {
             Log.error(
               JSON.stringify({
@@ -296,10 +298,18 @@ export default async ({ title, message, device, payload }) => {
               }),
             );
           } else {
+            /**
+             *  TODO: drop push keys from DB (failed_tokens);
+             */
+            // const failed_tokens = response.results // Array with result for each token we messaged
+            //   .map((res, i) => (res.error ? registrationTokens[i] : null)) // If there's any kind of error,
+            //   // pick _the token_ from the _other_ array
+            //   .filter(token => token);
+
             Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
           }
-        },
-      );
+        });
+      }
     }
   }
 };
