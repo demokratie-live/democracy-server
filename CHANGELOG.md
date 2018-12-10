@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [Changed] Return new list Types for Procedures
+
 ### 0.1.17
 
 - [Added] Query CommunityVotes for browser version
