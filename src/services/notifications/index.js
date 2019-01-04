@@ -61,24 +61,22 @@ const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload
     }
   });
   // send bulk send android notifications
-  if (androidNotificationTokens.length > 0) {
-    const gcmMessage = new gcm.Message({
-      data: {
-        title,
-        body: message,
-        payload,
-      },
+  const gcmMessage = new gcm.Message({
+    data: {
+      title,
+      body: message,
+      payload,
+    },
+  });
+  // Split array with tokens to smaler send packages
+  while (androidNotificationTokens.length > 0) {
+    const registrationTokens = androidNotificationTokens.splice(0, 100);
+    gcmProvider.send(gcmMessage, { registrationTokens }, (err, response) => {
+      if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
+      else {
+        Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
+      }
     });
-    gcmProvider.send(
-      gcmMessage,
-      { registrationTokens: androidNotificationTokens },
-      (err, response) => {
-        if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
-        else {
-          Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
-        }
-      },
-    );
   }
 };
 
@@ -227,6 +225,7 @@ const procedureUpdate = async ({ procedureId }) => {
 
 export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations };
 
+/*
 export default async ({ title, message, device, payload }) => {
   let deviceId;
   if (_.isObject(device)) {
@@ -298,9 +297,9 @@ export default async ({ title, message, device, payload }) => {
               }),
             );
           } else {
-            /**
-             *  TODO: drop push keys from DB (failed_tokens);
-             */
+            //
+            //  TODO: drop push keys from DB (failed_tokens);
+            //
             // const failed_tokens = response.results // Array with result for each token we messaged
             //   .map((res, i) => (res.error ? registrationTokens[i] : null)) // If there's any kind of error,
             //   // pick _the token_ from the _other_ array
@@ -313,3 +312,4 @@ export default async ({ title, message, device, payload }) => {
     }
   }
 };
+*/
