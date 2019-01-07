@@ -1,5 +1,5 @@
 import PushNotifiaction from '../models/PushNotifiaction';
-import { newVotes, newPreperations } from '../services/notifications/index';
+import { newVotes, newPreperations } from '../services/notifications';
 
 export default async () => {
   const [

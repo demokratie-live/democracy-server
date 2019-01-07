@@ -6,7 +6,7 @@ import Procedure from '../models/Procedure';
 import PushNotifiaction from '../models/PushNotifiaction';
 
 // Queries
-import { procedureUpdate } from '../services/notifications/index';
+import { procedureUpdate } from '../services/notifications';
 
 const deputiesNumber = {
   8: 518,
