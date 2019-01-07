@@ -10,6 +10,16 @@ import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
+    proceduresWithVoteResults: async (parent, { procedureIds }, { ProcedureModel }) => {
+      console.log('procedureIds', procedureIds);
+      const procedures = ProcedureModel.find({
+        procedureId: { $in: procedureIds },
+        'voteResults.yes': { $ne: null },
+        'voteResults.no': { $ne: null },
+        'voteResults.abstination': { $ne: null },
+      });
+      return procedures;
+    },
     procedures: async (
       parent,
       {
