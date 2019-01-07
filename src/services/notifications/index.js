@@ -1,6 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
-import _ from 'lodash';
 import apn from 'apn';
 import gcm from 'node-gcm';
 import util from 'util';
