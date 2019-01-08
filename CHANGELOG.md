@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.X
+
+- [FIX] Android: Fix Push notifications
+
 ### 0.1.17
 
 - [Added] Query CommunityVotes for browser version
