@@ -1,7 +1,8 @@
 # Changelog
 
-### 0.1.X
+### 0.1.18
 
+- [Changed] Return new list Types for Procedures
 - [FIX] Android: Fix Push notifications
 
 ### 0.1.17
