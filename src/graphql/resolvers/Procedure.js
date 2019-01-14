@@ -232,6 +232,85 @@ export default {
       return ProcedureModel.find({ _id: { $in: ids } });
     },
 
+    proceduresByIdHavingVoteResults: async (
+      parent,
+      { procedureIds, timespan = 'Period', pageSize = 99, offset = 0, filter = {} },
+      { ProcedureModel },
+    ) => {
+      // Timespan Selection
+      const timespanQuery = {};
+      switch (timespan) {
+        case 'CurrentSittingWeek':
+        case 'LastSittingWeek':
+          throw new Error('Not implemented/Not supported yet');
+        case 'CurrentQuarter':
+          {
+            const now = new Date();
+            const quarter = Math.floor(now.getMonth() / 3);
+            const firstDate = new Date(now.getFullYear(), quarter * 3, 1);
+            const endDate = new Date(firstDate.getFullYear(), firstDate.getMonth() + 3, 0);
+            timespanQuery.voteDate = {
+              $gte: firstDate,
+              $lt: endDate,
+            };
+          }
+          break;
+        case 'LastQuarter':
+          {
+            const now = new Date();
+            let year = now.getFullYear();
+            let quarter = Math.floor(now.getMonth() / 3) - 1;
+            if (quarter === -1) {
+              quarter = 3;
+              year -= 1;
+            }
+            const firstDate = new Date(year, quarter * 3, 1);
+            const endDate = new Date(firstDate.getFullYear(), firstDate.getMonth() + 3, 0);
+            timespanQuery.voteDate = {
+              $gte: firstDate,
+              $lt: endDate,
+            };
+          }
+          break;
+        case 'CurrentYear':
+          timespanQuery.voteDate = { $gte: new Date(new Date().getFullYear(), 0, 1) };
+          break;
+        case 'LastYear':
+          timespanQuery.voteDate = {
+            $gte: new Date(new Date().getFullYear() - 1, 0, 1),
+            $lt: new Date(new Date().getFullYear(), 0, 1),
+          };
+          break;
+        case 'Period':
+          timespanQuery.period = { $in: CONSTANTS.MIN_PERIOD };
+          break;
+        default:
+      }
+      // WOM Filter
+      const filterQuery = {};
+      // WOM Filter Subject Group
+      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
+      return (
+        ProcedureModel.find({
+          // Vote Results are present
+          'voteResults.yes': { $ne: null },
+          'voteResults.no': { $ne: null },
+          'voteResults.abstination': { $ne: null },
+          // Procedure ID selection
+          procedureId: { $in: procedureIds },
+          // Timespan Selection
+          ...timespanQuery,
+          // Apply Filter
+          ...filterQuery,
+        })
+          // Pagination
+          .limit(pageSize)
+          .skip(offset)
+      );
+    },
+
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
       Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });

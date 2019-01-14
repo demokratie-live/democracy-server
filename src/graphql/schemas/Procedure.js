@@ -43,10 +43,25 @@ input ProcedureFilter {
   activity: [String]
 }
 
+input ProcedureWOMFilter {
+  subjectGroups: [String]
+}
+
+enum VotedTimeSpan {
+  CurrentSittingWeek
+  LastSittingWeek
+  CurrentQuarter
+  LastQuarter
+  CurrentYear
+  LastYear
+  Period
+}
+
 type Query {
   procedure(id: ID!): Procedure
   procedures(listTypes: [ProcedureType!], type: ProcedureType, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
+  proceduresByIdHavingVoteResults(procedureIds: [String!]!, timespan: VotedTimeSpan, pageSize: Int, offset: Int, filter: ProcedureWOMFilter): [Procedure]
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
   searchProceduresAutocomplete(term: String!): SearchProcedures
