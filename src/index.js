@@ -9,6 +9,7 @@ import { Engine } from 'apollo-engine';
 import { CronJob } from 'cron';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
 
 import './services/logger';
 
@@ -58,12 +59,12 @@ const main = async () => {
   await DB();
 
   // Express Server
-  const app = express();
+  const server = express();
   if (CONSTANTS.DEBUG) {
-    app.use(cookieParser());
+    server.use(cookieParser());
   }
 
-  app.use(cors(corsOptions));
+  server.use(cors(corsOptions));
 
   const schema = makeExecutableSchema({
     typeDefs,
@@ -77,17 +78,17 @@ const main = async () => {
       graphqlPort: CONSTANTS.PORT,
     });
     engine.start();
-    app.use(engine.expressMiddleware());
+    server.use(engine.expressMiddleware());
   }
 
-  app.use(bodyParser.json());
+  server.use(bodyParser.json());
 
   // Authentification
-  app.use(auth);
+  server.use(auth);
 
   // Graphiql
   if (CONSTANTS.GRAPHIQL) {
-    app.use(
+    server.use(
       CONSTANTS.GRAPHIQL_PATH,
       graphiqlExpress({
         endpointURL: CONSTANTS.GRAPHQL_PATH,
@@ -95,28 +96,36 @@ const main = async () => {
     );
   }
 
+  // VOYAGER
+  if (CONSTANTS.VOYAGER) {
+    server.use('/voyager', voyagerMiddleware({ endpointUrl: CONSTANTS.GRAPHQL_PATH }));
+  }
+
   // Bundestag.io
   // Webhook
-  app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
+  server.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
   // Webhook update specific procedures
-  app.post(
+  server.post(
     '/webhooks/bundestagio/updateProcedures',
     isDataSource.createResolver(BIOupdateProcedures),
   );
 
   // Human Connection webhook
-  app.get('/webhooks/human-connection/contribute', isDataSource.createResolver(smHumanConnaction));
+  server.get(
+    '/webhooks/human-connection/contribute',
+    isDataSource.createResolver(smHumanConnaction),
+  );
 
   // Debug
   if (CONSTANTS.DEBUG) {
     // Push Notification test
-    app.get('/push-test', debugPushNotifications);
+    server.get('/push-test', debugPushNotifications);
     // Bundestag.io Import All
-    app.get('/webhooks/bundestagio/import-all', debugImportAll);
+    server.get('/webhooks/bundestagio/import-all', debugImportAll);
   }
 
   // Graphql
-  app.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
+  server.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
     graphqlExpress({
       schema,
       context: {
@@ -142,7 +151,7 @@ const main = async () => {
     })(req, res, next);
   });
 
-  const graphqlServer = createServer(app);
+  const graphqlServer = createServer(server);
   graphqlServer.listen(CONSTANTS.PORT, err => {
     if (err) {
       Log.error(JSON.stringify({ err }));
