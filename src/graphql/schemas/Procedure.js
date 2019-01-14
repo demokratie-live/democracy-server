@@ -51,5 +51,6 @@ type Query {
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
   searchProceduresAutocomplete(term: String!): SearchProcedures
   votedProcedures: [Procedure]
+  proceduresWithVoteResults(procedureIds: [String!]!): [Procedure]
 }
 `;
