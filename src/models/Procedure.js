@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 import Document from './Schemas/Document';
+import procedureStates from '../config/procedureStates';
 
 const ProcedureSchema = new Schema(
   {
@@ -50,6 +51,23 @@ const ProcedureSchema = new Schema(
   { timestamps: true },
 );
 
+ProcedureSchema.methods = {
+  isVotable() {
+    return this.isVoting() || this.isCompleted();
+  },
+  isVoting() {
+    return (
+      this.currentStatus === 'Beschlussempfehlung liegt vor' ||
+      (this.currentStatus === 'Überwiesen' &&
+        this.voteDate &&
+        new Date(this.voteDate) >= new Date())
+    );
+  },
+  isCompleted() {
+    return procedureStates.COMPLETED.some(s => s === this.currentStatus || this.voteDate);
+  },
+};
+
 ProcedureSchema.index(
   {
     procedureId: 'text',
@@ -70,7 +88,7 @@ ProcedureSchema.index(
 
 export default mongoose.model('Procedure', ProcedureSchema);
 
-mongoose.model('Procedure').ensureIndexes(err => {
+mongoose.model('Procedure').createIndexes(err => {
   if (!err) {
     Log.info('SearchIndexs for Procedures created');
   } else {

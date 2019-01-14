@@ -8,35 +8,38 @@ const VoteSchema = new Schema({
     required: true,
   },
   state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
-  voters: [
-    {
-      kind: String,
-      voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
-      // Todo: This is not working
-      // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
-      _id: false,
-    },
-  ],
-  voteResults: {
-    device: {
+  type: { type: String, enum: ['Phone', 'Device'], required: true },
+  voters: [{ voter: { type: Schema.Types.ObjectId, refPath: 'type' }, _id: false }],
+  votes: {
+    general: {
       yes: { type: Number, default: 0 },
       no: { type: Number, default: 0 },
-      abstination: { type: Number, default: 0 },
+      abstain: { type: Number, default: 0 },
     },
-    phone: {
+    constituencies: [
+      {
+        constituency: { type: String, required: true },
+        yes: { type: Number, default: 0 },
+        no: { type: Number, default: 0 },
+        abstain: { type: Number, default: 0 },
+        _id: false,
+      },
+    ],
+    cache: {
       yes: { type: Number, default: 0 },
       no: { type: Number, default: 0 },
-      abstination: { type: Number, default: 0 },
+      abstain: { type: Number, default: 0 },
     },
   },
 });
 
-VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
-VoteSchema.index({ _id: 1, 'voters.kind': 1, 'voters.voter': 1 }, { unique: true });
+VoteSchema.index({ procedure: 1, state: 1, type: 1 }, { unique: true });
+VoteSchema.index({ procedure: 1, type: 1, 'voters.voter': 1 }, { unique: true });
+VoteSchema.index({ _id: 1, 'votes.constituencies.constituency': 1 }, { unique: true });
 
 export default mongoose.model('Vote', VoteSchema);
 
-mongoose.model('Vote').ensureIndexes(err => {
+mongoose.model('Vote').createIndexes(err => {
   if (err) {
     Log.error(JSON.stringify({ err }));
   }

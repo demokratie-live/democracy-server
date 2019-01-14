@@ -47,6 +47,9 @@ const corsOptions = {
 };
 
 const main = async () => {
+  // Start regular DB Connection
+  await DB();
+
   // Migrations
   await migrate().catch(err => {
     // Log the original error
@@ -54,9 +57,6 @@ const main = async () => {
     // throw own error
     throw new Error('Migration not successful - I die now!');
   });
-
-  // Start regular DB Connection
-  await DB();
 
   // Express Server
   const server = express();

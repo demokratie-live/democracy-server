@@ -45,9 +45,9 @@ export default {
       if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
         const votedProcedures = await VoteModel.find(
           {
+            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
             voters: {
               $elemMatch: {
-                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
                 voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
               },
             },
@@ -205,9 +205,9 @@ export default {
       }
       const votedProcedures = await VoteModel.find(
         {
+          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
               voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
@@ -402,9 +402,9 @@ export default {
           ? false
           : await VoteModel.findOne({
               procedure: procedure._id,
+              type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
               voters: {
                 $elemMatch: {
-                  kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
                   voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
                 },
               },
