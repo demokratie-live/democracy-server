@@ -277,29 +277,41 @@ export default {
           break;
         default:
       }
+
       // WOM Filter
       const filterQuery = {};
       // WOM Filter Subject Group
       if (filter.subjectGroups && filter.subjectGroups.length > 0) {
         filterQuery.subjectGroups = { $in: filter.subjectGroups };
       }
-      return (
-        ProcedureModel.find({
-          // Vote Results are present
-          'voteResults.yes': { $ne: null },
-          'voteResults.no': { $ne: null },
-          'voteResults.abstination': { $ne: null },
-          // Procedure ID selection
-          procedureId: { $in: procedureIds },
-          // Timespan Selection
-          ...timespanQuery,
-          // Apply Filter
-          ...filterQuery,
-        })
-          // Pagination
-          .limit(pageSize)
-          .skip(offset)
-      );
+
+      let result = await ProcedureModel.find({
+        // Vote Results are present
+        'voteResults.yes': { $ne: null },
+        'voteResults.no': { $ne: null },
+        'voteResults.abstination': { $ne: null },
+        // Procedure ID selection
+        procedureId: { $in: procedureIds },
+        // Timespan Selection
+        ...timespanQuery,
+        // Apply Filter
+        ...filterQuery,
+      })
+        // Pagination
+        .limit(pageSize)
+        .skip(offset);
+
+      // Filter Andere(fraktionslos) from partyVotes array in result
+      result = result.map(procedure => {
+        // eslint-disable-next-line no-param-reassign
+        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
+          ({ party }) => party !== 'Andere',
+        );
+        return procedure;
+      });
+
+      // Return result
+      return result;
     },
 
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
