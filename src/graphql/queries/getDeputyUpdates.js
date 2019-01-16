@@ -1,0 +1,26 @@
+import gql from 'graphql-tag';
+
+export default gql`
+  query deputyUpdates($since: Date!, $limit: Int, $offset: Int) {
+    deputyUpdates(since: $since, limit: $limit, offset: $offset) {
+      beforeCount
+      afterCount
+      newCount
+      changedCount
+      deputies {
+        webId
+        imgURL
+        name
+        party
+        job
+        biography
+        constituency
+        office
+        links {
+          name
+          URL
+        }
+      }
+    }
+  }
+`;
