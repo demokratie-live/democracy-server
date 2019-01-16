@@ -382,4 +382,7 @@ export default {
       },
     ),
   },
+  VoteResult: {
+    governmentDecision: ({ yes, no }) => (yes > no ? 'YES' : 'NO'),
+  },
 };
