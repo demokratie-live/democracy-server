@@ -311,12 +311,28 @@ export default {
         .skip(offset);
 
       // Filter Andere(fraktionslos) from partyVotes array in result
-      result = result.map(procedure => {
-        // eslint-disable-next-line no-param-reassign
+      result = result.map(p => {
+        // MongoObject to JS Object
+        const procedure = p.toObject();
+
+        // Filter fractions
         procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
-          ({ party }) => party !== 'Andere',
+          ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
         );
-        return procedure;
+
+        // Rename Fractions
+        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.map(
+          ({ party, ...rest }) => {
+            switch (party.trim()) {
+              case 'CDU':
+                return { ...rest, party: 'Union' };
+
+              default:
+                return { ...rest, party };
+            }
+          },
+        );
+        return { ...procedure };
       });
 
       // Return result
