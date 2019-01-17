@@ -19,10 +19,11 @@ type Deputy {
   job: String
   biography: String
   constituency: String
+  directCandidate: Boolean
   contact: DeputyContact
 }
 
 type Query {
-  deputyByConstituency(constituency: String!): Deputy
+  deputyOfConstituency(constituency: String!): Deputy
 }
 `;

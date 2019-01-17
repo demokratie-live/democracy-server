@@ -29,7 +29,7 @@ export default async () => {
         variables: { since, limit, offset },
       });
 
-    // save
+    // handle results
     deputies.map(async data => {
       const deputy = {
         webId: data.webId,
@@ -39,6 +39,7 @@ export default async () => {
         job: data.job,
         biography: data.biography.join('\n\n'),
         constituency: data.constituency,
+        directCandidate: data.directCandidate,
         contact: {
           address: data.office.join('\n'),
           // email: { type: String },

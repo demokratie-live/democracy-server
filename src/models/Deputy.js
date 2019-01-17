@@ -10,6 +10,7 @@ const DeputySchema = new Schema(
     job: { type: String },
     biography: { type: String },
     constituency: { type: String },
+    directCandidate: { type: Boolean },
     contact: { type: DeputyContact },
   },
   { timestamps: true },

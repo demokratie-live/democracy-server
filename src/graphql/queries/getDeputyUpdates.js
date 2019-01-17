@@ -15,6 +15,7 @@ export default gql`
         job
         biography
         constituency
+        directCandidate
         office
         links {
           name
