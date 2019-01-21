@@ -302,17 +302,27 @@ export default {
         ...filterQuery,
       });
 
-      // Find selected procedures matching given Filter
-      let procedures = await ProcedureModel.find({
+      // Prepare Find Query
+      const findQuery = {
         // Vote Results are present
         ...voteResultsQuery,
-        // Procedure ID selection
-        procedureId: { $in: procedureIds },
         // Timespan Selection
         ...timespanQuery,
         // Apply Filter
         ...filterQuery,
-      }) // Pagination
+      };
+
+      // if empty, return all procedures having VoteResults
+      if (procedureIds) {
+        // Procedure ID selection
+        findQuery.procedureId = { $in: procedureIds };
+      }
+
+      // Find selected procedures matching given Filter
+      let procedures = await ProcedureModel.find(findQuery)
+        // Sorting last voted first
+        .sort({voteDate: -1})
+        // Pagination
         .limit(pageSize)
         .skip(offset);
 
