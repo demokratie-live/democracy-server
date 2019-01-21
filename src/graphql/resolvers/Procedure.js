@@ -292,16 +292,6 @@ export default {
         filterQuery.subjectGroups = { $in: filter.subjectGroups };
       }
 
-      // Count total Procedures matching given Filter
-      const total = await ProcedureModel.count({
-        // Vote Results are present
-        ...voteResultsQuery,
-        // Timespan Selection
-        ...timespanQuery,
-        // Apply Filter
-        ...filterQuery,
-      });
-
       // Prepare Find Query
       const findQuery = {
         // Vote Results are present
@@ -312,6 +302,9 @@ export default {
         ...filterQuery,
       };
 
+      // Count total Procedures matching given Filter
+      const total = await ProcedureModel.count(findQuery);
+
       // if empty, return all procedures having VoteResults
       if (procedureIds) {
         // Procedure ID selection
@@ -321,7 +314,7 @@ export default {
       // Find selected procedures matching given Filter
       let procedures = await ProcedureModel.find(findQuery)
         // Sorting last voted first
-        .sort({voteDate: -1})
+        .sort({ voteDate: -1 })
         // Pagination
         .limit(pageSize)
         .skip(offset);
