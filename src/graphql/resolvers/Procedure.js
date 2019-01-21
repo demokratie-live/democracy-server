@@ -225,9 +225,16 @@ export default {
 
     proceduresByIdHavingVoteResults: async (
       parent,
-      { procedureIds, timespan = 'Period', pageSize = 99, offset = 0, filter = {} },
+      { procedureIds, timespan = 'Period', pageSize = 25, offset = 0, filter = {} },
       { ProcedureModel },
     ) => {
+      // Vote Results are present Filter
+      const voteResultsQuery = {
+        'voteResults.yes': { $ne: null },
+        'voteResults.no': { $ne: null },
+        'voteResults.abstination': { $ne: null },
+      };
+
       // Timespan Selection
       const timespanQuery = {};
       switch (timespan) {
@@ -285,28 +292,35 @@ export default {
         filterQuery.subjectGroups = { $in: filter.subjectGroups };
       }
 
-      let result = await ProcedureModel.find({
+      // Count total Procedures matching given Filter
+      const total = await ProcedureModel.count({
         // Vote Results are present
-        'voteResults.yes': { $ne: null },
-        'voteResults.no': { $ne: null },
-        'voteResults.abstination': { $ne: null },
+        ...voteResultsQuery,
+        // Timespan Selection
+        ...timespanQuery,
+        // Apply Filter
+        ...filterQuery,
+      });
+
+      // Find selected procedures matching given Filter
+      let procedures = await ProcedureModel.find({
+        // Vote Results are present
+        ...voteResultsQuery,
         // Procedure ID selection
         procedureId: { $in: procedureIds },
         // Timespan Selection
         ...timespanQuery,
         // Apply Filter
         ...filterQuery,
-      })
-        // Pagination
+      }) // Pagination
         .limit(pageSize)
         .skip(offset);
 
-      // Filter Andere(fraktionslos) from partyVotes array in result
-      result = result.map(p => {
+      // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
+      procedures = procedures.map(p => {
         // MongoObject to JS Object
         const procedure = p.toObject();
-
-        // Filter fractions
+        // eslint-disable-next-line no-param-reassign
         procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
           ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
         );
@@ -327,7 +341,7 @@ export default {
       });
 
       // Return result
-      return result;
+      return { total, procedures };
     },
 
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
