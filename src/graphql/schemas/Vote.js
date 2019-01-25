@@ -63,8 +63,8 @@ export default `
   
 
   type Query {
-    votes(procedure: ID!, constituencies: [String]): Vote
-    communityVotes(procedure: ID!, constituencies: [String]): CommunityVotes
+    votes(procedure: ID!, constituencies: [String!]): Vote
+    communityVotes(procedure: ID!, constituencies: [String!]): CommunityVotes
     voteStatistic: VoteStatistic
   }
   `;

@@ -52,7 +52,7 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
 
   // Find constituency results if constituencies are given
   const votesConstituencies =
-    constituencies && constituencies.length > 0
+    (constituencies && constituencies.length > 0) || constituencies === undefined
       ? await VoteModel.aggregate([
           // Find Procedure, including type; results in up to two objects for state
           {
@@ -69,7 +69,9 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
                   $filter: {
                     input: '$votes.constituencies',
                     as: 'constituency',
-                    cond: { $in: ['$$constituency.constituency', constituencies] },
+                    cond: !constituencies
+                      ? true // Return all Constituencies if constituencies param is not given
+                      : { $in: ['$$constituency.constituency', constituencies] }, // Filter Constituencies if an array is given
                   },
                 },
               },
@@ -102,7 +104,11 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
             },
           },
         ])
+          // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
+          // Remove elements with property constituency: null (of no votes on it)
+          .then(data => data.filter(({ constituency }) => constituency))
       : [];
+
   if (votesGlobal.length > 0) {
     votesGlobal[0].voteResults.constituencies = votesConstituencies;
     return votesGlobal[0];
@@ -209,6 +215,9 @@ export default {
                 },
               },
             ])
+              // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
+              // Remove elements with property constituency: null (of no votes on it)
+              .then(data => data.filter(({ constituency }) => constituency))
           : [];
 
       if (votesGlobal.length > 0) {
