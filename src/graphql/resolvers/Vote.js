@@ -1,10 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
-
 import CONSTANTS from '../../config/constants';
-import Activity from './Activity';
-import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import procedureStates from '../../config/procedureStates';
+import { isLoggedin, isVerified } from '../../express/auth/permissions';
+import Activity from './Activity';
 
 const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
@@ -158,7 +157,7 @@ export default {
 
       // Find constituency results if constituencies are given
       const votesConstituencies =
-        constituencies && constituencies.length > 0
+        (constituencies && constituencies.length > 0) || constituencies === undefined
           ? await VoteModel.aggregate([
               // Find Procedure, including type; results in up to two objects for state
               {
@@ -175,7 +174,9 @@ export default {
                       $filter: {
                         input: '$votes.constituencies',
                         as: 'constituency',
-                        cond: { $in: ['$$constituency.constituency', constituencies] },
+                        cond: !constituencies
+                          ? true // Return all Constituencies if constituencies param is not given
+                          : { $in: ['$$constituency.constituency', constituencies] }, // Filter Constituencies if an array is given
                       },
                     },
                   },
