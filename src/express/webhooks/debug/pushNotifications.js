@@ -1,5 +1,5 @@
 import DeviceModel from '../../../models/Device';
-import pushNotify from '../../../services/notifications';
+import { testPush } from '../../../services/notifications';
 
 export default async (req, res) => {
   const { message, title } = req.query;
@@ -8,7 +8,7 @@ export default async (req, res) => {
   }
   const devices = await DeviceModel.find();
   devices.forEach(device => {
-    pushNotify({
+    testPush({
       title: title || 'DEMOCRACY',
       message,
       device,
