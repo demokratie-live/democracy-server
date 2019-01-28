@@ -26,6 +26,7 @@ import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures
 import debugPushNotifications from './express/webhooks/debug/pushNotifications';
 import debugImportAll from './express/webhooks/debug/importAll';
 import smHumanConnaction from './express/webhooks/socialmedia/humanconnection';
+import importDeputyProfiles from './importer/importDeputyProfiles';
 
 // Models
 import ProcedureModel from './models/Procedure';
@@ -157,16 +158,15 @@ const main = async () => {
       Log.error(JSON.stringify({ err }));
     } else {
       Log.info(`App is listen on port: ${CONSTANTS.PORT}`);
+      const crons = [
+        new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin'),
+        new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin'),
+        new CronJob('*/15 * * * *', importDeputyProfiles, null, true, 'Europe/Berlin', null, true),
+      ];
 
-      const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
-
-      const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
-      Log.info(
-        JSON.stringify({
-          cronjob: cronjob.running,
-          cronjob2: cronjob2.running,
-        }),
-      );
+      if (CONSTANTS.DEBUG) {
+        Log.info('crons', crons.length);
+      }
     }
   });
 };
