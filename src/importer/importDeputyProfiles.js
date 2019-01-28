@@ -38,7 +38,7 @@ export default async () => {
         party: data.party,
         job: data.job,
         biography: data.biography.join('\n\n'),
-        constituency: parseInt(data.constituency, 10).toString(), // remove pre zeros
+        constituency: data.constituency ? parseInt(data.constituency, 10).toString() : undefined, // remove pre zeros
         directCandidate: data.directCandidate,
         contact: {
           address: data.office.join('\n'),

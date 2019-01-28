@@ -2,7 +2,15 @@ import DeputyModel from '../../models/Deputy';
 
 export default {
   Query: {
-    deputyOfConstituency: async (parent, { constituency } /* {}, */) =>
-      DeputyModel.findOne({ constituency, directCandidate: true }),
+    deputiesOfConstituency: async (parent, { constituency, directCandidate = false }) => {
+      const query = {
+        constituency,
+      };
+      if (directCandidate) {
+        // returns only directCandidate
+        query.directCandidate = true;
+      }
+      return DeputyModel.find(query);
+    },
   },
 };
