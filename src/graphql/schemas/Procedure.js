@@ -1,7 +1,13 @@
 export default `
 enum ProcedureType {
   PREPARATION
-  VOTING @deprecated
+  VOTING
+  PAST
+  HOT
+} @deprecated(reason: "DEPRECATED ListType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE")
+
+enum ListType {
+  PREPARATION
   IN_VOTE
   PAST
   HOT
@@ -27,7 +33,8 @@ type Procedure {
   votedGovernment: Boolean
   completed: Boolean
   notify: Boolean
-  listType: ProcedureType
+  listType: ProcedureType @deprecated(reason: "DEPRECATED ListType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE")
+  list: ListType
   verified: Boolean
 }
 
@@ -45,7 +52,7 @@ input ProcedureFilter {
 
 type Query {
   procedure(id: ID!): Procedure
-  procedures(listTypes: [ProcedureType!], type: ProcedureType, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
+  procedures(listTypes: [ListType!], type: ProcedureType @deprecated(reason: "DEPRECATED listType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE"), pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
