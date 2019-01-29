@@ -231,7 +231,7 @@ export default {
         return null;
       }
       // eslint-disable-next-line
-      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+      const listType = procedureStates.IN_VOTE.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status,
       )
         ? 'VOTING'
