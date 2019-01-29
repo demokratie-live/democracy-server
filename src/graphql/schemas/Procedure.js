@@ -1,7 +1,14 @@
 export default `
-enum ProcedureType {
+${/* DEPRECATED ListType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
+enum ProcedureType @deprecated(reason: "Use procedures Query param listTypes instead of type") {
+  PREPARATION @deprecated(reason: "Use procedures Query param listTypes instead of type")
+  VOTING @deprecated(reason: "Use procedures Query param listTypes instead of type")
+  PAST @deprecated(reason: "Use procedures Query param listTypes instead of type")
+  HOT @deprecated(reason: "Use procedures Query param listTypes instead of type")
+} 
+
+enum ListType {
   PREPARATION
-  VOTING @deprecated
   IN_VOTE
   PAST
   HOT
@@ -27,7 +34,9 @@ type Procedure {
   votedGovernment: Boolean
   completed: Boolean
   notify: Boolean
-  listType: ProcedureType
+  ${/* DEPRECATED ListType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
+  listType: ProcedureType @deprecated(reason: "Use listTypes instead of type")
+  list: ListType
   verified: Boolean
 }
 
@@ -45,7 +54,8 @@ input ProcedureFilter {
 
 type Query {
   procedure(id: ID!): Procedure
-  procedures(listTypes: [ProcedureType!], type: ProcedureType, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
+  ${/* DEPRECATED listType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
+  procedures(listTypes: [ListType!], type: ProcedureType @deprecated(reason: "Use listTypes instead of type"), pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure]
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
