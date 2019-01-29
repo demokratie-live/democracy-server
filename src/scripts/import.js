@@ -12,7 +12,7 @@ export default async procedureIds => {
   } = await client.query({
     query: getProcedures,
     variables: { IDs: procedureIds },
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
   });
   // Start Inserting
   const promises = procedures.map(procedure => importProcedure(procedure, { push: true }));
