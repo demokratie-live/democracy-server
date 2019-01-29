@@ -2,7 +2,6 @@
 
 import apn from 'apn';
 import gcm from 'node-gcm';
-import util from 'util';
 
 import apnProvider from './apn';
 import gcmProvider from './gcm';
@@ -11,9 +10,67 @@ import DeviceModel from '../../models/Device';
 import ProcedureModel from '../../models/Procedure';
 import CONSTANTS from '../../config/constants';
 
-const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload }) => {
-  const androidNotificationTokens = [];
+// Send single iOS notification
+const pushIOS = ({ title, message, payload, token }) => {
+  // Check if Sending Interface is present
+  if (!apnProvider) {
+    Log.error('ERROR: apnProvider not present');
+    return;
+  }
 
+  // Construct Data Object
+  const data = new apn.Notification();
+  data.alert = {
+    title,
+    body: message,
+  };
+
+  data.topic = CONSTANTS.APN_TOPIC;
+  data.payload = payload;
+  // This flag was included in the testPush method
+  // see: https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
+  // data.contentAvailable = 1;
+
+  // Do the sending
+  apnProvider.send(data, token).then(response => {
+    Log.notification(JSON.stringify({ type: 'apnProvider.send', response }));
+  });
+};
+
+// send bulk android notifications
+const bulkPushAndroid = ({ title, message, payload, tokens }) => {
+  // Construct Data Object
+  const gcmMessage = new gcm.Message({
+    data: {
+      title,
+      body: message,
+      payload,
+    },
+  });
+
+  // Split array with tokens to smaller send packages
+  while (tokens.length > 0) {
+    const registrationTokens = tokens.splice(0, 100);
+    gcmProvider.send(gcmMessage, { registrationTokens }, (err, response) => {
+      //  TODO: drop push keys from DB (failed_tokens);
+      //
+      // const failed_tokens = response.results // Array with result for each token we messaged
+      //   .map((res, i) => (res.error ? registrationTokens[i] : null)) // If there's any kind of error,
+      //   // pick _the token_ from the _other_ array
+      //   .filter(token => token);
+      if (err) {
+        Log.error(JSON.stringify({ type: 'gcmProvider.send', err }));
+      } else {
+        Log.notification(JSON.stringify({ type: 'gcmProvider.send', response }));
+      }
+    });
+  }
+};
+
+const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload }) => {
+  const androidTokens = [];
+
+  // Remove duplicate Tokens
   const devices = tokenObjects.reduce((prev, { token, os }) => {
     const next = [...prev];
     if (!next.some(({ token: existingToken }) => existingToken === token)) {
@@ -22,60 +79,28 @@ const sendNotifications = ({ tokenObjects, title = 'DEMOCRACY', message, payload
     return next;
   }, []);
 
+  // Send for iOS and collect tokens for Android to BulkPush
   devices.forEach(({ token, os }) => {
     switch (os) {
       case 'ios':
-        {
-          const note = new apn.Notification();
-
-          note.alert = {
-            title,
-            body: message,
-          };
-
-          note.topic = CONSTANTS.APN_TOPIC;
-
-          note.payload = payload;
-
-          if (apnProvider) {
-            apnProvider.send(note, token).then(result => {
-              Log.notification({
-                type: 'apnProvider.send',
-                data: util.inspect(result, false, null),
-              });
-            });
-          } else {
-            Log.error('ERROR: apnProvider not present');
-          }
-        }
+        pushIOS({ title, message, payload, token });
         break;
 
       case 'android':
-        // Prepare android notifications
-        androidNotificationTokens.push(token);
+        androidTokens.push(token);
         break;
 
       default:
         break;
     }
   });
-  // send bulk send android notifications
-  const gcmMessage = new gcm.Message({
-    data: {
-      title,
-      body: message,
-      payload,
-    },
-  });
-  // Split array with tokens to smaler send packages
-  while (androidNotificationTokens.length > 0) {
-    const registrationTokens = androidNotificationTokens.splice(0, 100);
-    gcmProvider.send(gcmMessage, { registrationTokens }, (err, response) => {
-      if (err) Log.error(JSON.stringify({ type: 'gcmProvider', err }));
-      else {
-        Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
-      }
-    });
+  bulkPushAndroid({ title, message, payload, tokens: androidTokens });
+};
+
+// device is a Database Object
+const testPush = async ({ title, message, device, payload }) => {
+  if (device) {
+    sendNotifications({ tokenObjects: device.pushTokens, title, message, payload });
   }
 };
 
@@ -222,93 +247,4 @@ const procedureUpdate = async ({ procedureId }) => {
 };
 // procedureUpdate({ procedureId: 231079 });
 
-export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations };
-
-/*
-export default async ({ title, message, device, payload }) => {
-  let deviceId;
-  if (_.isObject(device)) {
-    deviceId = device._id;
-  }
-  const deviceObj = await DeviceModel.findById(deviceId);
-  if (deviceObj) {
-    const androidNotificationTokens = [];
-    deviceObj.pushTokens.forEach(({ token, os }) => {
-      switch (os) {
-        case 'ios':
-          {
-            const note = new apn.Notification();
-
-            note.alert = {
-              title,
-              body: message,
-            };
-
-            note.topic = CONSTANTS.APN_TOPIC;
-            note.contentAvailable = 1;
-
-            note.payload = payload;
-
-            if (apnProvider) {
-              apnProvider.send(note, token).then(result => {
-                Log.notification(
-                  JSON.stringify({
-                    type: 'apnProvider.send',
-                    data: util.inspect(result, false, null),
-                  }),
-                );
-              });
-            } else {
-              Log.error('ERROR: apnProvider not present');
-            }
-          }
-          break;
-
-        case 'android':
-          // Prepare android notifications
-          androidNotificationTokens.push(token);
-          break;
-
-        default:
-          break;
-      }
-    });
-    // send bulk send android notifications
-    if (androidNotificationTokens.length > 0) {
-      const gcmMessage = new gcm.Message({
-        data: {
-          title,
-          body: message,
-          payload,
-        },
-      });
-
-      // Split array with tokens to smaler send packages
-      while (androidNotificationTokens.length > 0) {
-        const registrationTokens = androidNotificationTokens.splice(0, 100);
-
-        gcmProvider.send(gcmMessage, { registrationTokens }, (err, response) => {
-          if (err) {
-            Log.error(
-              JSON.stringify({
-                type: 'gcmProvider',
-                err,
-              }),
-            );
-          } else {
-            //
-            //  TODO: drop push keys from DB (failed_tokens);
-            //
-            // const failed_tokens = response.results // Array with result for each token we messaged
-            //   .map((res, i) => (res.error ? registrationTokens[i] : null)) // If there's any kind of error,
-            //   // pick _the token_ from the _other_ array
-            //   .filter(token => token);
-
-            Log.notification(JSON.stringify({ type: 'gcmProvider', response }));
-          }
-        });
-      }
-    }
-  }
-};
-*/
+export { procedureUpdate, newVote, newVotes, newPreperation, newPreperations, testPush };
