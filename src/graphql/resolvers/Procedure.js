@@ -242,6 +242,7 @@ export default {
         'voteResults.yes': { $ne: null },
         'voteResults.no': { $ne: null },
         'voteResults.abstination': { $ne: null },
+        'voteResults.partyVotes': { $gt: [] },
       };
 
       // Timespan Selection
