@@ -231,7 +231,7 @@ export default {
         return null;
       }
       // eslint-disable-next-line
-      const listType = procedureStates.VOTING.concat(procedureStates.COMPLETED).some(
+      const listType = procedureStates.IN_VOTE.concat(procedureStates.COMPLETED).some(
         status => procedure.currentStatus === status,
       )
         ? 'VOTING'
@@ -430,6 +430,7 @@ export default {
       Log.graphql('Procedure.field.completed');
       return procedureStates.COMPLETED.includes(procedure.currentStatus);
     },
+    // DEPRECATED ListType 2019-01-29 use list instead
     listType: procedure => {
       Log.graphql('Procedure.field.listType');
       if (
@@ -440,6 +441,21 @@ export default {
         procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
       ) {
         return 'VOTING';
+      }
+      return 'PREPARATION';
+    },
+    list: procedure => {
+      Log.graphql('Procedure.field.list');
+      if (new Date(procedure.voteDate) < new Date()) {
+        return 'PAST';
+      } else if (
+        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
+        (procedure.currentStatus === 'Überwiesen' &&
+          procedure.voteDate &&
+          new Date(procedure.voteDate) >= new Date()) ||
+        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+      ) {
+        return 'IN_VOTE';
       }
       return 'PREPARATION';
     },
