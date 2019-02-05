@@ -101,6 +101,8 @@ const main = async () => {
     engine: CONSTANTS.ENGINE_API_KEY
       ? {
           apiKey: CONSTANTS.ENGINE_API_KEY,
+          privateVariables: true,
+          privateHeaders: true,
         }
       : false,
     typeDefs,
