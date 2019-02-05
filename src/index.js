@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import express from 'express';
-// import bodyParser from 'body-parser';
+import bodyParser from 'body-parser';
 import { ApolloServer } from 'apollo-server-express';
 import { CronJob } from 'cron';
 import cors from 'cors';
@@ -71,28 +71,33 @@ const main = async () => {
   if (CONSTANTS.VOYAGER) {
     server.use('/voyager', voyagerMiddleware({ endpointUrl: CONSTANTS.GRAPHQL_PATH }));
   }
-
   // Bundestag.io
   // Webhook
-  server.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
+  server.post(
+    '/webhooks/bundestagio/update',
+    bodyParser.json(),
+    isDataSource.createResolver(BIOupdate),
+  );
   // Webhook update specific procedures
   server.post(
     '/webhooks/bundestagio/updateProcedures',
+    bodyParser.json(),
     isDataSource.createResolver(BIOupdateProcedures),
   );
 
   // Human Connection webhook
   server.get(
     '/webhooks/human-connection/contribute',
+    bodyParser.json(),
     isDataSource.createResolver(smHumanConnaction),
   );
 
   // Debug
   if (CONSTANTS.DEBUG) {
     // Push Notification test
-    server.get('/push-test', debugPushNotifications);
+    server.get('/push-test', bodyParser.json(), debugPushNotifications);
     // Bundestag.io Import All
-    server.get('/webhooks/bundestagio/import-all', debugImportAll);
+    server.get('/webhooks/bundestagio/import-all', bodyParser.json(), debugImportAll);
   }
 
   // Graphql
