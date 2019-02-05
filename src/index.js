@@ -1,11 +1,8 @@
 /* eslint-disable no-console */
 
 import express from 'express';
-import bodyParser from 'body-parser';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-import { makeExecutableSchema } from 'graphql-tools';
-import { createServer } from 'http';
-import { Engine } from 'apollo-engine';
+// import bodyParser from 'body-parser';
+import { ApolloServer } from 'apollo-server-express';
 import { CronJob } from 'cron';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -67,35 +64,8 @@ const main = async () => {
 
   server.use(cors(corsOptions));
 
-  const schema = makeExecutableSchema({
-    typeDefs,
-    resolvers,
-  });
-
-  // Apollo Engine
-  if (CONSTANTS.ENGINE_API_KEY) {
-    const engine = new Engine({
-      engineConfig: { apiKey: CONSTANTS.ENGINE_API_KEY },
-      graphqlPort: CONSTANTS.PORT,
-    });
-    engine.start();
-    server.use(engine.expressMiddleware());
-  }
-
-  server.use(bodyParser.json());
-
   // Authentification
   server.use(auth);
-
-  // Graphiql
-  if (CONSTANTS.GRAPHIQL) {
-    server.use(
-      CONSTANTS.GRAPHIQL_PATH,
-      graphiqlExpress({
-        endpointURL: CONSTANTS.GRAPHQL_PATH,
-      }),
-    );
-  }
 
   // VOYAGER
   if (CONSTANTS.VOYAGER) {
@@ -126,48 +96,57 @@ const main = async () => {
   }
 
   // Graphql
-  server.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
-    graphqlExpress({
-      schema,
-      context: {
-        // Connection
-        res,
-        // User, Device & Phone
-        user: req.user,
-        device: req.device,
-        phone: req.phone,
-        // Models
-        ProcedureModel,
-        UserModel,
-        DeviceModel,
-        PhoneModel,
-        VerificationModel,
-        ActivityModel,
-        VoteModel,
-        PushNotifiactionModel,
-        SearchTermModel,
-      },
-      tracing: true,
-      cacheControl: true,
-    })(req, res, next);
+  console.log({ typeDefs, resolvers });
+  const graphQlServer = new ApolloServer({
+    engine: CONSTANTS.ENGINE_API_KEY
+      ? {
+          apiKey: CONSTANTS.ENGINE_API_KEY,
+        }
+      : false,
+    typeDefs,
+    resolvers,
+    playground: CONSTANTS.GRAPHIQL
+      ? {
+          endpoint: CONSTANTS.GRAPHQL_PATH,
+        }
+      : false,
+    context: ({ req, res }) => ({
+      // Connection
+      res,
+      // User, Device & Phone
+      user: req.user,
+      device: req.device,
+      phone: req.phone,
+      // Models
+      ProcedureModel,
+      UserModel,
+      DeviceModel,
+      PhoneModel,
+      VerificationModel,
+      ActivityModel,
+      VoteModel,
+      PushNotifiactionModel,
+      SearchTermModel,
+    }),
   });
 
-  const graphqlServer = createServer(server);
-  graphqlServer.listen(CONSTANTS.PORT, err => {
-    if (err) {
-      Log.error(JSON.stringify({ err }));
-    } else {
-      Log.info(`App is listen on port: ${CONSTANTS.PORT}`);
-      const crons = [
-        new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin'),
-        new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin'),
-        new CronJob('*/15 * * * *', importDeputyProfiles, null, true, 'Europe/Berlin', null, true),
-      ];
+  graphQlServer.applyMiddleware({
+    app: server,
+    path: CONSTANTS.GRAPHQL_PATH,
+  });
 
-      if (CONSTANTS.DEBUG) {
-        Log.info('crons', crons.length);
-      }
+  server.listen({ port: CONSTANTS.PORT }, () => {
+    const crons = [
+      new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin'),
+      new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin'),
+      new CronJob('*/15 * * * *', importDeputyProfiles, null, true, 'Europe/Berlin', null, true),
+    ];
+
+    if (CONSTANTS.DEBUG) {
+      Log.info('crons', crons.length);
     }
+
+    console.log(`🚀 Server ready at http://localhost:${CONSTANTS.PORT}${CONSTANTS.GRAPHQL_PATH}`);
   });
 };
 
