@@ -16,7 +16,8 @@ module.exports.up = async function(done) { // eslint-disable-line
         }
       });
     });
-    if (collections.length === 0) {
+    // _migrations table is created therefore there can be one collection
+    if (collections.length <= 1) {
       done();
       return;
     }
