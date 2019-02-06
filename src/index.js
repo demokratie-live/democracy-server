@@ -58,6 +58,9 @@ const main = async () => {
 
   // Express Server
   const server = express();
+
+  server.use(bodyParser.json());
+
   if (CONSTANTS.DEBUG) {
     server.use(cookieParser());
   }
@@ -75,29 +78,29 @@ const main = async () => {
   // Webhook
   server.post(
     '/webhooks/bundestagio/update',
-    bodyParser.json(),
+
     isDataSource.createResolver(BIOupdate),
   );
   // Webhook update specific procedures
   server.post(
     '/webhooks/bundestagio/updateProcedures',
-    bodyParser.json(),
+
     isDataSource.createResolver(BIOupdateProcedures),
   );
 
   // Human Connection webhook
   server.get(
     '/webhooks/human-connection/contribute',
-    bodyParser.json(),
+
     isDataSource.createResolver(smHumanConnaction),
   );
 
   // Debug
   if (CONSTANTS.DEBUG) {
     // Push Notification test
-    server.get('/push-test', bodyParser.json(), debugPushNotifications);
+    server.get('/push-test', debugPushNotifications);
     // Bundestag.io Import All
-    server.get('/webhooks/bundestagio/import-all', bodyParser.json(), debugImportAll);
+    server.get('/webhooks/bundestagio/import-all', debugImportAll);
   }
 
   // Graphql
