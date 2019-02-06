@@ -106,8 +106,9 @@ const main = async () => {
     engine: CONSTANTS.ENGINE_API_KEY
       ? {
           apiKey: CONSTANTS.ENGINE_API_KEY,
-          privateVariables: true,
-          privateHeaders: true,
+          // Send params and headers to engine
+          privateVariables: !CONSTANTS.ENGINE_DEBUG_MODE,
+          privateHeaders: !CONSTANTS.ENGINE_DEBUG_MODE,
         }
       : false,
     typeDefs,
@@ -135,6 +136,7 @@ const main = async () => {
       PushNotifiactionModel,
       SearchTermModel,
     }),
+    tracing: CONSTANTS.DEBUG,
   });
 
   graphQlServer.applyMiddleware({
