@@ -15,11 +15,24 @@ module.exports.up = async function(done) { // eslint-disable-line
           resolve(names);
         }
       });
-    });
-    // _migrations table is created therefore there can be one collection
-    if (collections.length <= 1) {
-      done();
-      return;
+    }).then(c => c.map(({ name }) => name));
+
+    const neededCollections = ['votes'];
+    const crashingCollections = ['old_votes'];
+
+    // if no target collection exists. Migration isn't neccecary
+    if (!neededCollections.some(c => collections.includes(c))) {
+      return done();
+    }
+
+    // Check if crashing collections does not exists
+    if (crashingCollections.some(c => collections.includes(c))) {
+      return done(Error('some Collections with target name for renaming exists'));
+    }
+
+    // Check if needed collections does exists
+    if (!neededCollections.every(c => collections.includes(c))) {
+      return done(Error('some source Collections missing'));
     }
 
     // rename collection
