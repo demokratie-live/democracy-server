@@ -388,7 +388,11 @@ export default {
           },
         );
         // Return new User Vote Results
-        return queryVotes(parent, { procedureId, constituency }, { VoteModel, device, phone });
+        return queryVotes(
+          parent,
+          { procedure: procedure._id, constituency },
+          { VoteModel, device, phone },
+        );
       },
     ),
   },
