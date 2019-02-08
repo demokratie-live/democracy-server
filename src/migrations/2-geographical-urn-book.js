@@ -18,7 +18,7 @@ module.exports.up = async function(done) { // eslint-disable-line
     }).then(c => c.map(({ name }) => name));
 
     const neededCollections = ['votes'];
-    const crashingCollections = ['old_votes'];
+    const crashingCollections = ['old_votes-geographical-urn-book'];
 
     // if no target collection exists. Migration isn't neccecary
     if (!neededCollections.some(c => collections.includes(c))) {
@@ -36,14 +36,14 @@ module.exports.up = async function(done) { // eslint-disable-line
     }
 
     // rename collection
-    await this.db.collection('votes').rename('old_votes2');
-    Log.info('Migration: Renamed votes -> old_votes2');
+    await this.db.collection('votes').rename('old_votes-geographical-urn-book');
+    Log.info('Migration: Renamed votes -> old_votes-geographical-urn-book');
 
     // find collections
-    const oldVotes = this.db.collection('old_votes2');
+    const oldVotes = this.db.collection('old_votes-geographical-urn-book');
 
     // Transform oldVotes -> Votes
-    Log.info('Migration: Transform collection old_votes2 -> votes');
+    Log.info('Migration: Transform collection old_votes-geographical-urn-book -> votes');
     const voteCursor = oldVotes.find();
     while (await voteCursor.hasNext()) {
       const oldVote = await voteCursor.next();
@@ -118,7 +118,7 @@ module.exports.up = async function(done) { // eslint-disable-line
       }
     }
 
-    Log.info('Migration: Done transforming collection old_votes2 -> votes');
+    Log.info('Migration: Done transforming collection old_votes-geographical-urn-book -> votes');
     done();
   } catch (err) {
     done(err);
