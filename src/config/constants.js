@@ -6,6 +6,7 @@ export default {
   GRAPHIQL: process.env.GRAPHIQL === 'true',
   GRAPHIQL_PATH: '/graphiql',
   GRAPHQL_PATH: '/',
+  VOYAGER: process.env.VOYAGER || false,
   BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/',
   NOTIFICATION_ANDROID_SERVER_KEY: process.env.NOTIFICATION_ANDROID_SERVER_KEY || null,
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'elasticsearch',
@@ -30,6 +31,7 @@ export default {
   AUTH_JWT_TTL: process.env.AUTH_JWT_TTL || '1d',
   AUTH_JWT_REFRESH_TTL: process.env.AUTH_JWT_REFRESH_TTL || '7d',
   ENGINE_API_KEY: process.env.ENGINE_API_KEY || null,
+  ENGINE_DEBUG_MODE: process.env.ENGINE_DEBUG_MODE === 'true',
   WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES
     ? process.env.WHITELIST_DATA_SOURCES.split(',')
     : ['::ffff:127.0.0.1', '::1'],

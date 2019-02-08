@@ -38,7 +38,8 @@ export default async data => {
               if (
                 // local data not present
                 !localData ||
-                // older than a day TODO: make it a week?
+                // older than a day
+                // TODO: make it a week?
                 NOW - new Date(localData.updatedAt) > ONEDAY ||
                 // bio date is newer
                 (pu.bioUpdateAt &&
