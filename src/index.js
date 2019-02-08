@@ -116,6 +116,7 @@ const main = async () => {
       : false,
     typeDefs,
     resolvers,
+    introspection: CONSTANTS.GRAPHIQL,
     playground: CONSTANTS.GRAPHIQL
       ? {
           endpoint: CONSTANTS.GRAPHQL_PATH,
