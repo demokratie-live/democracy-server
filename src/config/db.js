@@ -15,20 +15,19 @@ export default async () => {
 
   // Connect
   try {
-    await mongoose.connect(
-      CONSTANTS.db.url,
-      { useNewUrlParser: true },
-    );
+    await mongoose.connect(CONSTANTS.db.url, { useNewUrlParser: true });
   } catch (err) {
     await mongoose.createConnection(CONSTANTS.db.url, {});
   }
 
   // Open
-  mongoose.connection.once('open', () => Log.info('MongoDB is running')).on('error', e => {
-    // Unknown if this ends up in main - therefore we log here
-    Log.error(e.stack);
-    throw e;
-  });
+  mongoose.connection
+    .once('open', () => Log.info('MongoDB is running'))
+    .on('error', e => {
+      // Unknown if this ends up in main - therefore we log here
+      Log.error(e.stack);
+      throw e;
+    });
 };
 
 export { mongoose };
