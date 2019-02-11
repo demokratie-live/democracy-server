@@ -1,9 +1,13 @@
 import request from 'request';
 import _ from 'lodash';
 
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 export const statusSMS = async SMSID => {
+  if (CONFIG.SMS_SIMULATE) {
+    return true;
+  }
+
   const url = 'https://www.smsflatrate.net/status.php';
 
   const qs = {
@@ -11,10 +15,6 @@ export const statusSMS = async SMSID => {
   };
 
   return new Promise((resolve, reject) => {
-    if (CONSTANTS.SMS_SIMULATE) {
-      resolve(true);
-      return;
-    }
     request({ url, qs }, (err, response, body) => {
       if (err) {
         Log.error(JSON.stringify(err));
@@ -135,7 +135,7 @@ export const sendSMS = async (phone, code) => {
   const url = 'https://www.smsflatrate.net/schnittstelle.php';
 
   const qs = {
-    key: CONSTANTS.SMS_PROVIDER_KEY,
+    key: CONFIG.SMS_PROVIDER_KEY,
     from: 'DEMOCRACY',
     to: phone,
     text: `Hallo von DEMOCRACY. Dein Code lautet: ${code}`,
@@ -144,7 +144,7 @@ export const sendSMS = async (phone, code) => {
   };
 
   return new Promise((resolve, reject) => {
-    if (CONSTANTS.SMS_SIMULATE) {
+    if (CONFIG.SMS_SIMULATE) {
       resolve({ status: true, statusCode: 100, SMSID: _.uniqueId() });
       return;
     }

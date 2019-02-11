@@ -8,7 +8,7 @@ import gcmProvider from './gcm';
 
 import DeviceModel from '../../models/Device';
 import ProcedureModel from '../../models/Procedure';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 // Send single iOS notification
 const pushIOS = ({ title, message, payload, token }) => {
@@ -25,7 +25,7 @@ const pushIOS = ({ title, message, payload, token }) => {
     body: message,
   };
 
-  data.topic = CONSTANTS.APN_TOPIC;
+  data.topic = CONFIG.APN_TOPIC;
   data.payload = payload;
   // This flag was included in the testPush method
   // see: https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html

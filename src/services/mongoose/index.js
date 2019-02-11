@@ -1,23 +1,25 @@
-import mongoose from 'mongoose';
 import { inspect } from 'util';
+import mongoose from 'mongoose';
 
-import CONSTANTS from './constants';
-
-mongoose.Promise = global.Promise;
+/*
+  THIS FILE AND ALL IMPORTS ARE NOT ALLOWED TO INCLUDE ANY MONGOOSE MODELS
+  See index.js for more info
+*/
+import CONFIG from './../../config';
 
 export default async () => {
   // Mongo Debug
-  if (CONSTANTS.LOGGING.MONGO) {
+  if (CONFIG.LOGGING_MONGO) {
     mongoose.set('debug', (...rest) => {
-      Log[CONSTANTS.LOGGING.MONGO](inspect(rest));
+      Log[CONFIG.LOGGING_MONGO](inspect(rest));
     });
   }
 
   // Connect
   try {
-    await mongoose.connect(CONSTANTS.db.url, { useNewUrlParser: true });
+    await mongoose.connect(CONFIG.DB_URL, {});
   } catch (err) {
-    await mongoose.createConnection(CONSTANTS.db.url, {});
+    await mongoose.createConnection(CONFIG.DB_URL, {});
   }
 
   // Open
@@ -29,5 +31,3 @@ export default async () => {
       throw e;
     });
 };
-
-export { mongoose };

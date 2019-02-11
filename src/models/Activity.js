@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import mongoose, { Schema } from 'mongoose';
-import CONSTANTS from './../config/constants';
+import CONFIG from './../config';
 
 const ActivitySchema = new Schema(
   {
@@ -16,7 +16,7 @@ ActivitySchema.index({ actor: 1, procedure: 1 }, { unique: true });
 ActivitySchema.post('save', async doc => {
   const activities = await mongoose
     .model('Activity')
-    .find({ procedure: doc.procedure._id, kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device' })
+    .find({ procedure: doc.procedure._id, kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device' })
     .count();
   await mongoose.model('Procedure').findByIdAndUpdate(doc.procedure._id, { activities });
 });

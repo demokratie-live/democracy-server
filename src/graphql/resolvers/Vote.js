@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 import procedureStates from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import Activity from './Activity';
@@ -10,9 +10,9 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
   // Has user voted?
   const voted = await VoteModel.findOne({
     procedure: Types.ObjectId(procedure),
-    type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+    type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
-      voter: CONSTANTS.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
+      voter: CONFIG.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
     },
   });
 
@@ -22,7 +22,7 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
     {
       $match: {
         procedure: Types.ObjectId(procedure),
-        type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+        type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
       },
     },
     // Sum both objects (state)
@@ -58,7 +58,7 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
           {
             $match: {
               procedure: Types.ObjectId(procedure),
-              type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             },
           },
           // Filter correct constituency
@@ -141,7 +141,7 @@ export default {
         {
           $match: {
             procedure: procedure._id,
-            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           },
         },
         // Sum both objects (state)
@@ -169,7 +169,7 @@ export default {
               {
                 $match: {
                   procedure: procedure._id,
-                  type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+                  type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
                 },
               },
               // Filter correct constituency
@@ -232,7 +232,7 @@ export default {
         return null;
       }
 
-      const period = { $gte: CONSTANTS.MIN_PERIOD };
+      const period = { $gte: CONFIG.MIN_PERIOD };
 
       // This query should reference the ProcedureModel Method isCompleted
       // TODO is that possible?
@@ -254,10 +254,10 @@ export default {
 
       const votedProcedures = await VoteModel.find(
         {
-          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         },
@@ -288,10 +288,10 @@ export default {
         // User Has Voted?
         const hasVoted = await VoteModel.findOne({
           procedure,
-          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         });
@@ -308,13 +308,13 @@ export default {
         // Find & Create Vote Model if needed
         let vote = await VoteModel.findOne({
           procedure,
-          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           state,
         });
         if (!vote) {
           vote = await VoteModel.create({
             procedure,
-            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             state,
           });
         }
@@ -333,7 +333,7 @@ export default {
         const voteUpdate = {
           $push: {
             voters: {
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         };

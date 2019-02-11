@@ -5,7 +5,7 @@ import ms from 'ms';
 import _ from 'lodash';
 import crypto from 'crypto';
 
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 import { isLoggedin } from '../../express/auth/permissions';
 import { createTokens, headerToken } from '../../express/auth';
 import { sendSMS, statusSMS } from '../../services/sms';
@@ -15,7 +15,7 @@ const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
     Math.min(
       expires,
       latestCodeTime +
-        (ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
+        (ms(CONFIG.SMS_VERIFICATION_CODE_RESEND_BASETIME) / 1000) ** codesCount * 1000,
     ),
   );
 
@@ -39,7 +39,7 @@ export default {
       ) => {
         Log.graphql('Device.mutation.requestCode');
         // Check for SMS Verification
-        if (!CONSTANTS.SMS_VERIFICATION) {
+        if (!CONFIG.SMS_VERIFICATION) {
           return {
             reason: 'SMS Verification is disabled!',
             succeeded: false,
@@ -106,7 +106,7 @@ export default {
         const maxVal = 999999;
 
         let code = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal; // eslint-disable-line
-        if (CONSTANTS.SMS_SIMULATE) {
+        if (CONFIG.SMS_SIMULATE) {
           code = '000000';
         }
 
@@ -127,7 +127,7 @@ export default {
           // Check code time
           if (
             latestCode.time.getTime() +
-              ms(CONSTANTS.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
+              ms(CONFIG.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
             now.getTime()
           ) {
             return {
@@ -194,14 +194,14 @@ export default {
         if (
           verificationPhone &&
           verificationPhone.updatedAt <
-            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+            new Date(now.getTime() - ms(CONFIG.SMS_VERIFICATION_NEW_USER_DELAY))
         ) {
           // Older then 6 Months
           allowNewUser = true;
         }
 
         // Code expiretime
-        const expires = new Date(now.getTime() + ms(CONSTANTS.SMS_VERIFICATION_CODE_TTL));
+        const expires = new Date(now.getTime() + ms(CONFIG.SMS_VERIFICATION_CODE_TTL));
         verification.verifications.push({
           deviceHash: device.deviceHash,
           oldPhoneHash: oldPhoneDBHash,
@@ -242,7 +242,7 @@ export default {
       ) => {
         Log.graphql('Device.mutation.requestVerification');
         // Check for SMS Verification
-        if (!CONSTANTS.SMS_VERIFICATION) {
+        if (!CONFIG.SMS_VERIFICATION) {
           return {
             reason: 'SMS Verification is disabled!',
             succeeded: false,
@@ -315,8 +315,7 @@ export default {
         if (
           newPhone &&
           newUser &&
-          newPhone.updatedAt <
-            new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY))
+          newPhone.updatedAt < new Date(now.getTime() - ms(CONFIG.SMS_VERIFICATION_NEW_USER_DELAY))
         ) {
           // Allow new User - Invalidate newPhone
           newPhone.phoneHash = `Invalidated at '${now}': ${newPhone.phoneHash}`;
@@ -333,7 +332,7 @@ export default {
             oldPhone &&
             (!newUser ||
               oldPhone.updatedAt >=
-                new Date(now.getTime() - ms(CONSTANTS.SMS_VERIFICATION_NEW_USER_DELAY)))
+                new Date(now.getTime() - ms(CONFIG.SMS_VERIFICATION_NEW_USER_DELAY)))
           ) {
             newPhone = oldPhone;
             newPhone.phoneHash = newPhoneHash;
