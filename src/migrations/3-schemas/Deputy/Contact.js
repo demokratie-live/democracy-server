@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import DeputyLink from './DeputyLink';
+import DeputyLink from './Link';
 
 const DeputyContactSchema = new Schema(
   {

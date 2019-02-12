@@ -1,10 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
-
-const PhoneSchema = new Schema(
-  {
-    phoneHash: { type: String, required: true, unique: true },
-  },
-  { timestamps: true },
-);
+import mongoose from 'mongoose';
+import PhoneSchema from './../migrations/3-schemas/Phone';
 
 export default mongoose.model('Phone', PhoneSchema);

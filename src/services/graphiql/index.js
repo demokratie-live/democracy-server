@@ -13,7 +13,7 @@ import VerificationModel from './../../models/Verification';
 import ActivityModel from './../../models/Activity';
 import VoteModel from './../../models/Vote';
 import PushNotifiactionModel from './../../models/PushNotifiaction';
-import SearchTermModel from './../../models/SearchTerms';
+import SearchTermModel from './../../models/SearchTerm';
 
 const graphiql = new ApolloServer({
   engine: false,

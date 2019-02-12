@@ -1,10 +1,11 @@
 /* eslint no-await-in-loop: 0 */
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 
-import UserModel from './../models/User';
-import DeviceModel from './../models/Device';
-import ActivityModel from './../models/Activity';
-import VoteModel from './../models/Vote';
+import UserSchema from './1-schemas/User';
+import DeviceSchema from './1-schemas/Device';
+import ActivitySchema from './1-schemas/Activity';
+import VoteSchema from './1-schemas/Vote';
 
 module.exports.id = 'sms-verification';
 
@@ -49,6 +50,12 @@ module.exports.up = async function (done) { // eslint-disable-line
     const oldUsers = this.db.collection('old_users');
     const oldVotes = this.db.collection('old_votes');
     const oldActivities = this.db.collection('old_activities');
+
+    // load models
+    const DeviceModel = mongoose.model('Device', DeviceSchema);
+    const UserModel = mongoose.model('User', UserSchema);
+    const ActivityModel = mongoose.model('Activity', ActivitySchema);
+    const VoteModel = mongoose.model('Vote', VoteSchema);
 
     // Transform oldUsers -> Users + Devices
     const userCursor = oldUsers.find();
