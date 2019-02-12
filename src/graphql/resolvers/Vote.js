@@ -398,5 +398,23 @@ export default {
   },
   VoteResult: {
     governmentDecision: ({ yes, no }) => (yes > no ? 'YES' : 'NO'),
+    deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
+      Log.graphql('VoteResult.deputyVotes');
+      if ((constituencies && constituencies.length > 0) || constituencies === undefined) {
+        const match = {
+          $match: {
+            constituency: { $in: constituencies },
+            'votes.procedureId': voteResult.procedureId,
+          },
+        };
+        if (directCandidate) {
+          match.$match = { ...match.$match, directCandidate };
+        }
+        const deputies = DeputyModel.aggregate([match]);
+        console.log(deputies); // TODO
+        return voteResult;
+      }
+      return voteResult;
+    },
   },
 };

@@ -20,7 +20,7 @@ module.exports.up = async function(done) { // eslint-disable-line
     // Since we have no Modelchanges here, we do not need to remove Models from mongoose
 
     // PushNotifications have no index therefore we need to create the collection manually
-    // Pluralize not working correctly: utils.toCollectionName('PushNotification')
+    // Pluralize not working correctly: utils.toCollectionName('PushNotification') -> PushNotification
     await this.db.createCollection('pushnotifications');
 
     // The following models do have indexes and the coresponding collection will be created
