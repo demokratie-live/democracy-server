@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import utils from 'mongoose/lib/utils';
+// import utils from 'mongoose/lib/utils';
 
 import ActivitySchema from './1-schemas/Activity';
 import DeputySchema from './3-schemas/Deputy';
@@ -20,7 +20,8 @@ module.exports.up = async function(done) { // eslint-disable-line
     // Since we have no Modelchanges here, we do not need to remove Models from mongoose
 
     // PushNotifications have no index therefore we need to create the collection manually
-    await this.db.createCollection(utils.toCollectionName('PushNotification'));
+    // Pluralize not working correctly: utils.toCollectionName('PushNotification')
+    await this.db.createCollection('pushnotifications');
 
     // The following models do have indexes and the coresponding collection will be created
     const Activities = mongoose.model('Activity', ActivitySchema);
