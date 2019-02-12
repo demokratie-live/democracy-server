@@ -102,7 +102,7 @@ module.exports.up = async function(done) { // eslint-disable-line
         // Get all Device Voters
         const newDeviceVoters = oldVote.voters.map(({ kind, voter }) => { // eslint-disable-line
           if (kind === 'Device') {
-            return voter;
+            return { voter };
           }
         });
         // Create new Vote Object type Device
