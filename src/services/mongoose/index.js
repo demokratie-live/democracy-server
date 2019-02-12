@@ -17,7 +17,7 @@ export default async () => {
 
   // Connect
   try {
-    await mongoose.connect(CONFIG.DB_URL, {});
+    await mongoose.connect(CONFIG.DB_URL, { useNewUrlParser: true });
   } catch (err) {
     await mongoose.createConnection(CONFIG.DB_URL, {});
   }
