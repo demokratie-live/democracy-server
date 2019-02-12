@@ -65,11 +65,12 @@ module.exports.up = async function(done) { // eslint-disable-line
         0
       ) {
         // Get all Phone Voters
-        const newPhoneVoters = oldVote.voters.map(({ kind, voter }) => { // eslint-disable-line
+        const newPhoneVoters = oldVote.voters.reduce((arr, { kind, voter }) => {
           if (kind === 'Phone') {
-            return { voter };
+            return [...arr, { voter }];
           }
-        });
+          return arr;
+        }, []);
         // Create new Vote Object type Phone
         const newPhoneVote = await VoteModel.create({
           procedure: oldVote.procedure,
@@ -100,11 +101,12 @@ module.exports.up = async function(done) { // eslint-disable-line
         0
       ) {
         // Get all Device Voters
-        const newDeviceVoters = oldVote.voters.map(({ kind, voter }) => { // eslint-disable-line
+        const newDeviceVoters = oldVote.voters.reduce((arr, { kind, voter }) => {
           if (kind === 'Device') {
-            return { voter };
+            return [...arr, { voter }];
           }
-        });
+          return arr;
+        }, []);
         // Create new Vote Object type Device
         const newDeviceVote = await VoteModel.create({
           procedure: oldVote.procedure,
