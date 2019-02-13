@@ -400,21 +400,44 @@ export default {
     governmentDecision: ({ yes, no }) => (yes > no ? 'YES' : 'NO'),
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
       Log.graphql('VoteResult.deputyVotes');
-      if ((constituencies && constituencies.length > 0) || constituencies === undefined) {
+      // Default is empty
+      let deputyVotes = [];
+      // Do we have a procedureId and not an empty array for constituencies?
+      if (
+        voteResult.procedureId &&
+        ((constituencies && constituencies.length > 0) || constituencies === undefined)
+      ) {
+        // Match procedureId
         const match = {
           $match: {
-            constituency: { $in: constituencies },
             'votes.procedureId': voteResult.procedureId,
           },
         };
+        // Match constituencies if present - else use all
+        if (constituencies) {
+          match.$match = { ...match.$match, constituency: { $in: constituencies } };
+        }
+        // Match for directCandidate
         if (directCandidate) {
           match.$match = { ...match.$match, directCandidate };
         }
-        const deputies = DeputyModel.aggregate([match]);
-        console.log(deputies); // TODO
-        return voteResult;
+
+        // Query
+        const deputies = await DeputyModel.aggregate([match]);
+
+        // Construct result
+        deputies.map(deputy => {
+          const deputyVote = {
+            decision: deputy.votes.find(({ procedureId }) => procedureId === voteResult.procedureId)
+              .decision,
+            deputy,
+          };
+          deputyVotes = [...deputyVotes, deputyVote];
+          return null;
+        });
+        return deputyVotes;
       }
-      return voteResult;
+      return deputyVotes;
     },
   },
 };

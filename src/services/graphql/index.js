@@ -14,6 +14,7 @@ import ActivityModel from './../../models/Activity';
 import VoteModel from './../../models/Vote';
 import PushNotifiactionModel from './../../models/PushNotifiaction';
 import SearchTermModel from './../../models/SearchTerm';
+import DeputyModel from './../../models/Deputy';
 
 const graphql = new ApolloServer({
   engine: CONFIG.ENGINE_API_KEY
@@ -45,6 +46,7 @@ const graphql = new ApolloServer({
     VoteModel,
     PushNotifiactionModel,
     SearchTermModel,
+    DeputyModel,
   }),
   tracing: CONFIG.DEBUG,
 });

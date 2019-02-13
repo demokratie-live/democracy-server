@@ -623,5 +623,7 @@ export default {
       }
       return cleanHistory;
     },
+    // Propagate procedureId if present
+    voteResults: ({ voteResults, procedureId }) => ({ ...voteResults, procedureId }),
   },
 };

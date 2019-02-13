@@ -14,6 +14,7 @@ import ActivityModel from './../../models/Activity';
 import VoteModel from './../../models/Vote';
 import PushNotifiactionModel from './../../models/PushNotifiaction';
 import SearchTermModel from './../../models/SearchTerm';
+import DeputyModel from './../../models/Deputy';
 
 const graphiql = new ApolloServer({
   engine: false,
@@ -38,6 +39,7 @@ const graphiql = new ApolloServer({
     VoteModel,
     PushNotifiactionModel,
     SearchTermModel,
+    DeputyModel,
   }),
   tracing: CONFIG.DEBUG,
 });

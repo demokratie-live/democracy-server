@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
@@ -48,11 +46,7 @@ export default async () => {
           },
         };
         // Update/Insert
-        await DeputyModel.update(
-          { webId: deputy.webId },
-          { $set: _.pickBy(deputy) },
-          { upsert: true },
-        );
+        await DeputyModel.updateOne({ webId: deputy.webId }, { $set: deputy }, { upsert: true });
         return null;
       });
 
@@ -66,4 +60,5 @@ export default async () => {
     // If address is not reachable the query will throw
     Log.error(error);
   }
+  Log.import('Finish Importing Deputy Profiles');
 };
