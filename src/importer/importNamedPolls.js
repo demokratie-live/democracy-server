@@ -57,16 +57,11 @@ export default async () => {
               Log.error(`NamedPoll import vote missmatch on deputy vote string: ${voteData.vote}`);
               return null;
             }
-            // Check for deputy data
+            // Prepare update
             if (voteData.webId) {
-              if (updates[voteData.webId]) {
-                updates[voteData.webId] = [
-                  ...updates[voteData.webId],
-                  { procedureId: data.procedureId, decision },
-                ];
-              } else {
-                updates[voteData.webId] = [{ procedureId: data.procedureId, decision }];
-              }
+              updates[voteData.webId] = updates[voteData.webId]
+                ? [...updates[voteData.webId], { procedureId: data.procedureId, decision }]
+                : [{ procedureId: data.procedureId, decision }];
             }
             return null;
           });
