@@ -55,7 +55,8 @@ export default async () => {
               return null;
             }
             // Insert Data
-            await DeputyModel.update(
+            // We cannot wait here since this request is so often called it blocks any other mongo request
+            DeputyModel.update(
               { webId: voteData.webId, 'votes.procedureId': { $ne: data.procedureId } },
               { $addToSet: { votes: { procedureId: data.procedureId, decision } } },
             );

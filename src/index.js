@@ -64,7 +64,7 @@ const main = async () => {
   // This must be registered before graphql since it binds on / (default)
   if (CONFIG.GRAPHIQL_PATH) {
     const graphiql = require('./services/graphiql'); // eslint-disable-line global-require
-    graphiql.applyMiddleware({ app: server, path: CONFIG.GRAPHQL_PATH });
+    graphiql.applyMiddleware({ app: server, path: CONFIG.GRAPHIQL_PATH });
   }
 
   // Bundestag.io
