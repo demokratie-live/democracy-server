@@ -15,6 +15,9 @@ export default async () => {
 
   try {
     while (!done) {
+      // Data storage
+      const updates = {};
+
       // fetch
       const {
         data: {
@@ -27,7 +30,7 @@ export default async () => {
           variables: { since, limit, offset },
         });
       // handle results
-      namedPolls.map(async data => {
+      namedPolls.map(data => {
         // procedureId is not necessarily present
         if (data.procedureId) {
           // parse every deputies vote
@@ -54,16 +57,29 @@ export default async () => {
               Log.error(`NamedPoll import vote missmatch on deputy vote string: ${voteData.vote}`);
               return null;
             }
-            // Insert Data
-            // We cannot wait here since this request is so often called it blocks any other mongo request
-            await DeputyModel.update(
-              { webId: voteData.webId, 'votes.procedureId': { $ne: data.procedureId } },
-              { $addToSet: { votes: { procedureId: data.procedureId, decision } } },
-            );
+            // Check for deputy data
+            if (voteData.webId) {
+              if (updates[voteData.webId]) {
+                updates[voteData.webId] = [
+                  ...updates[voteData.webId],
+                  { procedureId: data.procedureId, decision },
+                ];
+              } else {
+                updates[voteData.webId] = [{ procedureId: data.procedureId, decision }];
+              }
+            }
             return null;
           });
         }
         return null;
+      });
+
+      // Insert Data
+      Object.keys(updates).map(async deputyWebId => {
+        await DeputyModel.updateOne(
+          { webId: deputyWebId },
+          { $addToSet: { votes: updates[deputyWebId] } },
+        );
       });
 
       // continue?
