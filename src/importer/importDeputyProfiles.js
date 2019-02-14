@@ -47,7 +47,7 @@ export default async () => {
         };
         // Update/Insert
         // We should not wait here since this request is quite often called it could block other mongo requests
-        DeputyModel.updateOne({ webId: deputy.webId }, { $set: deputy }, { upsert: true });
+        await DeputyModel.updateOne({ webId: deputy.webId }, { $set: deputy }, { upsert: true });
         return null;
       });
 
