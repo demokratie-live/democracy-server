@@ -1,6 +1,7 @@
 import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
+import { convertPartyName } from './tools';
 
 export default async () => {
   Log.import('Start Importing Deputy Profiles');
@@ -34,7 +35,7 @@ export default async () => {
           webId: data.webId,
           imgURL: data.imgURL,
           name: data.name,
-          party: data.party,
+          party: convertPartyName(data.party),
           job: data.job,
           biography: data.biography.join('\n\n'),
           constituency: data.constituency ? parseInt(data.constituency, 10).toString() : undefined, // remove pre zeros

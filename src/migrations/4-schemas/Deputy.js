@@ -18,4 +18,6 @@ const DeputySchema = new Schema(
   { timestamps: true },
 );
 
+DeputySchema.index({ webId: 1, 'votes.procedureId': 1 }, { unique: true });
+
 export default DeputySchema;

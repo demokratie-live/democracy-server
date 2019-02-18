@@ -7,6 +7,7 @@ import PushNotifiaction from '../models/PushNotifiaction';
 
 // Queries
 import { procedureUpdate } from '../services/notifications';
+import { convertPartyName } from '../importer/tools';
 
 const deputiesNumber = {
   8: 518,
@@ -75,30 +76,10 @@ export default async (bIoProcedure, { push = false }) => {
 
       if (bIoProcedure.customData.voteResults.partyVotes) {
         voteResults.partyVotes = bIoProcedure.customData.voteResults.partyVotes.map(
-          ({ party, ...rest }) => {
-            let partyName = party;
-            switch (party) {
-              case 'CDU/CSU':
-                partyName = 'Union';
-                break;
-              case 'AFD':
-                partyName = 'AfD';
-                break;
-              case 'Die Linke':
-                partyName = 'Linke';
-                break;
-              case 'B90/Grüne':
-                partyName = 'Grüne';
-                break;
-
-              default:
-                break;
-            }
-            return {
-              ...rest,
-              party: partyName,
-            };
-          },
+          ({ party, ...rest }) => ({
+            ...rest,
+            party: convertPartyName(party),
+          }),
         );
 
         // toggle votingData (Yes & No) if needed

@@ -13,11 +13,13 @@ const ProcedureSchema = new Schema(
     currentStatusHistory: [String],
     abstract: String,
     tags: [String],
+    /*
     state: {
       type: String,
       required: true,
       enum: ['preparation', 'voting', 'past'],
     },
+    */
     voteDate: Date,
     submissionDate: Date,
     lastUpdateDate: Date, // date of last dip21 history element for sorting in App
