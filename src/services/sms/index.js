@@ -132,6 +132,9 @@ export const statusSMS = async SMSID => {
 };
 
 export const sendSMS = async (phone, code) => {
+  if (CONFIG.SMS_SIMULATE) {
+    return { status: true, statusCode: 100, SMSID: _.uniqueId() };
+  }
   const url = 'https://www.smsflatrate.net/schnittstelle.php';
 
   const qs = {
@@ -144,10 +147,6 @@ export const sendSMS = async (phone, code) => {
   };
 
   return new Promise((resolve, reject) => {
-    if (CONFIG.SMS_SIMULATE) {
-      resolve({ status: true, statusCode: 100, SMSID: _.uniqueId() });
-      return;
-    }
     request({ url, qs }, (err, response, body) => {
       let status = false;
       let statusCode = null;
