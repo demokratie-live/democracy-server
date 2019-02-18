@@ -14,6 +14,7 @@ export default gql`
             webId
             vote
           }
+          inverseVoteDirection
         }
       }
     }

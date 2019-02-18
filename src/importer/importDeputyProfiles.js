@@ -2,6 +2,36 @@ import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
 
+const partyNameConverter = party => {
+  switch (party) {
+    case 'CDU/CSU':
+      // case 'Union':
+      return 'Union';
+    case 'AFD':
+      // case 'AfD':
+      return 'AfD';
+    case 'Die Linke':
+    case 'DIE LINKE.':
+      // case 'Linke':
+      return 'Linke';
+    case 'Bündnis 90/Die Grünen':
+    case 'B90/GR��NE':
+    case 'B90/Grüne':
+    case 'B90/GRÜNE':
+      // case 'Grüne':
+      return 'Grüne';
+    // case 'FDP':
+    //  return 'FDP';
+    // case 'SPD':
+    //  return 'SPD';
+    case 'fraktionslose':
+      // case 'fraktionslos':
+      return 'fraktionslos';
+    default:
+      return party;
+  }
+};
+
 export default async () => {
   Log.import('Start Importing Deputy Profiles');
 
@@ -34,7 +64,7 @@ export default async () => {
           webId: data.webId,
           imgURL: data.imgURL,
           name: data.name,
-          party: data.party,
+          party: partyNameConverter(data.party),
           job: data.job,
           biography: data.biography.join('\n\n'),
           constituency: data.constituency ? parseInt(data.constituency, 10).toString() : undefined, // remove pre zeros

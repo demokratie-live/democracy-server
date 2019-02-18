@@ -38,10 +38,10 @@ export default async () => {
             let decision;
             switch (voteData.vote) {
               case 'ja':
-                decision = 'YES';
+                decision = data.votes.inverseVoteDirection ? 'NO' : 'YES';
                 break;
               case 'nein':
-                decision = 'NO';
+                decision = data.votes.inverseVoteDirection ? 'YES' : 'NO';
                 break;
               case 'na':
                 decision = 'NOTVOTED';
@@ -73,7 +73,7 @@ export default async () => {
       Object.keys(updates).map(async deputyWebId => {
         await DeputyModel.updateOne(
           { webId: deputyWebId },
-          { $addToSet: { votes: updates[deputyWebId] } },
+          { $set: { votes: updates[deputyWebId] } },
         );
       });
 
