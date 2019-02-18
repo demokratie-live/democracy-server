@@ -31,7 +31,7 @@ const ProcedureSchema = new Schema(
       yes: { type: Number, required: true },
       no: { type: Number, required: true },
       abstination: { type: Number, required: true },
-      notVoted: { type: Number, required: true },
+      notVoted: { type: Number },
       decisionText: String,
       namedVote: Boolean,
       partyVotes: [
