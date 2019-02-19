@@ -28,7 +28,7 @@ export default {
       }
       const rsa = new RSAKey();
 
-      rsa.setPrivateString(process.env.SECRET_KEY);
+      rsa.setPrivateString(CONFIG.SECRET_KEY);
       const deviceHash = rsa.decrypt(deviceHashEncrypted);
       if (!deviceHash) {
         throw new Error('invalid deviceHash');
