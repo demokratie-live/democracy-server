@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 import { createTokens, headerToken } from '../../express/auth';
 /* import { isLoggedin } from '../../express/auth/permissions'; */
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 export default {
   Query: {
@@ -23,12 +23,12 @@ export default {
   Mutation: {
     signUp: async (parent, { deviceHashEncrypted }, { res, UserModel, DeviceModel }) => {
       Log.graphql('User.mutation.signUp');
-      if (!CONSTANTS.JWT_BACKWARD_COMPATIBILITY) {
+      if (!CONFIG.JWT_BACKWARD_COMPATIBILITY) {
         return null;
       }
       const rsa = new RSAKey();
 
-      rsa.setPrivateString(process.env.SECRET_KEY);
+      rsa.setPrivateString(CONFIG.SECRET_KEY);
       const deviceHash = rsa.decrypt(deviceHashEncrypted);
       if (!deviceHash) {
         throw new Error('invalid deviceHash');

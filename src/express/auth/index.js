@@ -1,7 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
 import PhoneModel from '../../models/Phone';
@@ -11,9 +11,9 @@ export const createTokens = async user => {
     {
       user,
     },
-    CONSTANTS.AUTH_JWT_SECRET,
+    CONFIG.AUTH_JWT_SECRET,
     {
-      expiresIn: CONSTANTS.AUTH_JWT_TTL,
+      expiresIn: CONFIG.AUTH_JWT_TTL,
     },
   );
 
@@ -21,9 +21,9 @@ export const createTokens = async user => {
     {
       user,
     },
-    CONSTANTS.AUTH_JWT_SECRET,
+    CONFIG.AUTH_JWT_SECRET,
     {
-      expiresIn: CONSTANTS.AUTH_JWT_REFRESH_TTL,
+      expiresIn: CONFIG.AUTH_JWT_REFRESH_TTL,
     },
   );
 
@@ -33,7 +33,7 @@ export const createTokens = async user => {
 const refreshTokens = async refreshToken => {
   // Verify Token
   try {
-    jwt.verify(refreshToken, CONSTANTS.AUTH_JWT_SECRET);
+    jwt.verify(refreshToken, CONFIG.AUTH_JWT_SECRET);
   } catch (err) {
     return {};
   }
@@ -65,7 +65,7 @@ export const headerToken = async ({ res, token, refreshToken }) => {
   res.set('x-token', token);
   res.set('x-refresh-token', refreshToken);
 
-  if (CONSTANTS.DEBUG) {
+  if (CONFIG.DEBUG) {
     res.cookie('debugToken', token, { maxAge: 900000, httpOnly: true });
     res.cookie('debugRefreshToken', refreshToken, { maxAge: 900000, httpOnly: true });
   }
@@ -73,15 +73,15 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 
 export const auth = async (req, res, next) => {
   Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
-  let token = req.headers['x-token'] || (CONSTANTS.DEBUG ? req.cookies.debugToken : null);
+  let token = req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
   // In some cases the old Client transmitts the token via authorization header as 'Bearer [token]'
-  if (CONSTANTS.JWT_BACKWARD_COMPATIBILITY && !token && req.headers.authorization) {
+  if (CONFIG.JWT_BACKWARD_COMPATIBILITY && !token && req.headers.authorization) {
     token = req.headers.authorization.substr(7);
   }
   const deviceHash =
-    req.headers['x-device-hash'] || (CONSTANTS.DEBUG ? req.query.deviceHash || null : null);
+    req.headers['x-device-hash'] || (CONFIG.DEBUG ? req.query.deviceHash || null : null);
   const phoneHash =
-    req.headers['x-phone-hash'] || (CONSTANTS.DEBUG ? req.query.phoneHash || null : null);
+    req.headers['x-phone-hash'] || (CONFIG.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
     Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
@@ -92,7 +92,7 @@ export const auth = async (req, res, next) => {
   if (token && !deviceHash) {
     Log.jwt(`JWT: Token: ${token}`);
     try {
-      const userid = jwt.verify(token, CONSTANTS.AUTH_JWT_SECRET).user;
+      const userid = jwt.verify(token, CONFIG.AUTH_JWT_SECRET).user;
       // Set request variables
       req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
@@ -116,7 +116,7 @@ export const auth = async (req, res, next) => {
       // Check for JWT Refresh Ability
       Log.jwt(`JWT: Token Error: ${err}`);
       const refreshToken =
-        req.headers['x-refresh-token'] || (CONSTANTS.DEBUG ? req.cookies.debugRefreshToken : null);
+        req.headers['x-refresh-token'] || (CONFIG.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });

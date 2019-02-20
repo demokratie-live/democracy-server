@@ -1,16 +1,17 @@
 import apn from 'apn';
 import _ from 'lodash';
 import fs from 'fs';
+import CONFIG from './../../config';
 
 let apnProvider = null; // eslint-disable-line
 
 if (!apnProvider) {
-  if (fs.existsSync(process.env.APPLE_APN_KEY)) {
+  if (fs.existsSync(CONFIG.APPLE_APN_KEY)) {
     const options = {
       token: {
-        key: process.env.APPLE_APN_KEY,
-        keyId: process.env.APPLE_APN_KEY_ID,
-        teamId: process.env.APPLE_TEAMID,
+        key: CONFIG.APPLE_APN_KEY,
+        keyId: CONFIG.APPLE_APN_KEY_ID,
+        teamId: CONFIG.APPLE_TEAMID,
       },
       production: process.env.NODE_ENV === 'production',
     };

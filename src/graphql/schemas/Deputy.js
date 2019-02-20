@@ -10,6 +10,11 @@ type DeputyContact {
   links: [DeputyLink]
 }
 
+type DeputyProcedure {
+  decision: VoteSelection!
+  procedure: Procedure!
+}
+
 type Deputy {
   _id: ID!
   webId: String!
@@ -21,6 +26,8 @@ type Deputy {
   constituency: String
   directCandidate: Boolean
   contact: DeputyContact
+  totalProcedures: Int
+  procedures(procedureIds: [String!], pageSize: Int, offset: Int): [DeputyProcedure]
 }
 
 type Query {

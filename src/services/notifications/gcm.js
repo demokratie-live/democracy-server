@@ -1,10 +1,10 @@
 import gcm from 'node-gcm';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 let gcmProvider; // eslint-disable-line
 
 if (!gcmProvider) {
-  gcmProvider = new gcm.Sender(CONSTANTS.NOTIFICATION_ANDROID_SERVER_KEY);
+  gcmProvider = new gcm.Sender(CONFIG.NOTIFICATION_ANDROID_SERVER_KEY);
 }
 
 export default gcmProvider;

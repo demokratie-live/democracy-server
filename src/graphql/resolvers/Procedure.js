@@ -2,7 +2,7 @@
 import _ from 'lodash';
 
 import procedureStates from '../../config/procedureStates';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
 
@@ -54,10 +54,10 @@ export default {
       if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
         const votedProcedures = await VoteModel.find(
           {
-            type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             voters: {
               $elemMatch: {
-                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+                voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
               },
             },
           },
@@ -78,7 +78,7 @@ export default {
 
       let sortQuery = {};
 
-      const period = { $gte: CONSTANTS.MIN_PERIOD };
+      const period = { $gte: CONFIG.MIN_PERIOD };
       if (listTypes.indexOf('PREPARATION') > -1) {
         switch (sort) {
           case 'activities':
@@ -214,10 +214,10 @@ export default {
       }
       const votedProcedures = await VoteModel.find(
         {
-          type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
             },
           },
         },
@@ -290,7 +290,7 @@ export default {
           };
           break;
         case 'Period':
-          timespanQuery.period = { $in: CONSTANTS.MIN_PERIOD };
+          timespanQuery.period = { $in: CONFIG.MIN_PERIOD };
           break;
         default:
       }
@@ -517,11 +517,11 @@ export default {
       Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
       const active =
-        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
+        (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
           ? false
           : await ActivityModel.findOne({
-              actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+              kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
               procedure,
             });
       return {
@@ -532,14 +532,14 @@ export default {
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       Log.graphql('Procedure.field.voted');
       const voted =
-        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
+        (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
           ? false
           : await VoteModel.findOne({
               procedure: procedure._id,
-              type: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
+              type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
               voters: {
                 $elemMatch: {
-                  voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+                  voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
                 },
               },
             });
@@ -623,5 +623,7 @@ export default {
       }
       return cleanHistory;
     },
+    // Propagate procedureId if present
+    voteResults: ({ voteResults, procedureId }) => ({ ...voteResults, procedureId }),
   },
 };

@@ -3,8 +3,9 @@
  */
 
 import webhook from '../../../scripts/webhook';
+import { isDataSource } from './../../auth/permissions';
 
-export default async (req, res) => {
+const update = async (req, res) => {
   Log.import('Bundestag.io authenticated: Update');
   try {
     const { data } = req.body;
@@ -22,3 +23,5 @@ export default async (req, res) => {
     });
   }
 };
+
+module.exports = isDataSource.createResolver(update);

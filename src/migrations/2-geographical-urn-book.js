@@ -1,5 +1,7 @@
 /* eslint no-await-in-loop: 0 */
-import VoteModel from './../models/Vote';
+import mongoose from 'mongoose';
+
+import VoteSchema from './2-schemas/Vote';
 
 module.exports.id = 'geographical-urn-book';
 
@@ -42,6 +44,14 @@ module.exports.up = async function(done) { // eslint-disable-line
     // find collections
     const oldVotes = this.db.collection('old_votes-geographical-urn-book');
 
+    // Remove Model from Mongoose if needed
+    if (mongoose.connection.models.Vote) {
+      delete mongoose.connection.models.Vote;
+    }
+
+    // Load Models
+    const VoteModel = mongoose.model('Vote', VoteSchema);
+
     // Transform oldVotes -> Votes
     Log.info('Migration: Transform collection old_votes-geographical-urn-book -> votes');
     const voteCursor = oldVotes.find();
@@ -55,11 +65,12 @@ module.exports.up = async function(done) { // eslint-disable-line
         0
       ) {
         // Get all Phone Voters
-        const newPhoneVoters = oldVote.voters.map(({ kind, voter }) => { // eslint-disable-line
+        const newPhoneVoters = oldVote.voters.reduce((arr, { kind, voter }) => {
           if (kind === 'Phone') {
-            return { voter };
+            return [...arr, { voter }];
           }
-        });
+          return arr;
+        }, []);
         // Create new Vote Object type Phone
         const newPhoneVote = await VoteModel.create({
           procedure: oldVote.procedure,
@@ -90,11 +101,12 @@ module.exports.up = async function(done) { // eslint-disable-line
         0
       ) {
         // Get all Device Voters
-        const newDeviceVoters = oldVote.voters.map(({ kind, voter }) => { // eslint-disable-line
+        const newDeviceVoters = oldVote.voters.reduce((arr, { kind, voter }) => {
           if (kind === 'Device') {
-            return voter;
+            return [...arr, { voter }];
           }
-        });
+          return arr;
+        }, []);
         // Create new Vote Object type Device
         const newDeviceVote = await VoteModel.create({
           procedure: oldVote.procedure,
