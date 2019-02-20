@@ -27,7 +27,7 @@ const graphql = new ApolloServer({
     : false,
   typeDefs,
   resolvers,
-  introspection: false,
+  introspection: true,
   playground: false,
   context: ({ req, res }) => ({
     // Connection
