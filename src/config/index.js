@@ -19,7 +19,7 @@ const recommendedConfigs = {
   MIN_PERIOD: process.env.MIN_PERIOD || 19,
   GRAPHQL_PATH: process.env.GRAPHQL_PATH || '/',
   // GRAPHIQL: process.env.GRAPHIQL === 'true',
-  GRAPHIQL_PATH: '/graphiql',
+  GRAPHIQL_PATH: process.env.GRAPHIQL_PATH || false,
   DB_URL: process.env.DB_URL || 'mongodb://localhost/democracy_development',
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'elasticsearch',
   BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/',
