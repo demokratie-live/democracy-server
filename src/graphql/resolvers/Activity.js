@@ -49,7 +49,7 @@ export default {
           });
         }
         const activityIndex = await ActivityModel.find({ procedure }).count();
-        return { activityIndex, active };
+        return { activityIndex, active: !!active };
       },
     ),
   },
