@@ -1,3 +1,6 @@
+import { unionBy } from 'lodash';
+
+// GraphQL
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
@@ -11,6 +14,7 @@ export default async () => {
   const client = createClient();
   const limit = 50;
   let offset = 0;
+  const associated = true;
   let done = false;
 
   try {
@@ -27,8 +31,9 @@ export default async () => {
         // eslint-disable-next-line no-await-in-loop
         await client.query({
           query: getNamedPollUpdates,
-          variables: { since, limit, offset },
+          variables: { since, limit, offset, associated },
         });
+
       // handle results
       namedPolls.map(data => {
         // procedureId is not necessarily present
@@ -71,10 +76,14 @@ export default async () => {
 
       // Insert Data
       Object.keys(updates).map(async deputyWebId => {
-        await DeputyModel.updateOne(
-          { webId: deputyWebId },
-          { $set: { votes: updates[deputyWebId] } },
-        );
+        // TODO try to update deputy without fetching. z.B. with aggregation setUnion
+        const deputy = await DeputyModel.findOne({ webId: deputyWebId });
+        if (deputy) {
+          // remove duplicates
+          const votes = unionBy(updates[deputyWebId], deputy.votes, 'procedureId');
+
+          await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
+        }
       });
 
       // continue?
