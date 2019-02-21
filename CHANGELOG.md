@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.19
+
+- [FIX] Memory issue by disabling apollo query cache
+
 ### 0.1.18
 
 - [Changed] Return new list Types for Procedures

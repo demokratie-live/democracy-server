@@ -12,5 +12,10 @@ const createClient = () =>
       fetch,
     }),
     cache: new InMemoryCache(),
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache',
+      },
+    },
   });
 export default createClient;
