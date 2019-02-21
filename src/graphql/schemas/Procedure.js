@@ -1,6 +1,7 @@
 export default `
 ${/* DEPRECATED ListType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
 enum ProcedureType {
+  IN_VOTE @deprecated(reason: "Use procedures Query param listTypes instead of type")
   PREPARATION @deprecated(reason: "Use procedures Query param listTypes instead of type")
   VOTING @deprecated(reason: "Use procedures Query param listTypes instead of type")
   PAST @deprecated(reason: "Use procedures Query param listTypes instead of type")
