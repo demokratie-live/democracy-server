@@ -4,20 +4,24 @@ import { unionBy } from 'lodash';
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
+import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
 
 export default async () => {
   Log.import('Start Importing Named Polls');
-  // TODO
-  const since = new Date('2019-01-16T09:59:20.123Z');
+  const name = 'importNamedPolls';
+  const cron = await getCron({ name });
+  // Last SuccessStartDate
+  const since = new Date(cron.lastSuccessStartDate); // new Date('2019-01-16T09:59:20.123Z');
+  // New SuccessStartDate
+  const startDate = new Date();
 
   // Query Bundestag.io
-  const client = createClient();
-  const limit = 50;
-  let offset = 0;
-  const associated = true;
-  let done = false;
-
   try {
+    const client = createClient();
+    const limit = 50;
+    let offset = 0;
+    const associated = true;
+    let done = false;
     while (!done) {
       // Data storage
       const updates = {};
@@ -92,8 +96,12 @@ export default async () => {
       }
       offset += limit;
     }
+    // Update Cron - Success
+    await setCronSuccess({ name, successStartDate: startDate });
   } catch (error) {
     // If address is not reachable the query will throw
+    // Update Cron - Error
+    await setCronError({ name });
     Log.error(error);
   }
 
