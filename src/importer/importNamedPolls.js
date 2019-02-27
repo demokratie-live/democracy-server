@@ -80,14 +80,10 @@ export default async () => {
 
       // Insert Data
       Object.keys(updates).map(async deputyWebId => {
-        // TODO try to update deputy without fetching. z.B. with aggregation setUnion
-        const deputy = await DeputyModel.findOne({ webId: deputyWebId });
-        if (deputy) {
-          // remove duplicates
-          const votes = unionBy(updates[deputyWebId], deputy.votes, 'procedureId');
-
-          await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
-        }
+        await DeputyModel.updateOne(
+          { webId: deputyWebId },
+          { $addToSet: { votes: updates[deputyWebId] } },
+        );
       });
 
       // continue?
