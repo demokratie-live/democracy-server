@@ -1,5 +1,3 @@
-import { unionBy } from 'lodash';
-
 // GraphQL
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
