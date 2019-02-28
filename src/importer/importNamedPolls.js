@@ -1,3 +1,5 @@
+import { unionBy } from 'lodash';
+
 // GraphQL
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
@@ -9,21 +11,21 @@ export default async () => {
   const name = 'importNamedPolls';
   const cron = await getCron({ name });
   // Last SuccessStartDate
-  const since = new Date(cron.lastSuccessStartDate); // new Date('2019-01-16T09:59:20.123Z');
+  const since = new Date(cron.lastSuccessStartDate);
   // New SuccessStartDate
   const startDate = new Date();
 
   // Query Bundestag.io
   try {
     const client = createClient();
-    const limit = 50;
+    const limit = 25;
     let offset = 0;
     const associated = true;
     let done = false;
-    // Data storage
-    const updates = {};
-
     while (!done) {
+      // Data storage
+      const updates = {};
+
       // fetch
       const {
         data: {
@@ -76,20 +78,24 @@ export default async () => {
         return null;
       });
 
+      // Insert Data
+      Object.keys(updates).map(async deputyWebId => {
+        // TODO try to update deputy without fetching. z.B. with aggregation setUnion
+        const deputy = await DeputyModel.findOne({ webId: deputyWebId });
+        if (deputy) {
+          // remove duplicates
+          const votes = unionBy(updates[deputyWebId], deputy.votes, 'procedureId');
+          // Insert
+          await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
+        }
+      });
+
       // continue?
       if (namedPolls.length < limit) {
         done = true;
       }
       offset += limit;
     }
-    // Insert Data
-    Object.keys(updates).map(async deputyWebId => {
-      await DeputyModel.findOneAndUpdate(
-        { webId: deputyWebId },
-        { $set: { votes: updates[deputyWebId] } },
-      );
-    });
-
     // Update Cron - Success
     await setCronSuccess({ name, successStartDate: startDate });
   } catch (error) {
