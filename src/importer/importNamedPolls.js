@@ -20,10 +20,10 @@ export default async () => {
     let offset = 0;
     const associated = true;
     let done = false;
-    while (!done) {
-      // Data storage
-      const updates = {};
+    // Data storage
+    const updates = {};
 
+    while (!done) {
       // fetch
       const {
         data: {
@@ -76,20 +76,20 @@ export default async () => {
         return null;
       });
 
-      // Insert Data
-      Object.keys(updates).map(async deputyWebId => {
-        await DeputyModel.updateOne(
-          { webId: deputyWebId },
-          { $addToSet: { votes: updates[deputyWebId] } },
-        );
-      });
-
       // continue?
       if (namedPolls.length < limit) {
         done = true;
       }
       offset += limit;
     }
+    // Insert Data
+    Object.keys(updates).map(async deputyWebId => {
+      await DeputyModel.findOneAndUpdate(
+        { webId: deputyWebId },
+        { $set: { votes: updates[deputyWebId] } },
+      );
+    });
+
     // Update Cron - Success
     await setCronSuccess({ name, successStartDate: startDate });
   } catch (error) {

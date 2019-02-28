@@ -50,7 +50,11 @@ export default async () => {
           },
         };
         // Update/Insert
-        await DeputyModel.updateOne({ webId: deputy.webId }, { $set: deputy }, { upsert: true });
+        await DeputyModel.findOneAndUpdate(
+          { webId: deputy.webId },
+          { $set: deputy },
+          { upsert: true },
+        );
         return null;
       });
 
