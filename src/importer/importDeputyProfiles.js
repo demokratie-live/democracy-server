@@ -2,20 +2,23 @@ import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
 import { convertPartyName } from './tools';
+import { getCron, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
 export default async () => {
   Log.import('Start Importing Deputy Profiles');
-
-  // TODO
-  const since = new Date('2019-01-16T09:59:20.123Z');
+  const name = 'importDeputyProfiles';
+  const cron = await getCron({ name });
+  // Last SuccessStartDate
+  const since = new Date(cron.lastSuccessStartDate);
+  // New SuccessStartDate
+  const startDate = new Date();
 
   // Query Bundestag.io
-  const client = createClient();
-  const limit = 50;
-  let offset = 0;
-  let done = false;
-
   try {
+    const client = createClient();
+    const limit = 50;
+    let offset = 0;
+    let done = false;
     while (!done) {
       // fetch
       const {
@@ -47,7 +50,11 @@ export default async () => {
           },
         };
         // Update/Insert
-        await DeputyModel.updateOne({ webId: deputy.webId }, { $set: deputy }, { upsert: true });
+        await DeputyModel.findOneAndUpdate(
+          { webId: deputy.webId },
+          { $set: deputy },
+          { upsert: true },
+        );
         return null;
       });
 
@@ -57,8 +64,12 @@ export default async () => {
       }
       offset += limit;
     }
+    // Update Cron - Success
+    await setCronSuccess({ name, successStartDate: startDate });
   } catch (error) {
     // If address is not reachable the query will throw
+    // Update Cron - Error
+    await setCronError({ name });
     Log.error(error);
   }
   Log.import('Finish Importing Deputy Profiles');

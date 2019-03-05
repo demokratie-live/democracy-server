@@ -16,7 +16,7 @@ const requiredConfigs = {
 const recommendedConfigs = {
   // No correct default Values
   PORT: process.env.PORT || 3000,
-  MIN_PERIOD: process.env.MIN_PERIOD || 19,
+  MIN_PERIOD: parseInt(process.env.MIN_PERIOD, 10) || 19,
   GRAPHQL_PATH: process.env.GRAPHQL_PATH || '/',
   // GRAPHIQL: process.env.GRAPHIQL === 'true',
   GRAPHIQL_PATH: process.env.GRAPHIQL_PATH || false,
