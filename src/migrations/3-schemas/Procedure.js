@@ -88,4 +88,7 @@ ProcedureSchema.index(
   },
 );
 
+ProcedureSchema.index({ voteDate: -1 }, { background: true });
+ProcedureSchema.index({ period: -1 }, { background: true });
+
 export default ProcedureSchema;
