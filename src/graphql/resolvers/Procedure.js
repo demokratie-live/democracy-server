@@ -228,13 +228,13 @@ export default {
             from: 'procedures',
             localField: 'procedure',
             foreignField: '_id',
-            as: 'procedures',
+            as: 'procedure',
           },
         },
-        { $unwind: '$procedures' },
+        { $unwind: '$procedure' },
       ]);
 
-      return votedProcedures;
+      return votedProcedures.map(({ procedure }) => procedure);
     },
 
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
