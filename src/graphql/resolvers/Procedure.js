@@ -212,19 +212,29 @@ export default {
       if (!user.isVerified()) {
         return null;
       }
-      const votedProcedures = await VoteModel.find(
+      const votedProcedures = await VoteModel.aggregate([
         {
-          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-          voters: {
-            $elemMatch: {
-              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+          $match: {
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+            voters: {
+              $elemMatch: {
+                voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+              },
             },
           },
         },
-        { procedure: 1 },
-      ).populate({ path: 'procedure' });
+        {
+          $lookup: {
+            from: 'procedures',
+            localField: 'procedure',
+            foreignField: '_id',
+            as: 'procedures',
+          },
+        },
+        { $unwind: '$procedures' },
+      ]);
 
-      return votedProcedures.map(({ procedure }) => procedure);
+      return votedProcedures;
     },
 
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
