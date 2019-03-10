@@ -556,7 +556,7 @@ export default {
   Procedure: {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       Log.graphql('Procedure.field.activityIndex');
-      const { activityIndex = 0 } = procedure;
+      const activityIndex = procedure.activities || 0;
       let { active } = procedure;
       if (active === undefined) {
         active =
