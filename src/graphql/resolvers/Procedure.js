@@ -14,82 +14,104 @@ const aggregateActiveField = ({
   kind,
   procedureObjIdField = '$_id',
   outField = 'active',
-}) => [
-  {
-    $lookup: {
-      from: 'activities',
-      let: { procedure: procedureObjIdField },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ['$procedure', '$$procedure'] },
-                { $eq: ['$actor', actor] },
-                { $eq: ['$kind', kind] },
-              ],
-            },
-          },
-        },
-      ],
-      as: 'activitiesLookup',
-    },
-  },
-  {
-    $addFields: {
-      [outField]: { $gt: [{ $size: '$activitiesLookup' }, 0] },
-    },
-  },
-];
-
-// aggregation pipeline to get voted state
-const aggregateVotedField = ({ actor, kind, procedureObjIdField = '$_id', outField = 'voted' }) => [
-  {
-    $lookup: {
-      from: 'votes',
-      let: { procedure: procedureObjIdField },
-      pipeline: [{ $match: { $expr: { $eq: ['$procedure', '$$procedure'] } } }],
-      as: 'votersLookup',
-    },
-  },
-  {
-    $unwind: {
-      path: '$votersLookup',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $match: {
-      $or: [{ 'votersLookup.type': kind }, { 'votersLookup.type': { $exists: false } }],
-    },
-  },
-  {
-    $addFields: {
-      [outField]: {
-        $gt: [
-          {
-            $size: {
-              $cond: {
-                if: { $ifNull: ['$votersLookup', false] },
-                then: {
-                  $filter: {
-                    input: '$votersLookup.voters',
-                    as: 'voter',
-                    cond: {
-                      $eq: ['$$voter.voter', actor],
-                    },
-                  },
+}) => {
+  if (actor !== false) {
+    return [
+      {
+        $lookup: {
+          from: 'activities',
+          let: { procedure: procedureObjIdField },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$procedure', '$$procedure'] },
+                    { $eq: ['$actor', actor] },
+                    { $eq: ['$kind', kind] },
+                  ],
                 },
-                else: [],
               },
             },
-          },
-          0,
-        ],
+          ],
+          as: 'activitiesLookup',
+        },
+      },
+      {
+        $addFields: {
+          [outField]: { $gt: [{ $size: '$activitiesLookup' }, 0] },
+        },
+      },
+    ];
+  }
+  return [
+    {
+      $addFields: {
+        [outField]: false,
       },
     },
-  },
-];
+  ];
+};
+
+// aggregation pipeline to get voted state
+const aggregateVotedField = ({ actor, kind, procedureObjIdField = '$_id', outField = 'voted' }) => {
+  if (actor !== false) {
+    return [
+      {
+        $lookup: {
+          from: 'votes',
+          let: { procedure: procedureObjIdField },
+          pipeline: [{ $match: { $expr: { $eq: ['$procedure', '$$procedure'] } } }],
+          as: 'votersLookup',
+        },
+      },
+      {
+        $unwind: {
+          path: '$votersLookup',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          $or: [{ 'votersLookup.type': kind }, { 'votersLookup.type': { $exists: false } }],
+        },
+      },
+      {
+        $addFields: {
+          [outField]: {
+            $gt: [
+              {
+                $size: {
+                  $cond: {
+                    if: { $ifNull: ['$votersLookup', false] },
+                    then: {
+                      $filter: {
+                        input: '$votersLookup.voters',
+                        as: 'voter',
+                        cond: {
+                          $eq: ['$$voter.voter', actor],
+                        },
+                      },
+                    },
+                    else: [],
+                  },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+    ];
+  }
+  return [
+    {
+      $addFields: {
+        [outField]: false,
+      },
+    },
+  ];
+};
 
 export default {
   Query: {
@@ -116,7 +138,10 @@ export default {
     ) => {
       Log.graphql('Procedure.query.procedures');
 
-      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      let actor = false;
+      if (phone || device) {
+        actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      }
       const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
 
       let listTypes = listTypeParam;
@@ -319,8 +344,10 @@ export default {
       if (!user.isVerified()) {
         return null;
       }
-
-      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      let actor = false;
+      if (phone || device) {
+        actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      }
       const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
       const votedProcedures = await VoteModel.aggregate([
         {
