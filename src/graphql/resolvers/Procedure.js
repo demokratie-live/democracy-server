@@ -212,19 +212,60 @@ export default {
       if (!user.isVerified()) {
         return null;
       }
-      const votedProcedures = await VoteModel.find(
+
+      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
+      const votedProcedures = await VoteModel.aggregate([
         {
-          type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-          voters: {
-            $elemMatch: {
-              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+          $match: {
+            type: kind,
+            voters: {
+              $elemMatch: {
+                voter: actor,
+              },
             },
           },
         },
-        { procedure: 1 },
-      ).populate({ path: 'procedure' });
+        {
+          $lookup: {
+            from: 'procedures',
+            localField: 'procedure',
+            foreignField: '_id',
+            as: 'procedure',
+          },
+        },
+        { $unwind: '$procedure' },
+        {
+          $lookup: {
+            from: 'activities',
+            let: { procedure: '$procedure._id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$procedure', '$$procedure'] },
+                      { $eq: ['$actor', actor] },
+                      { $eq: ['$kind', kind] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'activitiesLookup',
+          },
+        },
+        {
+          $addFields: {
+            'procedure.active': { $gt: [{ $size: '$activitiesLookup' }, 0] },
+            'procedure.voted': true,
+          },
+        },
+      ]);
 
-      return votedProcedures.map(({ procedure }) => procedure);
+      const procedures = votedProcedures.map(({ procedure }) => procedure);
+
+      return procedures;
     },
 
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
@@ -516,14 +557,17 @@ export default {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
-      const active =
-        (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
-          ? false
-          : await ActivityModel.findOne({
-              actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
-              kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-              procedure,
-            });
+      let { active } = procedure;
+      if (active === undefined) {
+        active =
+          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+            ? false
+            : await ActivityModel.findOne({
+                actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                procedure,
+              });
+      }
       return {
         activityIndex,
         active: !!active,
@@ -531,18 +575,22 @@ export default {
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       Log.graphql('Procedure.field.voted');
-      const voted =
-        (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
-          ? false
-          : await VoteModel.findOne({
-              procedure: procedure._id,
-              type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-              voters: {
-                $elemMatch: {
-                  voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+      let { voted } = procedure;
+
+      if (voted === undefined) {
+        voted =
+          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+            ? false
+            : await VoteModel.findOne({
+                procedure: procedure._id,
+                type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voters: {
+                  $elemMatch: {
+                    voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                  },
                 },
-              },
-            });
+              });
+      }
       return !!voted;
     },
     /* communityResults: async (procedure, args, { VoteModel }) => {
