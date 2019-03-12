@@ -42,16 +42,6 @@ const aggregateActiveField = ({
   },
 ];
 
-// {
-//   procedure: procedure._id,
-//   type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-//   voters: {
-//     $elemMatch: {
-//       voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
-//     },
-//   },
-// }
-
 // aggregation pipeline to get voted state
 const aggregateVotedField = ({ actor, kind, procedureObjIdField = '$_id', outField = 'voted' }) => [
   {
