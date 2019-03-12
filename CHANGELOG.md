@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.20
+
+- [FIX] Performance for procedures query
+
 ### 0.1.19
 
 - [FIX] Memory issue by disabling apollo query cache
