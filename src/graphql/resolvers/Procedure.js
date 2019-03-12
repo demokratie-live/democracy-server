@@ -8,6 +8,99 @@ import elasticsearch from '../../services/search';
 
 import { isLoggedin } from '../../express/auth/permissions';
 
+// aggregation pipeline to get active state
+const aggregateActiveField = ({
+  actor,
+  kind,
+  procedureObjIdField = '$_id',
+  outField = 'active',
+}) => [
+  {
+    $lookup: {
+      from: 'activities',
+      let: { procedure: procedureObjIdField },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ['$procedure', '$$procedure'] },
+                { $eq: ['$actor', actor] },
+                { $eq: ['$kind', kind] },
+              ],
+            },
+          },
+        },
+      ],
+      as: 'activitiesLookup',
+    },
+  },
+  {
+    $addFields: {
+      [outField]: { $gt: [{ $size: '$activitiesLookup' }, 0] },
+    },
+  },
+];
+
+// {
+//   procedure: procedure._id,
+//   type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+//   voters: {
+//     $elemMatch: {
+//       voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+//     },
+//   },
+// }
+
+// aggregation pipeline to get voted state
+const aggregateVotedField = ({ actor, kind, procedureObjIdField = '$_id', outField = 'voted' }) => [
+  {
+    $lookup: {
+      from: 'votes',
+      let: { procedure: procedureObjIdField },
+      pipeline: [{ $match: { $expr: { $eq: ['$procedure', '$$procedure'] } } }],
+      as: 'votersLookup',
+    },
+  },
+  {
+    $unwind: {
+      path: '$votersLookup',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $match: {
+      $or: [{ 'votersLookup.type': kind }, { 'votersLookup.type': { $exists: false } }],
+    },
+  },
+  {
+    $addFields: {
+      [outField]: {
+        $gt: [
+          {
+            $size: {
+              $cond: {
+                if: { $ifNull: ['$votersLookup', false] },
+                then: {
+                  $filter: {
+                    input: '$votersLookup.voters',
+                    as: 'voter',
+                    cond: {
+                      $eq: ['$$voter.voter', actor],
+                    },
+                  },
+                },
+                else: [],
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+  },
+];
+
 export default {
   Query: {
     proceduresWithVoteResults: async (parent, { procedureIds }, { ProcedureModel }) => {
@@ -32,6 +125,10 @@ export default {
       { ProcedureModel, user, VoteModel, device, phone },
     ) => {
       Log.graphql('Procedure.query.procedures');
+
+      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
+
       let listTypes = listTypeParam;
       if (type) {
         switch (type) {
@@ -95,31 +192,43 @@ export default {
             };
             break;
         }
-        return ProcedureModel.find({
-          currentStatus: { $in: procedureStates.PREPARATION },
-          period,
-          voteDate: { $not: { $type: 'date' } },
-          ...filterQuery,
-        })
-          .sort(sortQuery)
-          .limit(pageSize)
-          .skip(offset);
+        return ProcedureModel.aggregate([
+          {
+            $match: {
+              currentStatus: { $in: procedureStates.PREPARATION },
+              period,
+              voteDate: { $not: { $type: 'date' } },
+              ...filterQuery,
+            },
+          },
+          ...aggregateActiveField({ actor, kind }),
+          ...aggregateVotedField({ actor, kind }),
+          { $sort: sortQuery },
+          { $limit: pageSize },
+          { $skip: offset },
+        ]);
       }
 
       if (listTypes.indexOf('HOT') > -1) {
         const oneWeekAgo = new Date();
-        const hotProcedures = await ProcedureModel.find({
-          period,
-          activities: { $gt: 0 },
-          $or: [
-            { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
-            { voteDate: { $not: { $type: 'date' } } },
-          ],
-          ...filterQuery,
-        })
-          .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
-          .skip(offset)
-          .limit(pageSize);
+        const hotProcedures = await ProcedureModel.aggregate([
+          {
+            $match: {
+              period,
+              activities: { $gt: 0 },
+              $or: [
+                { voteDate: { $gt: new Date(oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)) } },
+                { voteDate: { $not: { $type: 'date' } } },
+              ],
+              ...filterQuery,
+            },
+          },
+          ...aggregateActiveField({ actor, kind }),
+          ...aggregateVotedField({ actor, kind }),
+          { $sort: { activities: -1, lastUpdateDate: -1, title: 1 } },
+          { $skip: offset },
+          { $limit: pageSize },
+        ]);
 
         return hotProcedures;
       }
@@ -158,6 +267,8 @@ export default {
               ...filterQuery,
             },
           },
+          ...aggregateActiveField({ actor, kind }),
+          ...aggregateVotedField({ actor, kind }),
           {
             $addFields: {
               nlt: { $ifNull: ['$voteDate', new Date('9000-01-01')] },
@@ -190,17 +301,23 @@ export default {
                 }).count()
               : 0;
 
-          pastVotings = await ProcedureModel.find({
-            $or: [
-              { voteDate: { $lt: new Date() } },
-              { currentStatus: { $in: procedureStates.COMPLETED } },
-            ],
-            period,
-            ...filterQuery,
-          })
-            .sort(sortQuery)
-            .skip(Math.max(offset - activeVotingsCount, 0))
-            .limit(pageSize - activeVotings.length);
+          pastVotings = await ProcedureModel.aggregate([
+            {
+              $match: {
+                $or: [
+                  { voteDate: { $lt: new Date() } },
+                  { currentStatus: { $in: procedureStates.COMPLETED } },
+                ],
+                period,
+                ...filterQuery,
+              },
+            },
+            ...aggregateActiveField({ actor, kind }),
+            ...aggregateVotedField({ actor, kind }),
+            { $sort: sortQuery },
+            { $skip: Math.max(offset - activeVotingsCount, 0) },
+            { $limit: pageSize - activeVotings.length },
+          ]);
         }
       }
 
@@ -235,29 +352,14 @@ export default {
           },
         },
         { $unwind: '$procedure' },
-        {
-          $lookup: {
-            from: 'activities',
-            let: { procedure: '$procedure._id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ['$procedure', '$$procedure'] },
-                      { $eq: ['$actor', actor] },
-                      { $eq: ['$kind', kind] },
-                    ],
-                  },
-                },
-              },
-            ],
-            as: 'activitiesLookup',
-          },
-        },
+        ...aggregateActiveField({
+          actor,
+          kind,
+          procedureObjIdField: '$procedure._id',
+          outField: 'procedure.active',
+        }),
         {
           $addFields: {
-            'procedure.active': { $gt: [{ $size: '$activitiesLookup' }, 0] },
             'procedure.voted': true,
           },
         },
@@ -555,7 +657,6 @@ export default {
 
   Procedure: {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
-      Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
       let { active } = procedure;
       if (active === undefined) {
@@ -574,9 +675,7 @@ export default {
       };
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
-      Log.graphql('Procedure.field.voted');
       let { voted } = procedure;
-
       if (voted === undefined) {
         voted =
           (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
