@@ -2,7 +2,7 @@
 import _ from 'lodash';
 
 import procedureStates from '../../config/procedureStates';
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
 
@@ -10,6 +10,15 @@ import { isLoggedin } from '../../express/auth/permissions';
 
 export default {
   Query: {
+    proceduresWithVoteResults: async (parent, { procedureIds }, { ProcedureModel }) => {
+      const procedures = ProcedureModel.find({
+        procedureId: { $in: procedureIds },
+        'voteResults.yes': { $ne: null },
+        'voteResults.no': { $ne: null },
+        'voteResults.abstination': { $ne: null },
+      });
+      return procedures;
+    },
     procedures: async (
       parent,
       {
@@ -45,10 +54,10 @@ export default {
       if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
         const votedProcedures = await VoteModel.find(
           {
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             voters: {
               $elemMatch: {
-                kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-                voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+                voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
               },
             },
           },
@@ -69,7 +78,7 @@ export default {
 
       let sortQuery = {};
 
-      const period = { $gte: CONSTANTS.MIN_PERIOD };
+      const period = { $gte: CONFIG.MIN_PERIOD };
       if (listTypes.indexOf('PREPARATION') > -1) {
         switch (sort) {
           case 'activities':
@@ -203,24 +212,190 @@ export default {
       if (!user.isVerified()) {
         return null;
       }
-      const votedProcedures = await VoteModel.find(
+
+      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
+      const votedProcedures = await VoteModel.aggregate([
         {
-          voters: {
-            $elemMatch: {
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-              voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+          $match: {
+            type: kind,
+            voters: {
+              $elemMatch: {
+                voter: actor,
+              },
             },
           },
         },
-        { procedure: 1 },
-      ).populate({ path: 'procedure' });
+        {
+          $lookup: {
+            from: 'procedures',
+            localField: 'procedure',
+            foreignField: '_id',
+            as: 'procedure',
+          },
+        },
+        { $unwind: '$procedure' },
+        {
+          $lookup: {
+            from: 'activities',
+            let: { procedure: '$procedure._id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$procedure', '$$procedure'] },
+                      { $eq: ['$actor', actor] },
+                      { $eq: ['$kind', kind] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'activitiesLookup',
+          },
+        },
+        {
+          $addFields: {
+            'procedure.active': { $gt: [{ $size: '$activitiesLookup' }, 0] },
+            'procedure.voted': true,
+          },
+        },
+      ]);
 
-      return votedProcedures.map(({ procedure }) => procedure);
+      const procedures = votedProcedures.map(({ procedure }) => procedure);
+
+      return procedures;
     },
 
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
       Log.graphql('Procedure.query.proceduresById');
       return ProcedureModel.find({ _id: { $in: ids } });
+    },
+
+    proceduresByIdHavingVoteResults: async (
+      parent,
+      { procedureIds, timespan = 'Period', pageSize = 25, offset = 0, filter = {} },
+      { ProcedureModel },
+    ) => {
+      // Vote Results are present Filter
+      const voteResultsQuery = {
+        'voteResults.yes': { $ne: null },
+        'voteResults.no': { $ne: null },
+        'voteResults.abstination': { $ne: null },
+        'voteResults.partyVotes': { $gt: [] },
+      };
+
+      // Timespan Selection
+      const timespanQuery = {};
+      switch (timespan) {
+        case 'CurrentSittingWeek':
+        case 'LastSittingWeek':
+          throw new Error('Not implemented/Not supported yet');
+        case 'CurrentQuarter':
+          {
+            const now = new Date();
+            const quarter = Math.floor(now.getMonth() / 3);
+            const firstDate = new Date(now.getFullYear(), quarter * 3, 1);
+            const endDate = new Date(firstDate.getFullYear(), firstDate.getMonth() + 3, 0);
+            timespanQuery.voteDate = {
+              $gte: firstDate,
+              $lt: endDate,
+            };
+          }
+          break;
+        case 'LastQuarter':
+          {
+            const now = new Date();
+            let year = now.getFullYear();
+            let quarter = Math.floor(now.getMonth() / 3) - 1;
+            if (quarter === -1) {
+              quarter = 3;
+              year -= 1;
+            }
+            const firstDate = new Date(year, quarter * 3, 1);
+            const endDate = new Date(firstDate.getFullYear(), firstDate.getMonth() + 3, 0);
+            timespanQuery.voteDate = {
+              $gte: firstDate,
+              $lt: endDate,
+            };
+          }
+          break;
+        case 'CurrentYear':
+          timespanQuery.voteDate = { $gte: new Date(new Date().getFullYear(), 0, 1) };
+          break;
+        case 'LastYear':
+          timespanQuery.voteDate = {
+            $gte: new Date(new Date().getFullYear() - 1, 0, 1),
+            $lt: new Date(new Date().getFullYear(), 0, 1),
+          };
+          break;
+        case 'Period':
+          timespanQuery.period = { $in: CONFIG.MIN_PERIOD };
+          break;
+        default:
+      }
+
+      // WOM Filter
+      const filterQuery = {};
+      // WOM Filter Subject Group
+      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      }
+
+      // Prepare Find Query
+      const findQuery = {
+        // Vote Results are present
+        ...voteResultsQuery,
+        // Timespan Selection
+        ...timespanQuery,
+        // Apply Filter
+        ...filterQuery,
+      };
+
+      // Count total Procedures matching given Filter
+      const total = await ProcedureModel.count(findQuery);
+
+      // if empty, return all procedures having VoteResults
+      if (procedureIds) {
+        // Procedure ID selection
+        findQuery.procedureId = { $in: procedureIds };
+      }
+
+      // Find selected procedures matching given Filter
+      let procedures = await ProcedureModel.find(findQuery)
+        // Sorting last voted first
+        .sort({ voteDate: -1 })
+        // Pagination
+        .limit(pageSize)
+        .skip(offset);
+
+      // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
+      procedures = procedures.map(p => {
+        // MongoObject to JS Object
+        const procedure = p.toObject();
+        // eslint-disable-next-line no-param-reassign
+        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
+          ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
+        );
+
+        // Rename Fractions
+        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.map(
+          ({ party, ...rest }) => {
+            switch (party.trim()) {
+              case 'CDU':
+                return { ...rest, party: 'Union' };
+
+              default:
+                return { ...rest, party };
+            }
+          },
+        );
+        return { ...procedure };
+      });
+
+      // Return result
+      return { total, procedures };
     },
 
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
@@ -382,14 +557,17 @@ export default {
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
-      const active =
-        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
-          ? false
-          : await ActivityModel.findOne({
-              actor: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
-              kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-              procedure,
-            });
+      let { active } = procedure;
+      if (active === undefined) {
+        active =
+          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+            ? false
+            : await ActivityModel.findOne({
+                actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                procedure,
+              });
+      }
       return {
         activityIndex,
         active: !!active,
@@ -397,18 +575,22 @@ export default {
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
       Log.graphql('Procedure.field.voted');
-      const voted =
-        (CONSTANTS.SMS_VERIFICATION && !phone) || (!CONSTANTS.SMS_VERIFICATION && !device)
-          ? false
-          : await VoteModel.findOne({
-              procedure: procedure._id,
-              voters: {
-                $elemMatch: {
-                  kind: CONSTANTS.SMS_VERIFICATION ? 'Phone' : 'Device',
-                  voter: CONSTANTS.SMS_VERIFICATION ? phone._id : device._id,
+      let { voted } = procedure;
+
+      if (voted === undefined) {
+        voted =
+          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+            ? false
+            : await VoteModel.findOne({
+                procedure: procedure._id,
+                type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                voters: {
+                  $elemMatch: {
+                    voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                  },
                 },
-              },
-            });
+              });
+      }
       return !!voted;
     },
     /* communityResults: async (procedure, args, { VoteModel }) => {
@@ -489,5 +671,7 @@ export default {
       }
       return cleanHistory;
     },
+    // Propagate procedureId if present
+    voteResults: ({ voteResults, procedureId }) => ({ ...voteResults, procedureId }),
   },
 };

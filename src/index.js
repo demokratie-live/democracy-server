@@ -2,164 +2,116 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-import { makeExecutableSchema } from 'graphql-tools';
-import { createServer } from 'http';
-import { Engine } from 'apollo-engine';
-import { CronJob } from 'cron';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
 
+// *****************************************************************
+// IMPORTANT - you cannot include any models before migrating the DB
+// *****************************************************************
+
+import CONFIG from './config';
+
+// Allow global Log
 import './services/logger';
 
-import DB from './config/db';
-import CONSTANTS from './config/constants';
-import typeDefs from './graphql/schemas';
-import resolvers from './graphql/resolvers';
-
-import sendNotifications from './scripts/sendNotifications';
-
-import { auth } from './express/auth';
-import BIOupdate from './express/webhooks/bundestagio/update';
-import BIOupdateProcedures from './express/webhooks/bundestagio/updateProcedures';
-import debugPushNotifications from './express/webhooks/debug/pushNotifications';
-import debugImportAll from './express/webhooks/debug/importAll';
-import smHumanConnaction from './express/webhooks/socialmedia/humanconnection';
-
-// Models
-import ProcedureModel from './models/Procedure';
-import UserModel from './models/User';
-import DeviceModel from './models/Device';
-import PhoneModel from './models/Phone';
-import VerificationModel from './models/Verification';
-import ActivityModel from './models/Activity';
-import VoteModel from './models/Vote';
-import PushNotifiactionModel from './models/PushNotifiaction';
-import SearchTermModel from './models/SearchTerms';
-import { isDataSource } from './express/auth/permissions';
-import { migrate } from './migrations/scripts';
-
-// enable cors
-const corsOptions = {
-  origin: '*',
-  // credentials: true, // <-- REQUIRED backend setting
-};
+import connectDB from './services/mongoose';
+import migrateDB from './services/migration';
 
 const main = async () => {
-  // Migrations
-  await migrate().catch(err => {
-    // Log the original error
-    Log.error(err.stack);
-    // throw own error
-    throw new Error('Migration not successful - I die now!');
-  });
+  // Connect to DB - this keeps the process running
+  // IMPORTANT - This is done before any Model is registered
+  await connectDB();
 
-  // Start regular DB Connection
-  await DB();
+  // Migrate DB if required - can exit the process
+  // IMPORTANT - you cannot include any models before finishing this
+  //   else every schema including an index will be created in the database
+  //   even tho is is quite retarded it is the way it is
+  await migrateDB();
 
   // Express Server
-  const app = express();
-  if (CONSTANTS.DEBUG) {
-    app.use(cookieParser());
+  const server = express();
+
+  if (process.env.EXPRESS_STATUS === 'true') {
+    server.use(require('express-status-monitor')()); // eslint-disable-line global-require
   }
 
-  app.use(cors(corsOptions));
+  // Cors
+  server.use(cors(/* corsOptions */));
+  /*
+  const corsOptions = {
+    origin: '*',
+    // credentials: true, // <-- REQUIRED backend setting
+  };
+  */
 
-  const schema = makeExecutableSchema({
-    typeDefs,
-    resolvers,
-  });
+  // Bodyparser
+  server.use(bodyParser.json());
 
-  // Apollo Engine
-  if (CONSTANTS.ENGINE_API_KEY) {
-    const engine = new Engine({
-      engineConfig: { apiKey: CONSTANTS.ENGINE_API_KEY },
-      graphqlPort: CONSTANTS.PORT,
-    });
-    engine.start();
-    app.use(engine.expressMiddleware());
+  // Cookie parser to debug JWT easily
+  if (CONFIG.DEBUG) {
+    server.use(cookieParser());
   }
-
-  app.use(bodyParser.json());
 
   // Authentification
-  app.use(auth);
+  // Here several Models are included
+  const { auth } = require('./express/auth'); // eslint-disable-line global-require
+  server.use(auth);
 
-  // Graphiql
-  if (CONSTANTS.GRAPHIQL) {
-    app.use(
-      CONSTANTS.GRAPHIQL_PATH,
-      graphiqlExpress({
-        endpointURL: CONSTANTS.GRAPHQL_PATH,
-      }),
-    );
+  // VOYAGER
+  if (CONFIG.VOYAGER) {
+    server.use('/voyager', voyagerMiddleware({ endpointUrl: CONFIG.GRAPHQL_PATH }));
+  }
+
+  // Graphiql Playground
+  // Here several Models are included for graphql
+  // This must be registered before graphql since it binds on / (default)
+  if (CONFIG.GRAPHIQL_PATH) {
+    const graphiql = require('./services/graphiql'); // eslint-disable-line global-require
+    graphiql.applyMiddleware({ app: server, path: CONFIG.GRAPHIQL_PATH });
   }
 
   // Bundestag.io
   // Webhook
-  app.post('/webhooks/bundestagio/update', isDataSource.createResolver(BIOupdate));
+  const BIOupdate = require('./express/webhooks/bundestagio/update'); // eslint-disable-line global-require
+  server.post('/webhooks/bundestagio/update', BIOupdate);
+
   // Webhook update specific procedures
-  app.post(
-    '/webhooks/bundestagio/updateProcedures',
-    isDataSource.createResolver(BIOupdateProcedures),
-  );
+  const BIOupdateProcedures = require('./express/webhooks/bundestagio/updateProcedures'); // eslint-disable-line global-require
+  server.post('/webhooks/bundestagio/updateProcedures', BIOupdateProcedures);
 
   // Human Connection webhook
-  app.get('/webhooks/human-connection/contribute', isDataSource.createResolver(smHumanConnaction));
+  const smHumanConnection = require('./express/webhooks/socialmedia/humanconnection'); // eslint-disable-line global-require
+  server.get('/webhooks/human-connection/contribute', smHumanConnection);
 
   // Debug
-  if (CONSTANTS.DEBUG) {
+  if (CONFIG.DEBUG) {
+    const debugPushNotifications = require('./express/webhooks/debug/pushNotifications'); // eslint-disable-line global-require
     // Push Notification test
-    app.get('/push-test', debugPushNotifications);
+    server.get('/push-test', debugPushNotifications);
     // Bundestag.io Import All
-    app.get('/webhooks/bundestagio/import-all', debugImportAll);
+    const debugImportAll = require('./express/webhooks/debug/importAll'); // eslint-disable-line global-require
+    server.get('/webhooks/bundestagio/import-all', debugImportAll);
   }
 
   // Graphql
-  app.use(CONSTANTS.GRAPHQL_PATH, (req, res, next) => {
-    graphqlExpress({
-      schema,
-      context: {
-        // Connection
-        res,
-        // User, Device & Phone
-        user: req.user,
-        device: req.device,
-        phone: req.phone,
-        // Models
-        ProcedureModel,
-        UserModel,
-        DeviceModel,
-        PhoneModel,
-        VerificationModel,
-        ActivityModel,
-        VoteModel,
-        PushNotifiactionModel,
-        SearchTermModel,
-      },
-      tracing: true,
-      cacheControl: true,
-    })(req, res, next);
-  });
+  // Here several Models are included for graphql
+  const graphql = require('./services/graphql'); // eslint-disable-line global-require
+  graphql.applyMiddleware({ app: server, path: CONFIG.GRAPHQL_PATH });
 
-  const graphqlServer = createServer(app);
-  graphqlServer.listen(CONSTANTS.PORT, err => {
+  // Start Server
+  server.listen({ port: CONFIG.PORT }, err => {
     if (err) {
-      Log.error(JSON.stringify({ err }));
+      Log.error(err);
     } else {
-      Log.info(`App is listen on port: ${CONSTANTS.PORT}`);
-
-      const cronjob = new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin');
-
-      const cronjob2 = new CronJob('45 19 * * *', sendNotifications, null, true, 'Europe/Berlin');
-      Log.info(
-        JSON.stringify({
-          cronjob: cronjob.running,
-          cronjob2: cronjob2.running,
-        }),
-      );
+      Log.warn(`🚀 Server ready at http://localhost:${CONFIG.PORT}${CONFIG.GRAPHQL_PATH}`);
     }
   });
+
+  // Start CronJobs (Bundestag Importer)
+  // Serveral Models are included
+  const cronJobs = require('./services/cronJobs'); // eslint-disable-line global-require
+  cronJobs();
 };
 
 // Async Wrapping Function

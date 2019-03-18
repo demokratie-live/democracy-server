@@ -3,8 +3,9 @@
  */
 
 import importProcedures from '../../../scripts/import';
+import { isDataSource } from './../../auth/permissions';
 
-export default async (req, res) => {
+const update = async (req, res) => {
   Log.info('Bundestag.io authenticated: Update Procedures');
   try {
     const {
@@ -24,3 +25,5 @@ export default async (req, res) => {
     });
   }
 };
+
+module.exports = isDataSource.createResolver(update);

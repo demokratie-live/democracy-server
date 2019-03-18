@@ -1,7 +1,7 @@
 import DeviceModel from '../../../models/Device';
 import { testPush } from '../../../services/notifications';
 
-export default async (req, res) => {
+const push = async (req, res) => {
   const { message, title } = req.query;
   if (!message) {
     res.send('message is missing');
@@ -23,3 +23,5 @@ export default async (req, res) => {
   });
   res.send("push's send");
 };
+
+module.exports = push;

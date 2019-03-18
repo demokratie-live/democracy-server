@@ -2,7 +2,7 @@ import importProcedures from './import';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import createClient from '../graphql/client';
 import ProcedureModel from '../models/Procedure';
-import CONSTANTS from '../config/constants';
+import CONFIG from '../config';
 
 export default async data => {
   const client = createClient();
@@ -14,7 +14,7 @@ export default async data => {
     data.map(async d => {
       const period = parseInt(d.period, 10);
       const types = d.types.filter(t => t.type === 'Gesetzgebung' || t.type === 'Antrag');
-      if (CONSTANTS.MIN_PERIOD <= period) {
+      if (CONFIG.MIN_PERIOD <= period) {
         await Promise.all(
           types.map(async t => {
             const { type, changedIds } = t;
@@ -38,7 +38,8 @@ export default async data => {
               if (
                 // local data not present
                 !localData ||
-                // older than a day TODO: make it a week?
+                // older than a day
+                // TODO: make it a week?
                 NOW - new Date(localData.updatedAt) > ONEDAY ||
                 // bio date is newer
                 (pu.bioUpdateAt &&

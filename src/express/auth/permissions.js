@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 const createExpressResolver = resolver => {
   const baseResolver = resolver;
@@ -26,7 +26,7 @@ const createGraphQLResolver = resolver => {
 // User has Data Source flag (note: its not required to have an actual user for this)
 export const isDataSource = createExpressResolver((req, res) => {
   if (
-    !CONSTANTS.WHITELIST_DATA_SOURCES.some(
+    !CONFIG.WHITELIST_DATA_SOURCES.some(
       address => address.length >= 3 && req.connection.remoteAddress.indexOf(address) !== -1,
     )
   ) {
@@ -50,7 +50,7 @@ export const isLoggedin = createGraphQLResolver((parent, args, { user, device })
 
 // User has verified flag
 export const isVerified = createGraphQLResolver((parent, args, { user, phone }) => {
-  if (!user || (CONSTANTS.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
+  if (!user || (CONFIG.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
     Log.warn('Permission denied: isVerified = false');
     throw new Error('Permission Denied');
   }

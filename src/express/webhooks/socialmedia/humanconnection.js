@@ -4,7 +4,9 @@ import slugify from 'slugify';
 import speakingurl from 'speakingurl';
 import m from 'moment';
 import _ from 'lodash';
-import CONSTANTS from '../../../config/constants';
+
+import CONFIG from '../../../config';
+import { isDataSource } from './../../auth/permissions';
 import { getImage } from './subjectGroupToIcon';
 
 const formatDate = date => {
@@ -33,7 +35,7 @@ const formatDate = date => {
 };
 
 async function contributeProcedure({ procedureId, email, password }) {
-  connect(CONSTANTS.HC_BACKEND_URL);
+  connect(CONFIG.HC_BACKEND_URL);
   const ProcedureModel = mongoose.model('Procedure');
   if (procedureId && email && password) {
     const procedure = await ProcedureModel.findOne({ procedureId });
@@ -67,7 +69,7 @@ async function contributeProcedure({ procedureId, email, password }) {
           slug: slugify(procedure.title, { lower: true }),
           resolveSlugs: {
             categories: ['democracy-politics'],
-            organization: CONSTANTS.HC_ORGANIZATION_SLUG,
+            organization: CONFIG.HC_ORGANIZATION_SLUG,
           },
         },
       );
@@ -78,7 +80,7 @@ async function contributeProcedure({ procedureId, email, password }) {
   }
 }
 
-export default async (req, res) => {
+const post = async (req, res) => {
   const { procedureId } = req.query;
   if (!procedureId) {
     throw new Error('No ProcedureId provided - cannot post to Human Connection');
@@ -86,8 +88,8 @@ export default async (req, res) => {
   try {
     const procedure = await contributeProcedure({
       procedureId,
-      email: CONSTANTS.HC_LOGIN_EMAIL,
-      password: CONSTANTS.HC_LOGIN_PASSWORD,
+      email: CONFIG.HC_LOGIN_EMAIL,
+      password: CONFIG.HC_LOGIN_PASSWORD,
     });
     Log.info(procedure);
     res.send({
@@ -103,3 +105,5 @@ export default async (req, res) => {
     });
   }
 };
+
+module.exports = isDataSource.createResolver(post);

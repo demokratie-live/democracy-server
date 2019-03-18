@@ -1,24 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
-
-const DeviceSchema = new Schema(
-  {
-    deviceHash: { type: String, required: true, unique: true },
-    pushTokens: [
-      {
-        token: String,
-        os: String,
-      },
-    ],
-    notificationSettings: {
-      enabled: { type: Boolean, default: true },
-      disableUntil: Date,
-      newVote: { type: Boolean, default: true },
-      newPreperation: { type: Boolean, default: false },
-      procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
-      tags: [],
-    },
-  },
-  { timestamps: true },
-);
+import mongoose from 'mongoose';
+import DeviceSchema from './../migrations/1-schemas/Device';
 
 export default mongoose.model('Device', DeviceSchema);

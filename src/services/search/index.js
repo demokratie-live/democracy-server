@@ -1,9 +1,9 @@
 import elasticsearch from 'elasticsearch';
 
-import CONSTANTS from '../../config/constants';
+import CONFIG from '../../config';
 
 const client = new elasticsearch.Client({
-  host: `${CONSTANTS.ELASTICSEARCH_URL}:9200`,
+  host: `${CONFIG.ELASTICSEARCH_URL}:9200`,
   log: process.NODE_ENV === 'development' ? 'warning' : 'error',
 });
 
