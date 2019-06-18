@@ -91,8 +91,8 @@ export default async () => {
         }
       });
 
-
-      await importProcedures(namedPolls.map(({procedureId}) => procedureId));
+      // eslint-disable-next-line no-await-in-loop
+      await importProcedures(namedPolls.map(({ procedureId }) => procedureId));
 
       // continue?
       if (namedPolls.length < limit) {
