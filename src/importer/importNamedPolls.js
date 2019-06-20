@@ -91,6 +91,7 @@ export default async () => {
         }
       });
 
+      // TODO: this should be moved to its own importer - tho calling it here would make sense?
       // eslint-disable-next-line no-await-in-loop
       await importProcedures(namedPolls.map(({ procedureId }) => procedureId));
 
