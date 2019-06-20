@@ -5,6 +5,7 @@ import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
+import importProcedures from '../scripts/import';
 
 export default async () => {
   Log.import('Start Importing Named Polls');
@@ -89,6 +90,10 @@ export default async () => {
           await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
         }
       });
+
+      // TODO: this should be moved to its own importer - tho calling it here would make sense?
+      // eslint-disable-next-line no-await-in-loop
+      await importProcedures(namedPolls.map(({ procedureId }) => procedureId));
 
       // continue?
       if (namedPolls.length < limit) {
