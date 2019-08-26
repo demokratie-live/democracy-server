@@ -39,7 +39,7 @@ const transports = [
     format: alignedWithTime,
   }),
 ];
-if (CONFIG.LOGGING_DISCORD && CONFIG.LOGGING_DISCORD_WEBHOOK !== "false" || CONFIG.LOGGING_DISCORD_WEBHOOK !== "") {
+if (CONFIG.LOGGING_DISCORD && CONFIG.LOGGING_DISCORD_WEBHOOK !== "false" && CONFIG.LOGGING_DISCORD_WEBHOOK !== "") {
   transports.push(
     new DiscordLogger({
       webhooks: CONFIG.LOGGING_DISCORD_WEBHOOK,
