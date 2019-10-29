@@ -1,5 +1,3 @@
-import { unionBy } from 'lodash';
-
 // GraphQL
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
@@ -37,10 +35,10 @@ export default async () => {
 
       // handle results
       procedures.map(data => {
-        if(data.period === 19 && (data.type === 'Gesetzgebung' || data.type === 'Antrag')){
+        if (data.period === 19 && (data.type === 'Gesetzgebung' || data.type === 'Antrag')) {
           importProcedures(data, { push: true });
         }
-        //return null;
+        return null;
       });
 
       // continue?
@@ -55,7 +53,7 @@ export default async () => {
     // If address is not reachable the query will throw
     // Update Cron - Error
     await setCronError({ name });
-    Log.error('try catch')
+    Log.error('try catch');
     Log.error(error);
   }
 

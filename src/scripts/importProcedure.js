@@ -9,7 +9,7 @@ import PushNotifiaction from '../models/PushNotifiaction';
 import { procedureUpdate } from '../services/notifications';
 import { convertPartyName } from '../importer/tools';
 
-/*const deputiesNumber = {
+/* const deputiesNumber = {
   8: 518,
   9: 519,
   10: 520,
@@ -22,7 +22,7 @@ import { convertPartyName } from '../importer/tools';
   17: 620,
   18: 630,
   19: 709,
-};*/
+}; */
 
 export default async (bIoProcedure, { push = false }) => {
   const newBIoProcedure = { ...bIoProcedure };
@@ -109,7 +109,7 @@ export default async (bIoProcedure, { push = false }) => {
           };
         }
       }
-    }/* else {
+    } /* else {
       // TODO: check if is needed after adding named-poll-scraper!
       bIoProcedure.history.some(h => {
         if (h.decision) {
@@ -133,7 +133,7 @@ export default async (bIoProcedure, { push = false }) => {
         }
         return false;
       });
-    }*/
+    } */
 
     newBIoProcedure.voteResults = voteResults;
 
