@@ -71,15 +71,6 @@ const main = async () => {
     graphiql.applyMiddleware({ app: server, path: CONFIG.GRAPHIQL_PATH });
   }
 
-  // Bundestag.io
-  // Webhook
-  const BIOupdate = require('./express/webhooks/bundestagio/update'); // eslint-disable-line global-require
-  server.post('/webhooks/bundestagio/update', BIOupdate);
-
-  // Webhook update specific procedures
-  const BIOupdateProcedures = require('./express/webhooks/bundestagio/updateProcedures'); // eslint-disable-line global-require
-  server.post('/webhooks/bundestagio/updateProcedures', BIOupdateProcedures);
-
   // Human Connection webhook
   const smHumanConnection = require('./express/webhooks/socialmedia/humanconnection'); // eslint-disable-line global-require
   server.get('/webhooks/human-connection/contribute', smHumanConnection);

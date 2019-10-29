@@ -5,10 +5,9 @@ import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
-import importProcedures from '../scripts/import';
 
 export default async () => {
-  Log.import('Start Importing Named Polls');
+  Log.info('Start Importing Named Polls');
   const name = 'importNamedPolls';
   const cron = await getCron({ name });
   // Last SuccessStartDate
@@ -91,10 +90,6 @@ export default async () => {
         }
       });
 
-      // TODO: this should be moved to its own importer - tho calling it here would make sense?
-      // eslint-disable-next-line no-await-in-loop
-      await importProcedures(namedPolls.map(({ procedureId }) => procedureId));
-
       // continue?
       if (namedPolls.length < limit) {
         done = true;
@@ -110,5 +105,5 @@ export default async () => {
     Log.error(error);
   }
 
-  Log.import('Finish Importing Named Polls');
+  Log.info('Finish Importing Named Polls');
 };
