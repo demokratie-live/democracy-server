@@ -5,7 +5,7 @@ import { convertPartyName } from './tools';
 import { getCron, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
 export default async () => {
-  Log.import('Start Importing Deputy Profiles');
+  Log.info('Start Importing Deputy Profiles');
   const name = 'importDeputyProfiles';
   const cron = await getCron({ name });
   // Last SuccessStartDate
@@ -72,5 +72,5 @@ export default async () => {
     await setCronError({ name });
     Log.error(error);
   }
-  Log.import('Finish Importing Deputy Profiles');
+  Log.info('Finish Importing Deputy Profiles');
 };
