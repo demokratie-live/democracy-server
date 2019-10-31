@@ -47,8 +47,8 @@ export default async (bIoProcedure, { push = false }) => {
     );
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
-    } else if (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) {
-      newBIoProcedure.voteDate = new Date(bIoProcedure.customData.expectedVotingDate);
+    } else {
+      newBIoProcedure.voteDate = (bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate) ? new Date(bIoProcedure.customData.expectedVotingDate) : null;
     }
 
     // check vote results
