@@ -628,7 +628,7 @@ export default {
     },
     list: procedure => {
       Log.graphql('Procedure.field.list');
-      if (new Date(procedure.voteDate) < new Date()) {
+      if (procedure.voteDate && new Date(procedure.voteDate) < new Date()) {
         return 'PAST';
       } else if (
         procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
