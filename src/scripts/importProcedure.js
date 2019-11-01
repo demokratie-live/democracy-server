@@ -152,7 +152,7 @@ export default async (bIoProcedure, { push = false }) => {
   return Procedure.findOneAndUpdate(
     { procedureId: newBIoProcedure.procedureId },
     _(newBIoProcedure)
-      .omitBy(x => /*_.isNull(x) ||*/ _.isUndefined(x))
+      .omitBy(x => /* _.isNull(x) || */ _.isUndefined(x))
       .value(),
     {
       upsert: true,
