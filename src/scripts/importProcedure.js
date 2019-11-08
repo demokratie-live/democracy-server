@@ -43,7 +43,7 @@ export default async (bIoProcedure, { push = false }) => {
           )) ||
         // Zurückgezogen
         initiator === 'Amtliche Mitteilung: Rücknahme' ||
-        initiator === 'Rücknahme' || 
+        initiator === 'Rücknahme' ||
         initiator === 'Rücknahme der Vorlage',
     );
     if (btWithDecisions.length > 0) {
