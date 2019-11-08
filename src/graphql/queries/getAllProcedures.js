@@ -30,8 +30,8 @@ export default gql`
         number
       }
       namedVote
+      voteDate
       customData {
-        expectedVotingDate
         voteResults {
           yes
           no
