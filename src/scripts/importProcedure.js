@@ -43,15 +43,13 @@ export default async (bIoProcedure, { push = false }) => {
           )) ||
         // Zurückgezogen
         initiator === 'Amtliche Mitteilung: Rücknahme' ||
-        initiator === 'Rücknahme',
+        initiator === 'Rücknahme' ||
+        initiator === 'Rücknahme der Vorlage',
     );
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
     } else {
-      newBIoProcedure.voteDate =
-        bIoProcedure.customData && bIoProcedure.customData.expectedVotingDate
-          ? new Date(bIoProcedure.customData.expectedVotingDate)
-          : null;
+      newBIoProcedure.voteDate = bIoProcedure.voteDate;
     }
 
     // check vote results
