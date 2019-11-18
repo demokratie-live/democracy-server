@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import { detailedDiff } from 'deep-object-diff';
 
+import PROCEDURE_DEFINITIONS from '../definitions/procedure';
+
 // Models
 import Procedure from '../models/Procedure';
 import PushNotifiaction from '../models/PushNotifiaction';
@@ -36,15 +38,15 @@ export default async (bIoProcedure, { push = false }) => {
         (decision &&
           decision.find(
             ({ tenor }) =>
-              tenor === 'Ablehnung der Vorlage' ||
-              tenor === 'Annahme der Vorlage' ||
-              tenor === 'Erklärung der Vorlage für erledigt' ||
-              tenor === 'Annahme in Ausschussfassung',
+              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ABLEHNUNG ||
+              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ANNAHME ||
+              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ERLEDIGT ||
+              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.AUSSCHUSSFASSUNG_ANNAHME,
           )) ||
         // Zurückgezogen
-        initiator === 'Amtliche Mitteilung: Rücknahme' ||
-        initiator === 'Rücknahme' ||
-        initiator === 'Rücknahme der Vorlage',
+        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME_AMTLICH ||
+        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME ||
+        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME_VORLAGE,
     );
     if (btWithDecisions.length > 0) {
       newBIoProcedure.voteDate = new Date(btWithDecisions.pop().date);
@@ -210,12 +212,12 @@ export default async (bIoProcedure, { push = false }) => {
           procedureUpdate({ procedureId: newBIoProcedure.procedureId });
         }
         if (
-          (newBIoProcedure.currentStatus === 'Beschlussempfehlung liegt vor' &&
-            oldProcedure.currentStatus !== 'Beschlussempfehlung liegt vor' &&
+          (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
+            oldProcedure.currentStatus !==  PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
             !(
-              oldProcedure.currentStatus === 'Überwiesen' && newBIoProcedure.voteDate > new Date()
+              oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN && newBIoProcedure.voteDate > new Date()
             )) ||
-          (newBIoProcedure.currentStatus === 'Überwiesen' &&
+          (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
             newBIoProcedure.voteDate > new Date() &&
             !oldProcedure.voteDate)
         ) {

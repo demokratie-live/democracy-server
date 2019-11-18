@@ -3,6 +3,7 @@ import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
 import importProcedures from '../scripts/importProcedure';
+import PROCEDURE_DEFINITIONS from '../definitions/procedure';
 
 export default async () => {
   Log.info('Start Importing Procedures');
@@ -35,7 +36,7 @@ export default async () => {
 
       // handle results
       procedures.map(data => {
-        if (data.period === 19 && (data.type === 'Gesetzgebung' || data.type === 'Antrag')) {
+        if (data.period === 19 && (data.type === PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG || data.type === PROCEDURE_DEFINITIONS.TYPE.ANTRAG)) {
           importProcedures(data, { push: true });
         }
         return null;

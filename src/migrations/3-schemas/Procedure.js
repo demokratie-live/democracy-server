@@ -1,6 +1,6 @@
 import { Schema } from 'mongoose';
 
-import procedureStates from './../../config/procedureStates';
+import procedureStates from '../../config/procedureStates';
 import ProcedureDocument from './Procedure/Document';
 
 const ProcedureSchema = new Schema(
