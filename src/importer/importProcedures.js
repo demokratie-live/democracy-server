@@ -36,7 +36,11 @@ export default async () => {
 
       // handle results
       procedures.map(data => {
-        if (data.period === 19 && (data.type === PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG || data.type === PROCEDURE_DEFINITIONS.TYPE.ANTRAG)) {
+        if (
+          data.period === 19 &&
+          (data.type === PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG ||
+            data.type === PROCEDURE_DEFINITIONS.TYPE.ANTRAG)
+        ) {
           importProcedures(data, { push: true });
         }
         return null;

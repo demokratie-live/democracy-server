@@ -147,11 +147,16 @@ export default {
             $match: {
               $or: [
                 {
-                  currentStatus: { $in: [ PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
+                  currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
                   voteDate: { $not: { $type: 'date' } },
                 },
                 {
-                  currentStatus: { $in: [ PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG, PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN] },
+                  currentStatus: {
+                    $in: [
+                      PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                      PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+                    ],
+                  },
                   voteDate: { $gte: new Date() },
                 },
               ],
@@ -182,7 +187,12 @@ export default {
                       voteDate: { $not: { $type: 'date' } },
                     },
                     {
-                      currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG, PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN] },
+                      currentStatus: {
+                        $in: [
+                          PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                          PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+                        ],
+                      },
                       voteDate: { $gte: new Date() },
                     },
                   ],
@@ -644,7 +654,9 @@ export default {
     },
     currentStatusHistory: ({ currentStatusHistory }) => {
       const cleanHistory = [...new Set(currentStatusHistory)];
-      const referStatusIndex = cleanHistory.findIndex(status => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN);
+      const referStatusIndex = cleanHistory.findIndex(
+        status => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+      );
       if (referStatusIndex !== -1) {
         cleanHistory.splice(referStatusIndex, 0, '1. Beratung');
       }

@@ -247,7 +247,12 @@ export default {
             voteDate: { $not: { $type: 'date' } },
           },
           {
-            currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN] },
+            currentStatus: {
+              $in: [
+                PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+              ],
+            },
             voteDate: { $gte: new Date() },
           },
         ],

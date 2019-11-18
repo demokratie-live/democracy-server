@@ -213,9 +213,10 @@ export default async (bIoProcedure, { push = false }) => {
         }
         if (
           (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
-            oldProcedure.currentStatus !==  PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
+            oldProcedure.currentStatus !== PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
             !(
-              oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN && newBIoProcedure.voteDate > new Date()
+              oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
+              newBIoProcedure.voteDate > new Date()
             )) ||
           (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
             newBIoProcedure.voteDate > new Date() &&
