@@ -1,3 +1,4 @@
+// TODO use definition file for Sachgebiete
 const subjectGroups = {
   'Arbeit und Beschäftigung': {
     icon: 'hammer',
