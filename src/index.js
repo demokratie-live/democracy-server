@@ -80,9 +80,6 @@ const main = async () => {
     const debugPushNotifications = require('./express/webhooks/debug/pushNotifications'); // eslint-disable-line global-require
     // Push Notification test
     server.get('/push-test', debugPushNotifications);
-    // Bundestag.io Import All
-    const debugImportAll = require('./express/webhooks/debug/importAll'); // eslint-disable-line global-require
-    server.get('/webhooks/bundestagio/import-all', debugImportAll);
   }
 
   // Graphql
