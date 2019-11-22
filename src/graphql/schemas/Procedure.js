@@ -26,6 +26,10 @@ type Procedure {
   abstract: String
   tags: [String]
   voteDate: Date
+  voteEnd: Date
+  voteWeek: Number
+  voteYear: Number
+  sessionTOPHeading: String
   subjectGroups: [String]
   submissionDate: Date
   activityIndex: ActivityIndex
