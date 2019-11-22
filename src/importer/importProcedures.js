@@ -213,7 +213,6 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     // This assumes that the last entry will always be the vote
     const lastSession = bIoProcedure.sessions.pop();
     if(lastSession && lastSession.session.top.topic.isVote){
-      newBIoProcedure.voteSession = lastSession.session.session;
       newBIoProcedure.voteWeek = lastSession.thisWeek
       newBIoProcedure.voteYear = lastSession.thisYear
       newBIoProcedure.sessionTOPHeading = lastSession.session.top.heading;

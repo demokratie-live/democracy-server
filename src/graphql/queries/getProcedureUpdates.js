@@ -62,7 +62,6 @@ export default gql`
           thisYear
           thisWeek
           session {
-            session
             top {
               heading
               topic{

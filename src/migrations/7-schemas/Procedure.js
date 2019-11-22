@@ -17,7 +17,6 @@ const ProcedureSchema = new Schema(
     voteEnd: Date,
     voteWeek: Number,
     voteYear: Number,
-    voteSession: String,
     sessionTOPHeading: String,
     submissionDate: Date, // Date of the first dip21 history element
     lastUpdateDate: Date, // Date of last dip21 history element for sorting in App
