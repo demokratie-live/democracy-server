@@ -82,6 +82,7 @@ export default {
     TYPE: {
       BESCHLUSSEMPFEHLUNG_BERICHT: 'Beschlussempfehlung und Bericht',
       BESCHLUSSEMPFEHLUNG: 'Beschlussempfehlung',
+      BERICHT: 'Bericht',
     },
   },
 };
