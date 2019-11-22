@@ -1,11 +1,13 @@
+import _ from 'lodash';
+
 // GraphQL
+import { detailedDiff } from 'deep-object-diff';
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
-import PROCEDURE_DEFINITIONS from '../definitions/procedure';
 
-import _ from 'lodash';
-import { detailedDiff } from 'deep-object-diff';
+// Definitions
+import PROCEDURE_DEFINITIONS from '../definitions/procedure';
 
 // Models
 import Procedure from '../models/Procedure';
@@ -30,87 +32,87 @@ import { convertPartyName } from '../importer/tools';
   19: 709,
 }; */
 
-const sendProcedurePushs = async (newBIoProcedure,newDoc,oldProcedure) => {
+const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
+  /**
+   * PUSH NOTIFICATIONS
+   */
+  // New Procedures
+  if (!oldProcedure) {
+    Log.push(
+      JSON.stringify({
+        type: 'new Procedure',
+        ids: newBIoProcedure.procedureId,
+      }),
+    );
+    PushNotifiaction.create({
+      procedureId: newBIoProcedure.procedureId,
+      type: 'new',
+    });
+    // newPreperation({ procedureId: newBIoProcedure.procedureId });
+  } else {
+    // Updated Procedures
+    const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
+    const updatedValues = _.compact(
+      _.map(diffs.updated, (value, key) => {
+        switch (key) {
+          case 'currentStatus':
+          case 'importantDocuments':
+          case 'voteResults':
+            return key;
 
-      /**
-       * PUSH NOTIFICATIONS
-       */
-      // New Procedures
-      if (!oldProcedure) {
-        Log.push(
-          JSON.stringify({
-            type: 'new Procedure',
-            ids: newBIoProcedure.procedureId,
-          }),
-        );
-        PushNotifiaction.create({
-          procedureId: newBIoProcedure.procedureId,
-          type: 'new',
-        });
-        // newPreperation({ procedureId: newBIoProcedure.procedureId });
-      } else {
-        // Updated Procedures
-        const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
-        const updatedValues = _.compact(
-          _.map(diffs.updated, (value, key) => {
-            switch (key) {
-              case 'currentStatus':
-              case 'importantDocuments':
-              case 'voteResults':
-                return key;
+          case 'updatedAt':
+          case 'bioUpdateAt':
+            return null;
 
-              case 'updatedAt':
-              case 'bioUpdateAt':
-                return null;
-
-              default:
-                return null;
-            }
-          }),
-        );
-        if (updatedValues.length > 0) {
-          Log.import(
-            JSON.stringify({
-              type: 'updated Procedure',
-              ids: newBIoProcedure.procedureId,
-              diffs,
-            }),
-          );
-          PushNotifiaction.create({
-            procedureId: newBIoProcedure.procedureId,
-            type: 'update',
-            updatedValues,
-          });
-          procedureUpdate({ procedureId: newBIoProcedure.procedureId });
+          default:
+            return null;
         }
-        if (
-          (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
-            oldProcedure.currentStatus !== PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
-            !(
-              oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN && newBIoProcedure.voteDate > new Date()
-            )) ||
-          (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
-            newBIoProcedure.voteDate > new Date() &&
-            !oldProcedure.voteDate)
-        ) {
-          // moved to Vote Procedures
-          Log.import(
-            JSON.stringify({
-              type: 'new Vote',
-              ids: newBIoProcedure.procedureId,
-            }),
-          );
-          PushNotifiaction.create({
-            procedureId: newBIoProcedure.procedureId,
-            type: 'newVote',
-          });
-          // newVote({ procedureId: newBIoProcedure.procedureId });
-        }
-      }
-}
+      }),
+    );
+    if (updatedValues.length > 0) {
+      Log.import(
+        JSON.stringify({
+          type: 'updated Procedure',
+          ids: newBIoProcedure.procedureId,
+          diffs,
+        }),
+      );
+      PushNotifiaction.create({
+        procedureId: newBIoProcedure.procedureId,
+        type: 'update',
+        updatedValues,
+      });
+      procedureUpdate({ procedureId: newBIoProcedure.procedureId });
+    }
+    if (
+      (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
+        oldProcedure.currentStatus !== PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
+        !(
+          oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
+          newBIoProcedure.voteDate > new Date()
+        )) ||
+      (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
+        newBIoProcedure.voteDate > new Date() &&
+        !oldProcedure.voteDate)
+    ) {
+      // moved to Vote Procedures
+      Log.import(
+        JSON.stringify({
+          type: 'new Vote',
+          ids: newBIoProcedure.procedureId,
+        }),
+      );
+      PushNotifiaction.create({
+        procedureId: newBIoProcedure.procedureId,
+        type: 'newVote',
+      });
+      // newVote({ procedureId: newBIoProcedure.procedureId });
+    }
+  }
+};
 
 const importProcedures = async (bIoProcedure, { push = false }) => {
-  const newBIoProcedure = {...bIoProcedure}; // Make sure to copy the object
+  const newBIoProcedure = { ...bIoProcedure }; // Make sure to copy the object
   // TODO move this evaluation to BIO
   if (bIoProcedure && bIoProcedure.history) {
     const [lastHistory] = newBIoProcedure.history.slice(-1);
@@ -134,8 +136,8 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     );
     if (btWithDecisions.length > 0) {
       // Do not override the more accurate date form ConferenceWeekDetails Scraper
-      const historyDate = new Date(btWithDecisions.pop().date)
-      if(bIoProcedure.voteDate < historyDate){
+      const historyDate = new Date(btWithDecisions.pop().date);
+      if (bIoProcedure.voteDate < historyDate) {
         newBIoProcedure.voteDate = historyDate;
       }
     } else {
@@ -210,12 +212,12 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
   }
 
   // Etract Session info
-  if(bIoProcedure && bIoProcedure.sessions){
+  if (bIoProcedure && bIoProcedure.sessions) {
     // This assumes that the last entry will always be the vote
     const lastSession = bIoProcedure.sessions.pop();
-    if(lastSession && lastSession.session.top.topic.isVote){
-      newBIoProcedure.voteWeek = lastSession.thisWeek
-      newBIoProcedure.voteYear = lastSession.thisYear
+    if (lastSession && lastSession.session.top.topic.isVote) {
+      newBIoProcedure.voteWeek = lastSession.thisWeek;
+      newBIoProcedure.voteYear = lastSession.thisYear;
       newBIoProcedure.sessionTOPHeading = lastSession.session.top.heading;
     }
   }
@@ -235,7 +237,7 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     },
   ).then(newDoc => {
     if (push) {
-      sendProcedurePushs(newBIoProcedure,newDoc,oldProcedure)
+      sendProcedurePushs(newBIoProcedure, newDoc, oldProcedure);
     }
   });
 };

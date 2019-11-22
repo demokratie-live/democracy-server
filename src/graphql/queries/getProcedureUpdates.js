@@ -64,7 +64,7 @@ export default gql`
           session {
             top {
               heading
-              topic{
+              topic {
                 isVote
               }
             }
