@@ -27,8 +27,8 @@ type Procedure {
   tags: [String]
   voteDate: Date
   voteEnd: Date
-  voteWeek: Number
-  voteYear: Number
+  voteWeek: Int
+  voteYear: Int
   sessionTOPHeading: String
   subjectGroups: [String]
   submissionDate: Date
