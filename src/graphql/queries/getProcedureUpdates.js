@@ -35,8 +35,9 @@ export default gql`
           number
         }
         namedVote
+        voteDate
+        voteEnd
         customData {
-          expectedVotingDate
           voteResults {
             yes
             no
@@ -53,6 +54,18 @@ export default gql`
                 no
                 abstination
                 notVoted
+              }
+            }
+          }
+        }
+        sessions {
+          thisYear
+          thisWeek
+          session {
+            top {
+              heading
+              topic {
+                isVote
               }
             }
           }
