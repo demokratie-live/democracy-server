@@ -26,12 +26,12 @@ type Procedure {
   abstract: String
   tags: [String]
   voteDate: Date
-  subjectGroups: [String]
+  subjectGroups: [String!]
   submissionDate: Date
-  activityIndex: ActivityIndex
+  activityIndex: ActivityIndex!
   importantDocuments: [Document]
   voteResults: VoteResult
-  voted: Boolean
+  voted: Boolean!
   votedGovernment: Boolean
   completed: Boolean
   notify: Boolean
