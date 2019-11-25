@@ -2,6 +2,7 @@
 import { Types } from 'mongoose';
 import CONFIG from '../../config';
 import procedureStates from '../../config/procedureStates';
+import PROCEDURE_DEFINITIONS from '../../definitions/procedure';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import Activity from './Activity';
 
@@ -242,11 +243,16 @@ export default {
           { voteDate: { $type: 'date' } },
           { currentStatus: { $in: procedureStates.COMPLETED } },
           {
-            currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+            currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
             voteDate: { $not: { $type: 'date' } },
           },
           {
-            currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+            currentStatus: {
+              $in: [
+                PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+              ],
+            },
             voteDate: { $gte: new Date() },
           },
         ],

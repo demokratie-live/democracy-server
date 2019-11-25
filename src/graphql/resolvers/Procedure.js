@@ -2,6 +2,7 @@
 import _ from 'lodash';
 
 import procedureStates from '../../config/procedureStates';
+import PROCEDURE_DEFINITIONS from '../../definitions/procedure';
 import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
@@ -146,11 +147,16 @@ export default {
             $match: {
               $or: [
                 {
-                  currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                  currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
                   voteDate: { $not: { $type: 'date' } },
                 },
                 {
-                  currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                  currentStatus: {
+                    $in: [
+                      PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                      PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+                    ],
+                  },
                   voteDate: { $gte: new Date() },
                 },
               ],
@@ -177,11 +183,16 @@ export default {
               ? await ProcedureModel.find({
                   $or: [
                     {
-                      currentStatus: { $in: ['Beschlussempfehlung liegt vor'] },
+                      currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
                       voteDate: { $not: { $type: 'date' } },
                     },
                     {
-                      currentStatus: { $in: ['Beschlussempfehlung liegt vor', 'Überwiesen'] },
+                      currentStatus: {
+                        $in: [
+                          PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG,
+                          PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+                        ],
+                      },
                       voteDate: { $gte: new Date() },
                     },
                   ],
@@ -616,8 +627,8 @@ export default {
     listType: procedure => {
       Log.graphql('Procedure.field.listType');
       if (
-        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-        (procedure.currentStatus === 'Überwiesen' &&
+        procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG ||
+        (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
         procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
@@ -631,8 +642,8 @@ export default {
       if (procedure.voteDate && new Date(procedure.voteDate) < new Date()) {
         return 'PAST';
       } else if (
-        procedure.currentStatus === 'Beschlussempfehlung liegt vor' ||
-        (procedure.currentStatus === 'Überwiesen' &&
+        procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG ||
+        (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
         procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
@@ -643,27 +654,29 @@ export default {
     },
     currentStatusHistory: ({ currentStatusHistory }) => {
       const cleanHistory = [...new Set(currentStatusHistory)];
-      const referStatusIndex = cleanHistory.findIndex(status => status === 'Überwiesen');
+      const referStatusIndex = cleanHistory.findIndex(
+        status => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+      );
       if (referStatusIndex !== -1) {
         cleanHistory.splice(referStatusIndex, 0, '1. Beratung');
       }
 
       const resultStaties = [
-        'Angenommen',
-        'Abgelehnt',
-        'Abgeschlossen - Ergebnis siehe Vorgangsablauf',
-        'Abgeschlossen',
-        'Verkündet',
-        'Verabschiedet',
-        'Bundesrat hat zugestimmt',
-        'Bundesrat hat Einspruch eingelegt',
-        'Bundesrat hat Zustimmung versagt',
-        'Bundesrat hat Vermittlungsausschuss nicht angerufen',
-        'Im Vermittlungsverfahren',
-        'Vermittlungsvorschlag liegt vor',
-        'Für mit dem Grundgesetz unvereinbar erklärt',
-        'Nicht ausgefertigt wegen Zustimmungsverweigerung des Bundespräsidenten',
-        'Zustimmung versagt',
+        PROCEDURE_DEFINITIONS.STATUS.ANGENOMMEN,
+        PROCEDURE_DEFINITIONS.STATUS.ABGELEHNT,
+        PROCEDURE_DEFINITIONS.STATUS.ABBESCHLOSSEN_VORGANGSABLAUF,
+        PROCEDURE_DEFINITIONS.STATUS.ABGESCHLOSSEN,
+        PROCEDURE_DEFINITIONS.STATUS.VERKUENDET,
+        PROCEDURE_DEFINITIONS.STATUS.VERABSCHIEDET,
+        PROCEDURE_DEFINITIONS.STATUS.BR_ZUGESTIMMT,
+        PROCEDURE_DEFINITIONS.STATUS.BR_EINSPRUCH,
+        PROCEDURE_DEFINITIONS.STATUS.BR_ZUSTIMMUNG_VERSAGT,
+        PROCEDURE_DEFINITIONS.STATUS.BR_VERMITTLUNGSAUSSCHUSS_NICHT_ANGERUFEN,
+        PROCEDURE_DEFINITIONS.STATUS.VERMITTLUNGSVERFAHREN,
+        PROCEDURE_DEFINITIONS.STATUS.VERMITTLUNGSVORSCHLAG,
+        PROCEDURE_DEFINITIONS.STATUS.UNVEREINBAR_MIT_GRUNDGESETZ,
+        PROCEDURE_DEFINITIONS.STATUS.BP_ZUSTIMMUNGSVERWEIGERUNG,
+        PROCEDURE_DEFINITIONS.STATUS.ZUSTIMMUNG_VERSAGT,
       ];
       const resultStatusIndex = cleanHistory.findIndex(status => resultStaties.includes(status));
       if (resultStatusIndex !== -1) {
