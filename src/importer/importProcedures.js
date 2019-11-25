@@ -112,123 +112,91 @@ const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
 };
 
 const importProcedures = async (bIoProcedure, { push = false }) => {
-  const newBIoProcedure = { ...bIoProcedure }; // Make sure to copy the object
-  // TODO move this evaluation to BIO
   if (bIoProcedure && bIoProcedure.history) {
-    const [lastHistory] = newBIoProcedure.history.slice(-1);
-    // Conditions on which Procedure is voted upon
-    const btWithDecisions = bIoProcedure.history.filter(
-      ({ initiator, decision }) =>
-        // Beschluss liegt vor
-        // TODO: decision should not be an array
-        (decision &&
-          decision.find(
-            ({ tenor }) =>
-              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ABLEHNUNG ||
-              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ANNAHME ||
-              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.VORLAGE_ERLEDIGT ||
-              tenor === PROCEDURE_DEFINITIONS.HISTORY.DECISION.TENOR.AUSSCHUSSFASSUNG_ANNAHME,
-          )) ||
-        // Zurückgezogen
-        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME_AMTLICH ||
-        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME ||
-        initiator === PROCEDURE_DEFINITIONS.HISTORY.INITIATOR.RUECKNAHME_VORLAGE,
-    );
-    if (btWithDecisions.length > 0) {
-      // Do not override the more accurate date form ConferenceWeekDetails Scraper
-      const historyDate = new Date(btWithDecisions.pop().date);
-      if (bIoProcedure.voteDate < historyDate) {
-        newBIoProcedure.voteDate = historyDate;
-      }
-    } else {
-      newBIoProcedure.voteDate = bIoProcedure.voteDate;
-    }
-
-    // check vote results
-    let voteResults = {
-      yes: null,
-      no: null,
-      abstination: null,
-      notVoted: null,
-    };
-    if (
-      bIoProcedure.customData &&
-      bIoProcedure.customData.voteResults &&
-      (bIoProcedure.customData.voteResults.yes ||
-        bIoProcedure.customData.voteResults.abstination ||
-        bIoProcedure.customData.voteResults.no)
-    ) {
-      voteResults = {
-        yes: bIoProcedure.customData.voteResults.yes,
-        abstination: bIoProcedure.customData.voteResults.abstination,
-        no: bIoProcedure.customData.voteResults.no,
-        notVoted: bIoProcedure.customData.voteResults.notVoted,
-        decisionText: bIoProcedure.customData.voteResults.decisionText,
-        namedVote: bIoProcedure.namedVote,
-      };
-
-      if (bIoProcedure.customData.voteResults.partyVotes) {
-        voteResults.partyVotes = bIoProcedure.customData.voteResults.partyVotes.map(
-          ({ party, ...rest }) => ({
-            ...rest,
-            party: convertPartyName(party),
-          }),
-        );
-
-        // toggle votingData (Yes & No) if needed
-        if (
-          bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
-          bIoProcedure.customData.voteResults.votingRecommendation === false
-        ) {
-          voteResults = {
-            ...voteResults,
-            yes: voteResults.no,
-            no: voteResults.yes,
-            partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
-              let mainDecision = main;
-              if (main !== 'ABSTINATION') {
-                mainDecision = main === 'YES' ? 'NO' : 'YES';
-              }
-              return {
-                ...rest,
-                main: mainDecision,
-                deviants: {
-                  ...deviants,
-                  yes: deviants.no,
-                  no: deviants.yes,
-                },
-              };
-            }),
-          };
-        }
-      }
-    }
-
-    newBIoProcedure.voteResults = voteResults;
-
-    newBIoProcedure.lastUpdateDate = lastHistory.date;
-
-    newBIoProcedure.submissionDate = newBIoProcedure.history[0].date;
+    const [lastHistory] = bIoProcedure.history.slice(-1);
+    bIoProcedure.lastUpdateDate = lastHistory.date; // eslint-disable-line no-param-reassign
+    bIoProcedure.submissionDate = bIoProcedure.history[0].date; // eslint-disable-line no-param-reassign
   }
 
-  // Etract Session info
+  // check vote results
+  let voteResults = {
+    yes: null,
+    no: null,
+    abstination: null,
+    notVoted: null,
+  };
+  if (
+    bIoProcedure.customData &&
+    bIoProcedure.customData.voteResults &&
+    (bIoProcedure.customData.voteResults.yes ||
+      bIoProcedure.customData.voteResults.abstination ||
+      bIoProcedure.customData.voteResults.no)
+  ) {
+    voteResults = {
+      yes: bIoProcedure.customData.voteResults.yes,
+      abstination: bIoProcedure.customData.voteResults.abstination,
+      no: bIoProcedure.customData.voteResults.no,
+      notVoted: bIoProcedure.customData.voteResults.notVoted,
+      decisionText: bIoProcedure.customData.voteResults.decisionText,
+      namedVote: bIoProcedure.namedVote,
+    };
+
+    if (bIoProcedure.customData.voteResults.partyVotes) {
+      voteResults.partyVotes = bIoProcedure.customData.voteResults.partyVotes.map(
+        ({ party, ...rest }) => ({
+          ...rest,
+          party: convertPartyName(party),
+        }),
+      );
+
+      // toggle votingData (Yes & No) if needed
+      if (
+        bIoProcedure.customData.voteResults.votingDocument === 'recommendedDecision' &&
+        bIoProcedure.customData.voteResults.votingRecommendation === false
+      ) {
+        voteResults = {
+          ...voteResults,
+          yes: voteResults.no,
+          no: voteResults.yes,
+          partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
+            let mainDecision = main;
+            if (main !== 'ABSTINATION') {
+              mainDecision = main === 'YES' ? 'NO' : 'YES';
+            }
+            return {
+              ...rest,
+              main: mainDecision,
+              deviants: {
+                ...deviants,
+                yes: deviants.no,
+                no: deviants.yes,
+              },
+            };
+          }),
+        };
+      }
+    }
+  }
+  bIoProcedure.voteResults = voteResults; // eslint-disable-line no-param-reassign
+
+  // Extract Session info
   if (bIoProcedure && bIoProcedure.sessions) {
     // This assumes that the last entry will always be the vote
     const lastSession = bIoProcedure.sessions.pop();
     if (lastSession && lastSession.session.top.topic.isVote) {
-      newBIoProcedure.voteWeek = lastSession.thisWeek;
-      newBIoProcedure.voteYear = lastSession.thisYear;
-      newBIoProcedure.sessionTOPHeading = lastSession.session.top.heading;
+      bIoProcedure.voteWeek = lastSession.thisWeek; // eslint-disable-line no-param-reassign
+      bIoProcedure.voteYear = lastSession.thisYear; // eslint-disable-line no-param-reassign
+      bIoProcedure.sessionTOPHeading = lastSession.session.top.heading; // eslint-disable-line no-param-reassign
     }
   }
 
   const oldProcedure = await Procedure.findOne({
-    procedureId: newBIoProcedure.procedureId,
+    procedureId: bIoProcedure.procedureId,
   });
 
   return Procedure.findOneAndUpdate(
-    { procedureId: newBIoProcedure.procedureId },
-    _(newBIoProcedure)
+    { procedureId: bIoProcedure.procedureId },
+    _(bIoProcedure)
       .omitBy(x => _.isUndefined(x))
       .value(),
     {
@@ -237,7 +205,7 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     },
   ).then(newDoc => {
     if (push) {
-      sendProcedurePushs(newBIoProcedure, newDoc, oldProcedure);
+      sendProcedurePushs(bIoProcedure, newDoc, oldProcedure);
     }
   });
 };
