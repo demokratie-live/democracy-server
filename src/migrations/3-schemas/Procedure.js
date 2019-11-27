@@ -54,19 +54,8 @@ const ProcedureSchema = new Schema(
 );
 
 ProcedureSchema.methods = {
-  isVotable() {
-    return this.isVoting() || this.isCompleted();
-  },
-  isVoting() {
-    return (
-      this.currentStatus === 'Beschlussempfehlung liegt vor' ||
-      (this.currentStatus === 'Überwiesen' &&
-        this.voteDate &&
-        new Date(this.voteDate) >= new Date())
-    );
-  },
   isCompleted() {
-    return procedureStates.COMPLETED.some(s => s === this.currentStatus || this.voteDate);
+    return this.voteDate || procedureStates.COMPLETED.some(s => s === this.currentStatus);
   },
 };
 

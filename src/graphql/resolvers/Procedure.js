@@ -638,14 +638,6 @@ export default {
       }
       return !!voted;
     },
-    /* communityResults: async (procedure, args, { VoteModel }) => {
-      Log.graphql('Procedure.field.voteResults');
-      // if(!votedGovernment && !voted){
-      //   return { yes: null, no: null, abstination: null }
-      // }
-      const result = await VoteModel.findOne({ procedure: procedure._id }, { voteResults: 1 });
-      return CONSTANTS.SMS_VERIFICATION ? result.voteResults.phone : result.voteResults.device;
-    }, */
     votedGovernment: procedure => {
       Log.graphql('Procedure.field.votedGovernment');
       return (

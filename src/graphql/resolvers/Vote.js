@@ -288,7 +288,7 @@ export default {
         // Find procedure
         const procedure = await ProcedureModel.findById(procedureId);
         // Fail if not existant or not votable
-        if (!procedure || !procedure.isVotable()) {
+        if (!procedure) {
           throw new Error('Not votable');
         }
         // User Has Voted?
@@ -307,10 +307,7 @@ export default {
           throw new Error('You have already voted');
         }
         // Decide Bucket to put user-vote in
-        let state = 'COMPLETED';
-        if (procedure.isVoting()) {
-          state = 'VOTING';
-        }
+        let state = procedure.isCompleted() ? 'COMPLETED' : 'VOTING';
         // Find & Create Vote Model if needed
         let vote = await VoteModel.findOne({
           procedure,
