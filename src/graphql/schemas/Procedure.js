@@ -13,6 +13,8 @@ enum ListType {
   IN_VOTE
   PAST
   HOT
+  TOP100
+  VOTE
 }
 
 type Procedure {

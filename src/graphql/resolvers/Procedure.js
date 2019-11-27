@@ -26,7 +26,7 @@ export default {
         listTypes: listTypeParam,
         type,
         offset = 0,
-        pageSize = 99,
+        pageSize = 100,
         sort = 'lastUpdateDate',
         filter = {},
       },
@@ -123,6 +123,40 @@ export default {
           .limit(pageSize);
 
         return hotProcedures;
+      }
+
+      if (listTypes.indexOf('TOP100') !== -1) {
+        const top100Procedures = await ProcedureModel.find({
+          period,
+          ...filterQuery,
+        })
+          .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
+          .skip(offset)
+          .limit(pageSize);
+
+        return top100Procedures;
+      }
+
+      if (listTypes.indexOf('VOTE') !== -1) {
+        const top100Procedures = await ProcedureModel.find({
+          period,
+          $or: [
+            {$and: [
+              {voteDate: { $gte: new Date() }},
+              {$or: [
+                {voteEnd: {$exists: false}},
+                {voteEnd: {$eq: null}}
+              ]}
+            ]},
+            { voteEnd: {$gte: new Date()}}              
+          ],
+          ...filterQuery,
+        })
+          .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
+          .skip(offset)
+          .limit(pageSize);
+
+        return top100Procedures;
       }
 
       switch (sort) {
