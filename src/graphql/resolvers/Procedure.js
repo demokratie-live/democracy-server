@@ -1,8 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import _ from 'lodash';
 
-import procedureStates from '../../config/procedureStates';
-import PROCEDURE_DEFINITIONS from '../../definitions/procedure';
+import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
+import PROCEDURE_STATES from '../../config/procedureStates';
 import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
@@ -97,7 +97,7 @@ export default {
             break;
         }
         return ProcedureModel.find({
-          currentStatus: { $in: procedureStates.PREPARATION },
+          currentStatus: { $in: PROCEDURE_STATES.PREPARATION },
           period,
           voteDate: { $not: { $type: 'date' } },
           ...filterQuery,
@@ -237,7 +237,7 @@ export default {
           pastVotings = await ProcedureModel.find({
             $or: [
               { voteDate: { $lt: new Date() } },
-              { currentStatus: { $in: procedureStates.COMPLETED } },
+              { currentStatus: { $in: PROCEDURE_STATES.COMPLETED } },
             ],
             period,
             ...filterQuery,
@@ -450,7 +450,7 @@ export default {
         return null;
       }
       // eslint-disable-next-line
-      const listType = procedureStates.IN_VOTE.concat(procedureStates.COMPLETED).some(
+      const listType = PROCEDURE_STATES.IN_VOTE.concat(PROCEDURE_STATES.COMPLETED).some(
         status => procedure.currentStatus === status,
       )
         ? 'VOTING'
@@ -646,7 +646,7 @@ export default {
     },
     completed: procedure => {
       Log.graphql('Procedure.field.completed');
-      return procedureStates.COMPLETED.includes(procedure.currentStatus);
+      return PROCEDURE_STATES.COMPLETED.includes(procedure.currentStatus);
     },
     // DEPRECATED ListType 2019-01-29 use list instead
     listType: procedure => {
@@ -656,7 +656,7 @@ export default {
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
-        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+        PROCEDURE_STATES.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
       ) {
         return 'VOTING';
       }
@@ -671,7 +671,7 @@ export default {
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
-        procedureStates.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+        PROCEDURE_STATES.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
       ) {
         return 'IN_VOTE';
       }

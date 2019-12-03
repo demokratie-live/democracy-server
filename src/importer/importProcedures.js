@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import moment from 'moment';
 
+// Definitions
+import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
+
 // GraphQL
 import { detailedDiff } from 'deep-object-diff';
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
-
-// Definitions
-import PROCEDURE_DEFINITIONS from '../definitions/procedure';
 
 // Models
 import Procedure from '../models/Procedure';

@@ -28,6 +28,13 @@
   dependencies:
     regenerator-runtime "^0.12.0"
 
+"@democracy-deutschland/bundestag.io-definitions@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@democracy-deutschland/bundestag.io-definitions/-/bundestag.io-definitions-1.0.0.tgz#9b54a141cf9cf99a0f572ad6e213bf28ac37f6b8"
+  integrity sha512-xj3lh1iX4uUz7IH5/CfEV+uPrwdwn6We/OtjqRgROJid+0RYwIxdSlwzYZ3b/FCMZanL2+IypxJgZVvaSFI4sw==
+  dependencies:
+    typescript "^3.7.2"
+
 "@f/animate@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@f/animate/-/animate-1.0.1.tgz#a031398adadf9a0bd3a56398cec931f877d88485"
@@ -6346,6 +6353,11 @@ typescript-eslint-parser@^16.0.0:
 typescript@^2.5.1:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.9.2.tgz#1cbf61d05d6b96269244eb6a3bce4bd914e0f00c"
+
+typescript@^3.7.2:
+  version "3.7.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.2.tgz#27e489b95fa5909445e9fef5ee48d81697ad18fb"
+  integrity sha512-ml7V7JfiN2Xwvcer+XAf2csGO1bPBdRbFCkYBczNZggrBZ9c7G3riSUeJmqEU5uOtXNPMhE3n+R4FA/3YOAWOQ==
 
 ua-parser-js@^0.7.18:
   version "0.7.19"
