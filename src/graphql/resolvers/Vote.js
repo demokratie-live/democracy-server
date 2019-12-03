@@ -307,7 +307,7 @@ export default {
           throw new Error('You have already voted');
         }
         // Decide Bucket to put user-vote in
-        let state = procedure.isCompleted() ? 'COMPLETED' : 'VOTING';
+        const state = procedure.isCompleted() ? 'COMPLETED' : 'VOTING';
         // Find & Create Vote Model if needed
         let vote = await VoteModel.findOne({
           procedure,
