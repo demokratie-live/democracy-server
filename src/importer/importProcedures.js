@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import moment from 'moment';
 
 // GraphQL
 import { detailedDiff } from 'deep-object-diff';
@@ -180,7 +181,7 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
   bIoProcedure.voteResults = voteResults; // eslint-disable-line no-param-reassign
 
   // Extract Session info
-  if (bIoProcedure && bIoProcedure.sessions) {
+  if (bIoProcedure.sessions) {
     // This assumes that the last entry will always be the vote
     const lastSession = bIoProcedure.sessions.pop();
     if (lastSession && lastSession.session.top.topic.isVote) {
@@ -188,6 +189,12 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
       bIoProcedure.voteYear = lastSession.thisYear; // eslint-disable-line no-param-reassign
       bIoProcedure.sessionTOPHeading = lastSession.session.top.heading; // eslint-disable-line no-param-reassign
     }
+    
+  }
+  // Set CalendarWeek & Year even if no sessions where found
+  if (bIoProcedure.voteDate && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear)) {
+    bIoProcedure.voteWeek = moment(bIoProcedure.voteDate).format('W'); // eslint-disable-line no-param-reassign
+    bIoProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
   }
 
   const oldProcedure = await Procedure.findOne({
@@ -222,7 +229,7 @@ export default async () => {
   // Query Bundestag.io
   try {
     const client = createClient();
-    const limit = 25;
+    const limit = 50;
     let offset = 0;
     const associated = true;
     let done = false;

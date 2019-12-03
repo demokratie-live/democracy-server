@@ -18,7 +18,7 @@ export default async () => {
   // Query Bundestag.io
   try {
     const client = createClient();
-    const limit = 25;
+    const limit = 50;
     let offset = 0;
     const associated = true;
     let done = false;
