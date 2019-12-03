@@ -189,7 +189,6 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
       bIoProcedure.voteYear = lastSession.thisYear; // eslint-disable-line no-param-reassign
       bIoProcedure.sessionTOPHeading = lastSession.session.top.heading; // eslint-disable-line no-param-reassign
     }
-    
   }
   // Set CalendarWeek & Year even if no sessions where found
   if (bIoProcedure.voteDate && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear)) {
