@@ -137,18 +137,17 @@ export default {
         return top100Procedures;
       }
 
-      if (listTypes.indexOf('VOTE') !== -1) {
+      if (listTypes.indexOf('CONFERENCEWEEKS_PLANNED') !== -1) {
         const top100Procedures = await ProcedureModel.find({
           period,
           $or: [
-            {$and: [
-              {voteDate: { $gte: new Date() }},
-              {$or: [
-                {voteEnd: {$exists: false}},
-                {voteEnd: {$eq: null}}
-              ]}
-            ]},
-            { voteEnd: {$gte: new Date()}}              
+            {
+              $and: [
+                { voteDate: { $gte: new Date() } },
+                { $or: [{ voteEnd: { $exists: false } }, { voteEnd: { $eq: null } }] },
+              ],
+            },
+            { voteEnd: { $gte: new Date() } },
           ],
           ...filterQuery,
         })

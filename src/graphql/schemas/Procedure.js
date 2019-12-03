@@ -14,7 +14,7 @@ enum ListType {
   PAST
   HOT
   TOP100
-  VOTE
+  CONFERENCEWEEKS_PLANNED
 }
 
 type Procedure {
