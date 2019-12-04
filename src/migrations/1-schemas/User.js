@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import CONFIG from './../../config';
+import CONFIG from '../../config';
 
 const UserSchema = new Schema(
   {

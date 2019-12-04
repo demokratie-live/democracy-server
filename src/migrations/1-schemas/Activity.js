@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import mongoose, { Schema } from 'mongoose';
-import CONFIG from './../../config';
+import CONFIG from '../../config';
 
 const ActivitySchema = new Schema(
   {

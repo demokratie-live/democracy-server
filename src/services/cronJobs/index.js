@@ -1,9 +1,9 @@
 import { CronJob } from 'cron';
 
-import sendNotifications from './../../scripts/sendNotifications';
-import importDeputyProfiles from './../../importer/importDeputyProfiles';
-import importNamedPolls from './../../importer/importNamedPolls';
-import importProcedures from './../../importer/importProcedures';
+import sendNotifications from '../../scripts/sendNotifications';
+import importDeputyProfiles from '../../importer/importDeputyProfiles';
+import importNamedPolls from '../../importer/importNamedPolls';
+import importProcedures from '../../importer/importProcedures';
 import { resetCronSuccessStartDate } from './tools';
 
 const cronJobs = () => [

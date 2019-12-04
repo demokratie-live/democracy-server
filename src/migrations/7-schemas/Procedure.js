@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose';
 
-import procedureStates from './../../config/procedureStates';
-import ProcedureDocument from './../3-schemas/Procedure/Document';
+import procedureStates from '../../config/procedureStates';
+import ProcedureDocument from '../3-schemas/Procedure/Document';
 
 const ProcedureSchema = new Schema(
   {
@@ -51,21 +51,8 @@ const ProcedureSchema = new Schema(
 );
 
 ProcedureSchema.methods = {
-  isVotable() {
-    return this.isVoting() || this.isCompleted();
-  },
-  isVoting() {
-    return (
-      // TODO check if we replaced this alrdy with constants
-      this.currentStatus === 'Beschlussempfehlung liegt vor' ||
-      (this.currentStatus === 'Überwiesen' &&
-        this.voteDate &&
-        new Date(this.voteDate) >= new Date())
-    );
-  },
   isCompleted() {
-    // TODO move this.voteDate out of the some()
-    return procedureStates.COMPLETED.some(s => s === this.currentStatus || this.voteDate);
+    return this.voteDate || procedureStates.COMPLETED.some(s => s === this.currentStatus);
   },
 };
 

@@ -1,7 +1,7 @@
 import apn from 'apn';
 import _ from 'lodash';
 import fs from 'fs';
-import CONFIG from './../../config';
+import CONFIG from '../../config';
 
 let apnProvider = null; // eslint-disable-line
 

@@ -1,8 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
+import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import CONFIG from '../../config';
-import procedureStates from '../../config/procedureStates';
-import PROCEDURE_DEFINITIONS from '../../definitions/procedure';
+import PROCEDURE_STATES from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import Activity from './Activity';
 
@@ -241,7 +241,7 @@ export default {
         period,
         $or: [
           { voteDate: { $type: 'date' } },
-          { currentStatus: { $in: procedureStates.COMPLETED } },
+          { currentStatus: { $in: PROCEDURE_STATES.COMPLETED } },
           {
             currentStatus: { $in: [PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG] },
             voteDate: { $not: { $type: 'date' } },
@@ -288,7 +288,7 @@ export default {
         // Find procedure
         const procedure = await ProcedureModel.findById(procedureId);
         // Fail if not existant or not votable
-        if (!procedure || !procedure.isVotable()) {
+        if (!procedure) {
           throw new Error('Not votable');
         }
         // User Has Voted?
@@ -307,10 +307,7 @@ export default {
           throw new Error('You have already voted');
         }
         // Decide Bucket to put user-vote in
-        let state = 'COMPLETED';
-        if (procedure.isVoting()) {
-          state = 'VOTING';
-        }
+        const state = procedure.isCompleted() ? 'COMPLETED' : 'VOTING';
         // Find & Create Vote Model if needed
         let vote = await VoteModel.findOne({
           procedure,

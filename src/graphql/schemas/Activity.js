@@ -1,7 +1,7 @@
 export default `
 
 type ActivityIndex {
-  activityIndex: Int
+  activityIndex: Int!
   active: Boolean
 }
 
