@@ -666,7 +666,8 @@ export default {
       Log.graphql('Procedure.field.list');
       if (procedure.voteDate && new Date(procedure.voteDate) < new Date()) {
         return 'PAST';
-      } else if (
+      }
+      if (
         procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG ||
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&

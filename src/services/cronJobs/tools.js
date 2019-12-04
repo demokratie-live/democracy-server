@@ -1,4 +1,4 @@
-import CronJobModel from './../../models/CronJob';
+import CronJobModel from '../../models/CronJob';
 
 export const getCron = async ({ name }) => {
   const cronjob = await CronJobModel.findOne({ name });

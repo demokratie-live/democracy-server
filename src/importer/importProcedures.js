@@ -16,7 +16,7 @@ import PushNotifiaction from '../models/PushNotifiaction';
 
 // Queries
 import { procedureUpdate } from '../services/notifications';
-import { convertPartyName } from '../importer/tools';
+import { convertPartyName } from './tools';
 
 /* const deputiesNumber = {
   8: 518,

@@ -1,3 +1,3 @@
-import { create } from './';
+import { create } from '.';
 
 create(process.argv[2]);

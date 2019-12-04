@@ -1,5 +1,5 @@
 import mm from 'mongodb-migrations';
-import config from './../../../mm-config';
+import config from '../../../mm-config';
 
 export const create = name => {
   const migrator = new mm.Migrator(config);

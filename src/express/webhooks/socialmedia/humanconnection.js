@@ -6,7 +6,7 @@ import m from 'moment';
 import _ from 'lodash';
 
 import CONFIG from '../../../config';
-import { isDataSource } from './../../auth/permissions';
+import { isDataSource } from '../../auth/permissions';
 import { getImage } from './subjectGroupToIcon';
 
 const formatDate = date => {
@@ -19,7 +19,8 @@ const formatDate = date => {
 
     if (days > 1) {
       return `${days} Tage`;
-    } else if (days === 1) {
+    }
+    if (days === 1) {
       return `morgen`;
     }
 

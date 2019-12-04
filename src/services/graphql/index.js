@@ -1,20 +1,20 @@
 import { ApolloServer } from 'apollo-server-express';
-import CONFIG from './../../config';
+import CONFIG from '../../config';
 
-import typeDefs from './../../graphql/schemas';
-import resolvers from './../../graphql/resolvers';
+import typeDefs from '../../graphql/schemas';
+import resolvers from '../../graphql/resolvers';
 
 // Models
-import ProcedureModel from './../../models/Procedure';
-import UserModel from './../../models/User';
-import DeviceModel from './../../models/Device';
-import PhoneModel from './../../models/Phone';
-import VerificationModel from './../../models/Verification';
-import ActivityModel from './../../models/Activity';
-import VoteModel from './../../models/Vote';
-import PushNotifiactionModel from './../../models/PushNotifiaction';
-import SearchTermModel from './../../models/SearchTerm';
-import DeputyModel from './../../models/Deputy';
+import ProcedureModel from '../../models/Procedure';
+import UserModel from '../../models/User';
+import DeviceModel from '../../models/Device';
+import PhoneModel from '../../models/Phone';
+import VerificationModel from '../../models/Verification';
+import ActivityModel from '../../models/Activity';
+import VoteModel from '../../models/Vote';
+import PushNotifiactionModel from '../../models/PushNotifiaction';
+import SearchTermModel from '../../models/SearchTerm';
+import DeputyModel from '../../models/Deputy';
 
 const graphql = new ApolloServer({
   engine: CONFIG.ENGINE_API_KEY

@@ -2,7 +2,7 @@
   THIS FILE AND ALL IMPORTS ARE NOT ALLOWED TO INCLUDE ANY MONGOOSE MODELS
   See index.js for more info
 */
-import { migrate } from './../../migrations/scripts';
+import { migrate } from '../../migrations/scripts';
 
 export default async () => {
   await migrate().catch(err => {

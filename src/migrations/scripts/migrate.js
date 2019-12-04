@@ -1,3 +1,3 @@
-import { migrate } from './';
+import { migrate } from '.';
 
 migrate();
