@@ -1,5 +1,4 @@
 export default `
-
   type Device {
     notificationSettings: NotificationSettings
   }
@@ -35,8 +34,13 @@ export default `
   }
 
   type Mutation {
-    requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
-    requestVerification(code: String!, newPhoneHash: String!, newUser: Boolean): VerificationResult
+    requestCode(newPhone: String!, oldPhoneHash: String): CodeResult!
+    requestVerification(
+      "Code which is send by SMS"
+      code: String!,
+      newPhoneHash: String!, 
+      newUser: Boolean
+    ): VerificationResult!
 
     addToken(token: String!, os: String!): TokenResult
     
