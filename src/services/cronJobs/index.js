@@ -5,6 +5,7 @@ import importDeputyProfiles from '../../importer/importDeputyProfiles';
 import importNamedPolls from '../../importer/importNamedPolls';
 import importProcedures from '../../importer/importProcedures';
 import { resetCronSuccessStartDate } from './tools';
+import quePushsConferenceWeek from '../../services/notifications/'
 
 const cronJobs = () => [
   new CronJob('0 8 * * *', sendNotifications, null, true, 'Europe/Berlin'),
@@ -13,6 +14,7 @@ const cronJobs = () => [
   new CronJob('*/15 * * * *', importNamedPolls, null, true, 'Europe/Berlin', null, true),
   new CronJob('*/15 * * * *', importProcedures, null, true, 'Europe/Berlin', null, true),
   new CronJob('55 3 * * *', resetCronSuccessStartDate, null, true, 'Europe/Berlin'),
+  new CronJob('0 14 * * SUN', quePushsConferenceWeek, null, true, 'Europe/Berlin'),
 ];
 
 module.exports = cronJobs;
