@@ -598,6 +598,114 @@ export default {
   },
 
   Procedure: {
+    communityVotes: async (
+      procedure,
+      { constituencies },
+      { VoteModel, ProcedureModel },
+    ) => {
+      Log.graphql('Procedure.query.communityVotes');
+      // Find global result(cache), not including constituencies
+      const votesGlobal = await VoteModel.aggregate([
+        // Find Procedure
+        {
+          $match: {
+            procedure: procedure._id,
+            type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+          },
+        },
+        // Sum both objects (state)
+        {
+          $group: {
+            _id: '$procedure',
+            yes: { $sum: '$votes.cache.yes' },
+            no: { $sum: '$votes.cache.no' },
+            abstination: { $sum: '$votes.cache.abstain' },
+          },
+        },
+        { 
+          $addFields: {
+            total : { '$add' : [ '$yes', '$no', '$abstination' ] },
+          }
+        },
+        // Remove _id from result
+        {
+          $project: {
+            _id: false,
+          },
+        },
+      ]);
+
+      // Find constituency results if constituencies are given
+      const votesConstituencies =
+        (constituencies && constituencies.length > 0) || constituencies === undefined
+          ? await VoteModel.aggregate([
+              // Find Procedure, including type; results in up to two objects for state
+              {
+                $match: {
+                  procedure: procedure._id,
+                  type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                },
+              },
+              // Filter correct constituency
+              {
+                $project: {
+                  votes: {
+                    constituencies: {
+                      $filter: {
+                        input: '$votes.constituencies',
+                        as: 'constituency',
+                        cond: !constituencies
+                          ? true // Return all Constituencies if constituencies param is not given
+                          : { $in: ['$$constituency.constituency', constituencies] }, // Filter Constituencies if an array is given
+                      },
+                    },
+                  },
+                },
+              },
+              // Unwind constituencies for sum, but preserve null
+              {
+                $unwind: {
+                  path: '$votes.constituencies',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              // Sum both objects (state)
+              {
+                $group: {
+                  _id: '$votes.constituencies.constituency',
+                  yes: { $sum: '$votes.constituencies.yes' },
+                  no: { $sum: '$votes.constituencies.no' },
+                  abstain: { $sum: '$votes.constituencies.abstain' },
+                },
+              },
+              { 
+                $addFields: {
+                  total : { '$add' : [ '$yes', '$no', '$abstain' ] },
+                }
+              },
+              // Build correct result
+              {
+                $project: {
+                  _id: false,
+                  constituency: '$_id',
+                  yes: '$yes',
+                  no: '$no',
+                  abstination: '$abstain',
+                  total: '$total',
+                },
+              },
+            ])
+              // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
+              // Remove elements with property constituency: null (of no votes on it)
+              .then(data => data.filter(({ constituency }) => constituency))
+          : [];
+
+      if (votesGlobal.length > 0) {
+        votesGlobal[0].constituencies = votesConstituencies;
+        return votesGlobal[0];
+      }
+      return null;
+    },
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
       Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;

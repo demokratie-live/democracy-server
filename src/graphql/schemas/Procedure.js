@@ -37,6 +37,7 @@ type Procedure {
   activityIndex: ActivityIndex!
   importantDocuments: [Document]
   voteResults: VoteResult
+  communityVotes(constituencies: [String!]): CommunityVotes
   voted: Boolean!
   votedGovernment: Boolean
   completed: Boolean
