@@ -40,8 +40,8 @@ export const pushBulk = ({ title, message, payload, tokens }) => {
       //   .map((res, i) => (res.error ? registrationTokens[i] : null)) // If there's any kind of error,
       //   // pick _the token_ from the _other_ array
       //   .filter(token => token);
-      if (err) {
-        Log.error(JSON.stringify({ type: 'gcmProvider.send', err }));
+      if (err || response.success !== 1 || response.failure !== 0) {
+        Log.error(JSON.stringify({ type: 'gcmProvider.send', registrationTokens, err, response }));
       } else {
         Log.info(JSON.stringify({ type: 'gcmProvider.send', response }));
       }

@@ -1,10 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
+import moment from 'moment';
+import {forEach, filter} from 'p-iteration'
+
+
+import CONFIG from '../../config'
 
 import DeviceModel from '../../models/Device';
+import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
+import VoteModel from '../../models/Vote';
+import PushNotifiaction from '../../models/PushNotifiaction';
+
 import {push as pushIOS} from './iOS';
 import {pushBulk as pushAndroid} from './Android';
-import PushNotifiaction from '../../models/PushNotifiaction';
 
 export const PUSH_TYPE = {
   PROCEDURE: 'procedure',
@@ -52,8 +60,22 @@ export const sendQuedPushs = () => {
   // send all pushs in there
 }
 
-export const quePushs = ({type, category, action, title, message, procedureIds, tokens, time = new Date()}) => {
-
+export const quePushs = ({type, category, title, message, procedureIds, tokens, time = new Date()}) => {
+  console.log(type, category, title, message, procedureIds, tokens.length, time)
+  /*sendPushs({
+    tokenObjects: tokens,
+    title,
+    message,
+    payload: {
+      type,
+      action: type,
+      category,
+      title,
+      message,
+      procedureId: procedureIds[0],
+      procedureIds,
+    },
+  });*/
 }
 
 // This is called every Sunday by a Cronjob
@@ -99,11 +121,12 @@ export const quePushsVoteTop100 = async () => {
   // Check if we have a ConferenceWeek
   const startOfWeek = moment().startOf('isoweek').toDate(); // Should be Mo
   const endOfWeek   = moment().endOf('isoweek').toDate(); // Should be So
-  const conferenceProceduresCount = await ProcedureModel.count({$and: [{voteDate: {$gte: startOfWeek}},{voteDate: {$lte: endOfWeek}}]},{ procedureId: 1 })
-  // Dont Push TOP100 if we have an 
-  if(conferenceProceduresCount > 0){
+  const conferenceProceduresCount = await ProcedureModel.count({$and: [{voteDate: {$gte: startOfWeek}},{voteDate: {$lte: endOfWeek}}]})
+  
+  // Dont Push TOP100 if we have an active conferenceWeek
+  /*if(conferenceProceduresCount > 0){
     return;
-  }
+  }*/
 
   // find TOP100 procedures
   const top100Procedures = await ProcedureModel.find({period: 19})
@@ -111,13 +134,19 @@ export const quePushsVoteTop100 = async () => {
     .limit(100);
 
   // Find Devices
-  const devices = await DeviceModel.find({'notificationSettings.enabled': true});
+  let devices = await DeviceModel.find({'notificationSettings.enabled': true, pushTokens: { $gt: [] } });
 
   // loop through the TOP100
   let topId = 1;
-  top100Procedures.forEach((procedure)=>{
+  for (var i = 0; i < top100Procedures.length; i++) {
+    // Iterate over numeric indexes from 0 to 5, as everyone expects.
+    const procedure = top100Procedures[i]
+    // Skip some calls
+    if(devices.length === 0){
+      continue
+    }
     // loop through the devices and remove those we send a Push
-    devices = devices.reduce(async (acc, device) => {
+    devices = await filter(devices,async (device) => {
       let voted = null;
       // Check if device is associcated with a vote on the procedure
       if(CONFIG.SMS_VERIFICATION){
@@ -149,20 +178,19 @@ export const quePushsVoteTop100 = async () => {
       }
       // Dont send Pushs - User has voted already
       if(voted){
-        return [...acc,device]
+        return true;
       }
       // Check if we sent the user a notifiation in the past time on that procedure
       const tokens = device.pushTokens.reduce((acc, token) => {
-        let result = acc;
-        const pastPushs = PushNotifiactionModel.count({category: PUSH_CATEGORY.TOP100, procedureIds: procedure.procedureId, token, time: {$gte: moment().subtract('months', 1)}});
-        if(pstPushs === 0){
+        const pastPushs = 0// PushNotifiactionModel.count({category: PUSH_CATEGORY.TOP100, procedureIds: {$elemMatch: procedure.procedureId}, token, time: {$gte: moment().subtract('months', 1)}});
+        if(pastPushs === 0){
           return [...acc,token]
         }
         return acc;
       },[]);
       // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
       if(tokens.length === 0){
-        return [...acc,device]
+        return true;
       }
       // Send Pushs
       quePushs({
@@ -170,16 +198,16 @@ export const quePushsVoteTop100 = async () => {
         category: PUSH_CATEGORY.TOP100,
         title: `TOP 100 - #${topId}: Jetzt Abstimmen!`,
         message: procedure.title,
-        procedureIds,
+        procedureIds: [procedure.procedureId],
         tokens,
-        time
+        time: new Date() // TODO
       });
       // We have qued a Push, remove device from list.
-      return acc;
+      return false;
     },[])
     // Count the Top Number up
     topId += 1;
-  })
+  }
 }
 
 export const quePushsOutcome = async (procedureId) => {
