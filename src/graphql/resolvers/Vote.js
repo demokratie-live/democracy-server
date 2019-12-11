@@ -46,6 +46,7 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
           yes: '$yes',
           no: '$no',
           abstination: '$abstain',
+          total: { $add: ['$yes', '$no', '$abstain'] },
         },
       },
     },
@@ -102,6 +103,7 @@ const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, de
               yes: '$yes',
               no: '$no',
               abstination: '$abstain',
+              total: { $add: ['$yes', '$no', '$abstain'] },
             },
           },
         ])
@@ -203,6 +205,11 @@ export default {
                   yes: { $sum: '$votes.constituencies.yes' },
                   no: { $sum: '$votes.constituencies.no' },
                   abstain: { $sum: '$votes.constituencies.abstain' },
+                },
+              },
+              {
+                $addFields: {
+                  total: { $add: ['$yes', '$no', '$abstain'] },
                 },
               },
               // Build correct result
