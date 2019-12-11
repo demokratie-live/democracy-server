@@ -598,11 +598,7 @@ export default {
   },
 
   Procedure: {
-    communityVotes: async (
-      procedure,
-      { constituencies },
-      { VoteModel, ProcedureModel },
-    ) => {
+    communityVotes: async (procedure, { constituencies }, { VoteModel }) => {
       Log.graphql('Procedure.query.communityVotes');
       // Find global result(cache), not including constituencies
       const votesGlobal = await VoteModel.aggregate([
@@ -622,10 +618,10 @@ export default {
             abstination: { $sum: '$votes.cache.abstain' },
           },
         },
-        { 
+        {
           $addFields: {
-            total : { '$add' : [ '$yes', '$no', '$abstination' ] },
-          }
+            total: { $add: ['$yes', '$no', '$abstination'] },
+          },
         },
         // Remove _id from result
         {
@@ -678,10 +674,10 @@ export default {
                   abstain: { $sum: '$votes.constituencies.abstain' },
                 },
               },
-              { 
+              {
                 $addFields: {
-                  total : { '$add' : [ '$yes', '$no', '$abstain' ] },
-                }
+                  total: { $add: ['$yes', '$no', '$abstain'] },
+                },
               },
               // Build correct result
               {
