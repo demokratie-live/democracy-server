@@ -24,7 +24,7 @@ type Procedure {
   type: String
   period: Int
   currentStatus: String
-  currentStatusHistory: [String]
+  currentStatusHistory: [String!]!
   abstract: String
   tags: [String]
   voteDate: Date
@@ -35,7 +35,7 @@ type Procedure {
   subjectGroups: [String!]
   submissionDate: Date
   activityIndex: ActivityIndex!
-  importantDocuments: [Document]
+  importantDocuments: [Document!]!
   voteResults: VoteResult
   voted: Boolean!
   votedGovernment: Boolean
@@ -79,7 +79,7 @@ type ProceduresHavingVoteResults {
 }
 
 type Query {
-  procedure(id: ID!): Procedure
+  procedure(id: ID!): Procedure!
   ${/* DEPRECATED listType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
   procedures(listTypes: [ListType!], type: ProcedureType, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure!]!
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
