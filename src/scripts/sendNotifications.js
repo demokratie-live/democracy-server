@@ -1,4 +1,4 @@
-import PushNotifiaction from '../models/PushNotifiaction';
+import PushNotification from '../models/PushNotification';
 import { newVotes, newPreperations } from '../services/notifications';
 
 export default async () => {
@@ -7,9 +7,9 @@ export default async () => {
     newProcedurePushes,
     //   updatedPushes
   ] = await Promise.all([
-    PushNotifiaction.find({ status: 'new', type: 'newVote' }),
-    PushNotifiaction.find({ status: 'new', type: 'new' }),
-    PushNotifiaction.find({ status: 'new', type: 'update' }),
+    PushNotification.find({ status: 'new', type: 'newVote' }),
+    PushNotification.find({ status: 'new', type: 'new' }),
+    PushNotification.find({ status: 'new', type: 'update' }),
   ]);
 
   if (newVotePushes.length > 0) {
@@ -22,7 +22,7 @@ export default async () => {
       procedureIds: [...new Set(newProcedurePushes.map(({ procedureId }) => procedureId))],
     });
   }
-  await PushNotifiaction.update(
+  await PushNotification.update(
     {
       status: 'new',
     },

@@ -10,6 +10,28 @@ export const provider = (key = CONFIG.NOTIFICATION_ANDROID_SERVER_KEY) => {
   return new gcm.Sender(key);
 }
 
+export const push = async ({ title, message, payload, token, callback }) => {
+
+  const gcmProvider = provider();
+
+  // Check if Sending Interface is present
+  if (!gcmProvider) {
+    Log.error('ERROR: gcmProvider not present');
+    return;
+  }
+
+  // Construct Data Object
+  const gcmMessage = new gcm.Message({
+    data: {
+      title,
+      body: message,
+      payload,
+    },
+  });
+
+  gcmProvider.send(gcmMessage, token, callback);
+};
+
 // send bulk android notifications
 export const pushBulk = ({ title, message, payload, tokens }) => {
 

@@ -1,7 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import moment from 'moment';
-import {forEach, filter} from 'p-iteration'
-
+import {filter, reduce} from 'p-iteration'
 
 import CONFIG from '../../config'
 
@@ -9,64 +8,18 @@ import DeviceModel from '../../models/Device';
 import UserModel from '../../models/User';
 import ProcedureModel from '../../models/Procedure';
 import VoteModel from '../../models/Vote';
-import PushNotifiaction from '../../models/PushNotifiaction';
+import {default as PushNotificationModel, PUSH_TYPE, PUSH_CATEGORY, PUSH_OS} from '../../models/PushNotification';
 
 import {push as pushIOS} from './iOS';
-import {pushBulk as pushAndroid} from './Android';
+import {push as pushAndroid} from './Android';
 
-export const PUSH_TYPE = {
-  PROCEDURE: 'procedure',
-  PROCEDURE_BULK: 'procedureBulk',
-}
-
-export const PUSH_CATEGORY = {
-  CONFERENCE_WEEK: 'conferenceWeek',
-  CONFERENCE_WEEK_VOTE: 'conferenceWeekVote',
-  TOP100: 'top100',
-  OUTCOME: 'outcome',
-}
-
-export const sendPushs = ({ tokenObjects, title = 'DEMOCRACY', message, payload }) => {
-  // Remove duplicate Tokens
-  const devices = tokenObjects.reduce((prev, { token, os }) => {
-    const next = [...prev];
-    if (!next.some(({ token: existingToken }) => existingToken === token)) {
-      next.push({ token, os });
-    }
-    return next;
-  }, []);
-
-  // Send for iOS and collect tokens for Android to BulkPush
-  const androidTokens = [];
-  devices.forEach(({ token, os }) => {
-    switch (os) {
-      case 'ios':
-        pushIOS({ title, message, payload, token });
-        break;
-
-      case 'android':
-        androidTokens.push(token);
-        break;
-
-      default:
-        break;
-    }
-  });
-  pushAndroid({ title, message, payload, tokens: androidTokens });
-};
-
-export const sendQuedPushs = () => {
+export const sendQuedPushs = async () => {
   // Query Database
+  const pushs = await PushNotificationModel.find({sent: false, time: {$lte: new Date()}})
   // send all pushs in there
-}
-
-export const quePushs = ({type, category, title, message, procedureIds, tokens, time = new Date()}) => {
-  console.log(type, category, title, message, procedureIds, tokens.length, time)
-  /*sendPushs({
-    tokenObjects: tokens,
-    title,
-    message,
-    payload: {
+  const sent = await pushs.map(({_id, type, category, title, message, procedureIds, token, os}) => {
+    // Construct Payload
+    const payload = {
       type,
       action: type,
       category,
@@ -74,8 +27,70 @@ export const quePushs = ({type, category, title, message, procedureIds, tokens, 
       message,
       procedureId: procedureIds[0],
       procedureIds,
-    },
-  });*/
+    };
+    // Send Pushs
+    switch(os){
+      case PUSH_OS.ANDROID:
+        pushAndroid({ title, message, payload, token, callback: async (err, response) => {
+            if (err || response.success !== 1 || response.failure !== 0) {
+              // Write failure to Database
+              await PushNotificationModel.update(
+                { _id },
+                { $set: { failure: JSON.stringify({ err, response }) } }
+              )
+              // Remove broken Push tokens
+              if(response.results && response.results[0].error === 'NotRegistered'){
+                await DeviceModel.update(
+                  { },
+                  { $pull: { pushTokens: { token } } },
+                  { multi: true }
+                )
+                Log.error(`[PUSH] Android failure - removig token`);
+              } else {
+                Log.error(`[PUSH] Android failure ${JSON.stringify({ token, err, response })}`);
+              }
+            }
+          }
+        });
+        break;
+      case PUSH_OS.IOS:
+        pushIOS({ title, message, payload, token });
+        break;
+    }
+    // Return id
+    return _id;
+  });
+  // Set sent = true
+  await PushNotificationModel.update(
+    { _id: {$in: sent} },
+    { $set: { sent: true } },
+    { multi: true }
+  )
+  
+  Log.info(`[PUSH] Sent ${sent.length} Pushs`)
+
+  return true;
+}
+
+export const quePushs = async ({type, category, title, message, procedureIds, tokens, time = new Date()}) => {
+  console.log(type, category, title, message, procedureIds, tokens.length, time)
+  // Generate one push for each token
+  const docs = tokens.map(({token, os})=>{
+    return {
+      type,
+      category,
+      title,
+      message,
+      procedureIds,
+      token,
+      os,
+      time
+    }
+  });
+
+  await PushNotificationModel.insertMany(docs)
+
+  return true;
 }
 
 // This is called every Sunday by a Cronjob
@@ -124,9 +139,9 @@ export const quePushsVoteTop100 = async () => {
   const conferenceProceduresCount = await ProcedureModel.count({$and: [{voteDate: {$gte: startOfWeek}},{voteDate: {$lte: endOfWeek}}]})
   
   // Dont Push TOP100 if we have an active conferenceWeek
-  /*if(conferenceProceduresCount > 0){
+  if(conferenceProceduresCount > 0){
     return;
-  }*/
+  }
 
   // find TOP100 procedures
   const top100Procedures = await ProcedureModel.find({period: 19})
@@ -181,8 +196,8 @@ export const quePushsVoteTop100 = async () => {
         return true;
       }
       // Check if we sent the user a notifiation in the past time on that procedure
-      const tokens = device.pushTokens.reduce((acc, token) => {
-        const pastPushs = 0// PushNotifiactionModel.count({category: PUSH_CATEGORY.TOP100, procedureIds: {$elemMatch: procedure.procedureId}, token, time: {$gte: moment().subtract('months', 1)}});
+      const tokens = await reduce(device.pushTokens, async (acc, token) => {
+        const pastPushs = await PushNotificationModel.count({category: PUSH_CATEGORY.TOP100, procedureIds: procedure.procedureId, token: token.token, os: token.os, time: {$gte: moment().subtract(1, 'months')}});
         if(pastPushs === 0){
           return [...acc,token]
         }
@@ -192,6 +207,9 @@ export const quePushsVoteTop100 = async () => {
       if(tokens.length === 0){
         return true;
       }
+      // Calculate random Time:
+      const time = new Date();
+      time.setHours(9+Math.round(Math.random()*9))
       // Send Pushs
       quePushs({
         type: PUSH_TYPE.PROCEDURE,
@@ -200,7 +218,7 @@ export const quePushsVoteTop100 = async () => {
         message: procedure.title,
         procedureIds: [procedure.procedureId],
         tokens,
-        time: new Date() // TODO
+        time,
       });
       // We have qued a Push, remove device from list.
       return false;

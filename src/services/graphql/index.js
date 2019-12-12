@@ -12,7 +12,7 @@ import PhoneModel from '../../models/Phone';
 import VerificationModel from '../../models/Verification';
 import ActivityModel from '../../models/Activity';
 import VoteModel from '../../models/Vote';
-import PushNotifiactionModel from '../../models/PushNotifiaction';
+import PushNotificationModel from '../../models/PushNotification';
 import SearchTermModel from '../../models/SearchTerm';
 import DeputyModel from '../../models/Deputy';
 
@@ -44,7 +44,7 @@ const graphql = new ApolloServer({
     VerificationModel,
     ActivityModel,
     VoteModel,
-    PushNotifiactionModel,
+    PushNotificationModel,
     SearchTermModel,
     DeputyModel,
   }),

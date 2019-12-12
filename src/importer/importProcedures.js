@@ -12,7 +12,7 @@ import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tool
 
 // Models
 import Procedure from '../models/Procedure';
-import PushNotifiaction from '../models/PushNotifiaction';
+import PushNotification from '../models/PushNotification';
 
 // Queries
 import { procedureUpdate } from '../services/notifications';
@@ -45,7 +45,7 @@ const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
         ids: newBIoProcedure.procedureId,
       }),
     );
-    PushNotifiaction.create({
+    PushNotification.create({
       procedureId: newBIoProcedure.procedureId,
       type: 'new',
     });
@@ -78,7 +78,7 @@ const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
           diffs,
         }),
       );
-      PushNotifiaction.create({
+      PushNotification.create({
         procedureId: newBIoProcedure.procedureId,
         type: 'update',
         updatedValues,
@@ -103,7 +103,7 @@ const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
           ids: newBIoProcedure.procedureId,
         }),
       );
-      PushNotifiaction.create({
+      PushNotification.create({
         procedureId: newBIoProcedure.procedureId,
         type: 'newVote',
       });
