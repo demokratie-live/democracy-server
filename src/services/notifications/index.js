@@ -42,10 +42,10 @@ export const sendQuedPushs = async () => {
               if(response.results && response.results[0].error === 'NotRegistered'){
                 await DeviceModel.update(
                   { },
-                  { $pull: { pushTokens: { token } } },
+                  { $pull: { pushTokens: { token, os: PUSH_OS.ANDROID } } },
                   { multi: true }
                 )
-                Log.error(`[PUSH] Android failure - removig token`);
+                Log.warn(`[PUSH] Android failure - removig token`);
               } else {
                 Log.error(`[PUSH] Android failure ${JSON.stringify({ token, err, response })}`);
               }
@@ -54,7 +54,27 @@ export const sendQuedPushs = async () => {
         });
         break;
       case PUSH_OS.IOS:
-        pushIOS({ title, message, payload, token });
+        pushIOS({ title, message, payload, token, callback: async ({sent, failed}) => {
+          Log.info(JSON.stringify({ type: 'apnProvider.send', sent, failed }));
+          if (sent.length === 0 && failed.length !== 0) {
+            // Write failure to Database
+            await PushNotificationModel.update(
+              { _id },
+              { $set: { failure: JSON.stringify({ failed }) } }
+            )
+            // Remove broken Push tokens
+            if(failed[0].response && (failed[0].response.reason === 'DeviceTokenNotForTopic' || failed[0].response.reason === 'BadDeviceToken')){
+              await DeviceModel.update(
+                { },
+                { $pull: { pushTokens: { token, os: PUSH_OS.IOS } } },
+                { multi: true }
+              )
+              Log.warn(`[PUSH] IOS failure - removig token`);
+            } else {
+              Log.error(`[PUSH] IOS failure ${JSON.stringify({ token, sent, failed })}`);
+            }
+          }
+        }});
         break;
     }
     // Return id
@@ -67,13 +87,14 @@ export const sendQuedPushs = async () => {
     { multi: true }
   )
   
-  Log.info(`[PUSH] Sent ${sent.length} Pushs`)
+  if(sent.length > 0){
+    Log.info(`[PUSH] Sent ${sent.length} Pushs`)
+  }
 
   return true;
 }
 
 export const quePushs = async ({type, category, title, message, procedureIds, tokens, time = new Date()}) => {
-  console.log(type, category, title, message, procedureIds, tokens.length, time)
   // Generate one push for each token
   const docs = tokens.map(({token, os})=>{
     return {
@@ -154,7 +175,6 @@ export const quePushsVoteTop100 = async () => {
   // loop through the TOP100
   let topId = 1;
   for (var i = 0; i < top100Procedures.length; i++) {
-    // Iterate over numeric indexes from 0 to 5, as everyone expects.
     const procedure = top100Procedures[i]
     // Skip some calls
     if(devices.length === 0){
@@ -176,9 +196,6 @@ export const quePushsVoteTop100 = async () => {
               },
             },
           })
-          if(!voted){
-
-          }
         } 
       } else {
         voted = await VoteModel.findOne({
@@ -240,34 +257,166 @@ export const quePushsOutcome = async (procedureId) => {
   Lorem Ipsum Titel
   (Glocke, nicht limitiert, nicht abgestimmt, alle)
   */
-  const title = voted ? 'Offizielles Ergebnis zu Deiner Abstimmung' : 'Offizielles Ergebnis zur Abstimmung'
-  const message = procedure.title // TODO
-  quePushs({
-    type: PUSH_TYPE.PROCEDURE,
-    category: PUSH_CATEGORY.OUTCOME,
-    title,
-    message,
-    procedureIds: [procedureId],
-    tokens,
-  });
+
+  // find procedure
+  const procedure = await ProcedureModel.findOne({procedureId});
+
+  // Check if we found the procedure
+  if(!procedure){
+    Log.error(`[PUSH] Unknown Procedure ${procedureId}`)
+    return;
+  }
+  // Find Devices
+  console.log(procedure._id)
+  let devices = await DeviceModel.find({'notificationSettings.enabled': true, pushTokens: { $gt: [] }, 'notificationSettings.procedures': procedure._id });
+  console.log(`Test: ${devices}`)
+
+  // loop through the devices and send Pushs
+  for (var i = 0; i < devices.length; i++) {
+    const device = devices[i];
+    // Dont continue if we have no push tokens
+    let voted = null;
+    // Check if device is associcated with a vote on the procedure
+    if(CONFIG.SMS_VERIFICATION){
+      const user = await UserModel.findOne({device: device._id, verified: true})
+      if(user){
+        voted = await VoteModel.findOne({
+          procedure: procedure._id,
+          type: 'Phone',
+          voters: {
+            $elemMatch: {
+              voter: user.phone,
+            },
+          },
+        })
+      } 
+    } else {
+      voted = await VoteModel.findOne({
+        procedure: procedure._id,
+        type: 'Device',
+        voters: {
+          $elemMatch: {
+            voter: device._id,
+          },
+        },
+      })
+    }
+
+    const title = voted ? 'Offizielles Ergebnis zu Deiner Abstimmung' : 'Offizielles Ergebnis zur Abstimmung'
+    const message = procedure.title
+    quePushs({
+      type: PUSH_TYPE.PROCEDURE,
+      category: PUSH_CATEGORY.OUTCOME,
+      title,
+      message,
+      procedureIds: [procedureId],
+      tokens: device.pushTokens,
+    });
+  }
 }
 
-export const quePushsVoteConferenceWeek = () => {
+export const quePushsVoteConferenceWeek = async () => {
   /*
   Diese Woche im Bundestag: Jetzt Abstimmen!
   Lorem Ipsum Titel
   (Innerhalb der Sitzungswoche, nicht abgestimmt, nicht vergangen, 1x pro Tag, individuell)
   */
-  const title = 'Diese Woche im Bundestag: Jetzt Abstimmen!'
-  const message = procedure.title // TODO
-  quePushs({
-    type: PUSH_TYPE.PROCEDURE,
-    category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
-    title,
-    message,
-    procedureIds,
-    tokens,
-  });
+
+  // Check if we have a ConferenceWeek
+  const startOfWeek = moment().startOf('isoweek').toDate(); // Should be Mo
+  const endOfWeek   = moment().endOf('isoweek').toDate(); // Should be So
+  const conferenceProceduresCount = await ProcedureModel.count({$and: [{voteDate: {$gte: startOfWeek}},{voteDate: {$lte: endOfWeek}}]})
+  
+  // Dont Push ConfereceWeek Updates if we have dont have an active conferenceWeek
+  if(conferenceProceduresCount === 0){
+    return;
+  }
+
+  // find ConferenceWeek procedures not voted
+  const conferenceWeekProcedures = await ProcedureModel.find({
+    period: 19,
+    $or: [
+      {
+        $and: [
+          { voteDate: { $gte: new Date() } },
+          { $or: [{ voteEnd: { $exists: false } }, { voteEnd: { $eq: null } }] },
+        ],
+      },
+      { voteEnd: { $gte: new Date() } },
+    ],
+  }).sort({ activities: -1, lastUpdateDate: -1, title: 1 })
+
+  // Find Devices
+  let devices = await DeviceModel.find({'notificationSettings.enabled': true, pushTokens: { $gt: [] } });
+
+  // loop through the ConferenceWeek Procedures
+  for (var i = 0; i < conferenceWeekProcedures.length; i++) {
+    const procedure = conferenceWeekProcedures[i]
+    // Skip some calls
+    if(devices.length === 0){
+      continue
+    }
+    // loop through the devices and remove those we send a Push
+    devices = await filter(devices,async (device) => {
+      let voted = null;
+      // Check if device is associcated with a vote on the procedure
+      if(CONFIG.SMS_VERIFICATION){
+        const user = await UserModel.findOne({device: device._id, verified: true})
+        if(user){
+          voted = await VoteModel.findOne({
+            procedure: procedure._id,
+            type: 'Phone',
+            voters: {
+              $elemMatch: {
+                voter: user.phone,
+              },
+            },
+          })
+        } 
+      } else {
+        voted = await VoteModel.findOne({
+          procedure: procedure._id,
+          type: 'Device',
+          voters: {
+            $elemMatch: {
+              voter: device._id,
+            },
+          },
+        })
+      }
+      // Dont send Pushs - User has voted already
+      if(voted){
+        return true;
+      }
+      // Check if we sent the user a notifiation in the past time on that procedure
+      const tokens = await reduce(device.pushTokens, async (acc, token) => {
+        const pastPushs = await PushNotificationModel.count({category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE, procedureIds: procedure.procedureId, token: token.token, os: token.os, time: {$gte: moment().subtract(1, 'weeks')}});
+        if(pastPushs === 0){
+          return [...acc,token]
+        }
+        return acc;
+      },[]);
+      // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
+      if(tokens.length === 0){
+        return true;
+      }
+      // Calculate random Time:
+      const time = new Date();
+      time.setHours(9+Math.round(Math.random()*9))
+      // Send Pushs
+      quePushs({
+        type: PUSH_TYPE.PROCEDURE,
+        category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
+        title: 'Diese Woche im Bundestag: Jetzt Abstimmen!',
+        message: procedure.title,
+        procedureIds: [procedure.procedureId],
+        tokens,
+        time,
+      });
+      // We have qued a Push, remove device from list.
+      return false;
+    },[])
+  }
 }
 
 

@@ -19,11 +19,11 @@ export const provider = (key = CONFIG.APPLE_APN_KEY, keyId = CONFIG.APPLE_APN_KE
       production,
     };
   
-    apnProvider = new apn.Provider(options);
+    return new apn.Provider(options);
 }
 
 // Send single iOS notification
-export const push = ({ title, message, payload, token }) => {
+export const push = ({ title, message, payload, token, callback }) => {
   const apnProvider = provider();
 
   // Check if Sending Interface is present
@@ -44,6 +44,6 @@ export const push = ({ title, message, payload, token }) => {
 
   // Do the sending
   apnProvider.send(data, token).then(response => {
-    Log.info(JSON.stringify({ type: 'apnProvider.send', response }));
+    callback(response)
   });
 };
