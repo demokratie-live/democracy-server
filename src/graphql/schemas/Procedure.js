@@ -21,7 +21,7 @@ type Procedure {
   _id: ID!
   title: String!
   procedureId: String!
-  type: String
+  type: String!
   period: Int
   currentStatus: String
   currentStatusHistory: [String!]!
@@ -76,7 +76,7 @@ enum VotedTimeSpan {
 
 type ProceduresHavingVoteResults {
   total: Int
-  procedures: [Procedure]
+  procedures: [Procedure!]!
 }
 
 type Query {
@@ -84,7 +84,7 @@ type Query {
   ${/* DEPRECATED listType 2019-01-29 Renamed filed VOTING to PAST and IN_VOTE */ ''}
   procedures(listTypes: [ListType!], type: ProcedureType, pageSize: Int, offset: Int, sort: String, filter: ProcedureFilter): [Procedure!]!
   proceduresById(ids: [String!]!, pageSize: Int, offset: Int): [Procedure]
-  proceduresByIdHavingVoteResults(procedureIds: [String!], timespan: VotedTimeSpan, pageSize: Int, offset: Int, filter: ProcedureWOMFilter): ProceduresHavingVoteResults
+  proceduresByIdHavingVoteResults(procedureIds: [String!], timespan: VotedTimeSpan, pageSize: Int, offset: Int, filter: ProcedureWOMFilter): ProceduresHavingVoteResults!
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
   searchProceduresAutocomplete(term: String!): SearchProcedures

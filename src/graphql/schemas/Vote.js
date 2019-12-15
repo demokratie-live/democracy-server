@@ -24,7 +24,7 @@ export default `
   }
 
   type DeputyVote {
-    deputy: Deputy
+    deputy: Deputy!
     decision: VoteSelection
   }
 
@@ -38,7 +38,7 @@ export default `
     decisionText: String
     namedVote: Boolean
     partyVotes: [PartyVote!]!
-    deputyVotes(constituencies: [String!], directCandidate: Boolean): [DeputyVote]
+    deputyVotes(constituencies: [String!], directCandidate: Boolean): [DeputyVote!]!
   }
 
   type PartyVote {
@@ -133,7 +133,7 @@ export default `
     communityVote: VommunityVote
     governmentVote: GovernmentVote
     partyVotes: [PartyVote!]!
-    deputyVotes(directCandidate: Boolean): [DeputyVote]
+    deputyVotes(directCandidate: Boolean): [DeputyVote!]!
     decisionText: String
   }
 
