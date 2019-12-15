@@ -6,14 +6,11 @@ import PROCEDURE_STATES from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import Activity from './Activity';
 
-const queryVotes = async (parent, { procedure, procedureId, constituencies }, { VoteModel, device, phone }) => {
+const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
   // Has user voted?
   const voted = await VoteModel.findOne({
-    $or: [
-      { procedure: Types.ObjectId(procedure) },
-      { procedureId },
-    ],
+    procedure: Types.ObjectId(procedure),
     type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
       voter: CONFIG.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
@@ -291,12 +288,16 @@ export default {
     vote: isVerified.createResolver(
       async (
         parent,
-        { procedure: procedureId, selection, constituency },
+        { procedure: procedureObjId, procedureId, selection, constituency },
         { VoteModel, ProcedureModel, ActivityModel, user, device, phone },
       ) => {
         Log.graphql('Vote.mutation.vote');
         // Find procedure
-        const procedure = await ProcedureModel.findById(procedureId);
+        const procedure = await ProcedureModel.findOne({
+          $or: [
+            { procedure: Types.ObjectId(procedureObjId) },
+            { procedureId },
+        ]});
         // Fail if not existant or not votable
         if (!procedure) {
           throw new Error('Not votable');
@@ -391,7 +392,7 @@ export default {
         // Increate Activity
         await Activity.Mutation.increaseActivity(
           parent,
-          { procedureId },
+          { procedureId: procedure._id },
           {
             ProcedureModel,
             ActivityModel,
