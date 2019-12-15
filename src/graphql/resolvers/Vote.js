@@ -6,11 +6,14 @@ import PROCEDURE_STATES from '../../config/procedureStates';
 import { isLoggedin, isVerified } from '../../express/auth/permissions';
 import Activity from './Activity';
 
-const queryVotes = async (parent, { procedure, constituencies }, { VoteModel, device, phone }) => {
+const queryVotes = async (parent, { procedure, procedureId, constituencies }, { VoteModel, device, phone }) => {
   Log.graphql('Vote.query.votes');
   // Has user voted?
   const voted = await VoteModel.findOne({
-    procedure: Types.ObjectId(procedure),
+    $or: [
+      { procedure: Types.ObjectId(procedure) },
+      { procedureId },
+    ],
     type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
       voter: CONFIG.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary

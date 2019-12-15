@@ -66,7 +66,12 @@ export default `
   }
   
   type Mutation {
-    vote(procedure: ID!, selection: VoteSelection!, constituency: String): Vote
+    vote(
+      procedure: ID,
+      procedureId: String, 
+      selection: VoteSelection!, 
+      constituency: String
+    ): Vote
   }
   
 
