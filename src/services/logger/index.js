@@ -53,7 +53,6 @@ const myLevels = {
     error: 0,
     warn: 1,
     info: 2,
-    notification: 3,
     import: 4,
     jwt: 5,
     graphql: 6,
