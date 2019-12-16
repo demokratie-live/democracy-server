@@ -3,19 +3,19 @@ import { Schema } from 'mongoose';
 export const PUSH_TYPE = {
   PROCEDURE: 'procedure',
   PROCEDURE_BULK: 'procedureBulk',
-}
+};
 
 export const PUSH_CATEGORY = {
   CONFERENCE_WEEK: 'conferenceWeek',
   CONFERENCE_WEEK_VOTE: 'conferenceWeekVote',
   TOP100: 'top100',
   OUTCOME: 'outcome',
-}
+};
 
 export const PUSH_OS = {
   IOS: 'ios',
-  ANDROID: 'android'
-}
+  ANDROID: 'android',
+};
 
 const PushNotificationSchema = new Schema(
   {
@@ -26,7 +26,12 @@ const PushNotificationSchema = new Schema(
     },
     category: {
       type: String,
-      enum: [PUSH_CATEGORY.CONFERENCE_WEEK, PUSH_CATEGORY.CONFERENCE_WEEK_VOTE, PUSH_CATEGORY.TOP100, PUSH_CATEGORY.OUTCOME],
+      enum: [
+        PUSH_CATEGORY.CONFERENCE_WEEK,
+        PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
+        PUSH_CATEGORY.TOP100,
+        PUSH_CATEGORY.OUTCOME,
+      ],
       required: true,
     },
     title: {
@@ -57,7 +62,7 @@ const PushNotificationSchema = new Schema(
     },
     failure: {
       type: String,
-    }
+    },
   },
   { timestamps: true },
 );

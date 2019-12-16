@@ -2,16 +2,17 @@ import gcm from 'node-gcm';
 import CONFIG from '../../config';
 
 export const provider = (key = CONFIG.NOTIFICATION_ANDROID_SERVER_KEY) => {
-  if(!key){
-    Log.error('ERROR: NOTIFICATION_ANDROID_SERVER_KEY not specified in .env - Android Notifications not possible');
+  if (!key) {
+    Log.error(
+      'ERROR: NOTIFICATION_ANDROID_SERVER_KEY not specified in .env - Android Notifications not possible',
+    );
     return null;
   }
 
   return new gcm.Sender(key);
-}
+};
 
 export const push = async ({ title, message, payload, token, callback }) => {
-
   const gcmProvider = provider();
 
   // Check if Sending Interface is present
@@ -34,7 +35,6 @@ export const push = async ({ title, message, payload, token, callback }) => {
 
 // send bulk android notifications
 export const pushBulk = ({ title, message, payload, tokens }) => {
-
   const gcmProvider = provider();
 
   // Check if Sending Interface is present

@@ -3,24 +3,30 @@ import apn from 'apn';
 import fs from 'fs';
 import CONFIG from '../../config';
 
+export const provider = (
+  key = CONFIG.APPLE_APN_KEY,
+  keyId = CONFIG.APPLE_APN_KEY_ID,
+  teamId = CONFIG.APPLE_TEAMID,
+  production = process.env.NODE_ENV === 'production',
+) => {
+  if (!fs.existsSync(key)) {
+    Log.error('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
+    return null;
+  }
+  if (!keyId || !teamId) {
+    Log.error(
+      'ERROR: APPLE_APN_KEY_ID or APPLE_TEAMID not specified in .env - Apple Notifications not possible',
+    );
+    return null;
+  }
 
-export const provider = (key = CONFIG.APPLE_APN_KEY, keyId = CONFIG.APPLE_APN_KEY_ID, teamId = CONFIG.APPLE_TEAMID, production = process.env.NODE_ENV === 'production') => {
-    if (!fs.existsSync(key)) {
-      Log.error('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
-      return null;
-    }
-    if(!keyId || !teamId){
-      Log.error('ERROR: APPLE_APN_KEY_ID or APPLE_TEAMID not specified in .env - Apple Notifications not possible');
-      return null;
-    }
+  const options = {
+    token: { key, keyId, teamId },
+    production,
+  };
 
-    const options = {
-      token: { key, keyId, teamId},
-      production,
-    };
-  
-    return new apn.Provider(options);
-}
+  return new apn.Provider(options);
+};
 
 // Send single iOS notification
 export const push = ({ title, message, payload, token, callback }) => {
@@ -44,6 +50,6 @@ export const push = ({ title, message, payload, token, callback }) => {
 
   // Do the sending
   apnProvider.send(data, token).then(response => {
-    callback(response)
+    callback(response);
   });
 };
