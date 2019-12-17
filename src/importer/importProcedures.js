@@ -110,7 +110,8 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     }
   }
   // Set CalendarWeek & Year even if no sessions where found
-  if (bIoProcedure.voteDate && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear)) {
+  // Always override Week & Year by voteDate since we sort by this and the session match is not too accurate
+  if (bIoProcedure.voteDate /* && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear) */) {
     bIoProcedure.voteWeek = moment(bIoProcedure.voteDate).format('W'); // eslint-disable-line no-param-reassign
     bIoProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
   }
