@@ -295,7 +295,7 @@ export default {
         // Find procedure
         const procedure = await ProcedureModel.findOne({
           $or: [
-            { procedure: Types.ObjectId(procedureObjId) },
+            { _id: Types.ObjectId(procedureObjId) },
             { procedureId },
         ]});
         // Fail if not existant or not votable

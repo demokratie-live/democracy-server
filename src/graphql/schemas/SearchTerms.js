@@ -1,11 +1,11 @@
 export default `
 
 type SearchTerm {
-  term: String
+  term: String!
 }
 
 type Query {
-  mostSearched: [SearchTerm]
+  mostSearched: [SearchTerm!]!
 }
  
 type Mutation {

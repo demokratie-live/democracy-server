@@ -49,8 +49,8 @@ type Procedure {
 }
 
 type SearchProcedures {
-  procedures: [Procedure]
-  autocomplete: [String]
+  procedures: [Procedure!]!
+  autocomplete: [String!]!
 }
 
 input ProcedureFilter {
@@ -87,7 +87,7 @@ type Query {
   proceduresByIdHavingVoteResults(procedureIds: [String!], timespan: VotedTimeSpan, pageSize: Int, offset: Int, filter: ProcedureWOMFilter): ProceduresHavingVoteResults!
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
-  searchProceduresAutocomplete(term: String!): SearchProcedures
+  searchProceduresAutocomplete(term: String!): SearchProcedures!
   votedProcedures: [Procedure]
   proceduresWithVoteResults(procedureIds: [String!]!): [Procedure]
 }
