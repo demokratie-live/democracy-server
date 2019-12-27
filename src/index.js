@@ -75,13 +75,6 @@ const main = async () => {
   const smHumanConnection = require('./express/webhooks/socialmedia/humanconnection'); // eslint-disable-line global-require
   server.get('/webhooks/human-connection/contribute', smHumanConnection);
 
-  // Debug
-  if (CONFIG.DEBUG) {
-    const debugPushNotifications = require('./express/webhooks/debug/pushNotifications'); // eslint-disable-line global-require
-    // Push Notification test
-    server.get('/push-test', debugPushNotifications);
-  }
-
   // Graphql
   // Here several Models are included for graphql
   const graphql = require('./services/graphql'); // eslint-disable-line global-require

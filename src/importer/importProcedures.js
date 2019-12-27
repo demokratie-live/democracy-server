@@ -5,17 +5,15 @@ import moment from 'moment';
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 
 // GraphQL
-import { detailedDiff } from 'deep-object-diff';
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
 
 // Models
 import Procedure from '../models/Procedure';
-import PushNotifiaction from '../models/PushNotifiaction';
 
 // Queries
-import { procedureUpdate } from '../services/notifications';
+import { quePushsOutcome } from '../services/notifications';
 import { convertPartyName } from './tools';
 
 /* const deputiesNumber = {
@@ -32,85 +30,6 @@ import { convertPartyName } from './tools';
   18: 630,
   19: 709,
 }; */
-
-const sendProcedurePushs = async (newBIoProcedure, newDoc, oldProcedure) => {
-  /**
-   * PUSH NOTIFICATIONS
-   */
-  // New Procedures
-  if (!oldProcedure) {
-    Log.push(
-      JSON.stringify({
-        type: 'new Procedure',
-        ids: newBIoProcedure.procedureId,
-      }),
-    );
-    PushNotifiaction.create({
-      procedureId: newBIoProcedure.procedureId,
-      type: 'new',
-    });
-    // newPreperation({ procedureId: newBIoProcedure.procedureId });
-  } else {
-    // Updated Procedures
-    const diffs = detailedDiff(newDoc.toObject(), oldProcedure.toObject());
-    const updatedValues = _.compact(
-      _.map(diffs.updated, (value, key) => {
-        switch (key) {
-          case 'currentStatus':
-          case 'importantDocuments':
-          case 'voteResults':
-            return key;
-
-          case 'updatedAt':
-          case 'bioUpdateAt':
-            return null;
-
-          default:
-            return null;
-        }
-      }),
-    );
-    if (updatedValues.length > 0) {
-      Log.import(
-        JSON.stringify({
-          type: 'updated Procedure',
-          ids: newBIoProcedure.procedureId,
-          diffs,
-        }),
-      );
-      PushNotifiaction.create({
-        procedureId: newBIoProcedure.procedureId,
-        type: 'update',
-        updatedValues,
-      });
-      procedureUpdate({ procedureId: newBIoProcedure.procedureId });
-    }
-    if (
-      (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
-        oldProcedure.currentStatus !== PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG &&
-        !(
-          oldProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
-          newBIoProcedure.voteDate > new Date()
-        )) ||
-      (newBIoProcedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
-        newBIoProcedure.voteDate > new Date() &&
-        !oldProcedure.voteDate)
-    ) {
-      // moved to Vote Procedures
-      Log.import(
-        JSON.stringify({
-          type: 'new Vote',
-          ids: newBIoProcedure.procedureId,
-        }),
-      );
-      PushNotifiaction.create({
-        procedureId: newBIoProcedure.procedureId,
-        type: 'newVote',
-      });
-      // newVote({ procedureId: newBIoProcedure.procedureId });
-    }
-  }
-};
 
 const importProcedures = async (bIoProcedure, { push = false }) => {
   if (bIoProcedure && bIoProcedure.history) {
@@ -191,7 +110,8 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     }
   }
   // Set CalendarWeek & Year even if no sessions where found
-  if (bIoProcedure.voteDate && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear)) {
+  // Always override Week & Year by voteDate since we sort by this and the session match is not too accurate
+  if (bIoProcedure.voteDate /* && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear) */) {
     bIoProcedure.voteWeek = moment(bIoProcedure.voteDate).format('W'); // eslint-disable-line no-param-reassign
     bIoProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
   }
@@ -209,9 +129,28 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
       upsert: true,
       new: true,
     },
-  ).then(newDoc => {
+  ).then(() => {
     if (push) {
-      sendProcedurePushs(bIoProcedure, newDoc, oldProcedure);
+      // We have a vote result in new Procedure
+      if (
+        bIoProcedure.voteResults.yes !== null ||
+        bIoProcedure.voteResults.no !== null ||
+        bIoProcedure.voteResults.abstination !== null ||
+        bIoProcedure.voteResults.notVoted !== null
+      ) {
+        // We have no old Procedure or no VoteResult on old Procedure
+        if (!oldProcedure || !oldProcedure.voteResults) {
+          quePushsOutcome(bIoProcedure.procedureId);
+          // We have different values for VoteResult
+        } else if (
+          bIoProcedure.voteResults.yes !== oldProcedure.voteResults.yes ||
+          bIoProcedure.voteResults.no !== oldProcedure.voteResults.no ||
+          bIoProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
+          bIoProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted
+        ) {
+          quePushsOutcome(bIoProcedure.procedureId);
+        }
+      }
     }
   });
 };
