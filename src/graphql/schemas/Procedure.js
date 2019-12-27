@@ -88,7 +88,7 @@ type Query {
   notifiedProcedures: [Procedure]
   searchProcedures(term: String!): [Procedure] @deprecated(reason: "use searchProceduresAutocomplete")
   searchProceduresAutocomplete(term: String!): SearchProcedures!
-  votedProcedures: [Procedure]
+  votedProcedures: [Procedure!]!
   proceduresWithVoteResults(procedureIds: [String!]!): [Procedure]
 }
 `;

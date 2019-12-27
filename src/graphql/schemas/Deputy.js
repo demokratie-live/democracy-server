@@ -27,10 +27,10 @@ type Deputy {
   directCandidate: Boolean
   contact: DeputyContact
   totalProcedures: Int
-  procedures(procedureIds: [String!], pageSize: Int, offset: Int): [DeputyProcedure]
+  procedures(procedureIds: [String!], pageSize: Int, offset: Int): [DeputyProcedure!]!
 }
 
 type Query {
-  deputiesOfConstituency(constituency: String!, directCandidate: Boolean): [Deputy]
+  deputiesOfConstituency(constituency: String!, directCandidate: Boolean): [Deputy!]!
 }
 `;
