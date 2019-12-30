@@ -23,8 +23,11 @@ export default `
 
   type NotificationSettings {
     enabled: Boolean
-    newVote: Boolean
-    newPreperation: Boolean
+    newVote: Boolean @deprecated(reason: "<= 1.22 Notification Settings")
+    newPreperation: Boolean @deprecated(reason: "<= 1.22 Notification Settings")
+    conferenceWeekPushs: Boolean
+    voteConferenceWeekPushs: Boolean
+    voteTOP100Pushs: Boolean
     disableUntil: Date
     procedures: [String]
     tags: [String]
@@ -40,10 +43,14 @@ export default `
 
     addToken(token: String!, os: String!): TokenResult
     
+    ${/* DEPRECATED newVote & newPreperation: <= 1.22 Notification Settings */ ''}
     updateNotificationSettings(
       enabled: Boolean,
       newVote: Boolean,
-      newPreperation: Boolean, 
+      newPreperation: Boolean,
+      conferenceWeekPushs: Boolean,
+      voteConferenceWeekPushs: Boolean,
+      voteTOP100Pushs: Boolean,
       disableUntil: Date, 
       procedures: [String], 
       tags: [String]

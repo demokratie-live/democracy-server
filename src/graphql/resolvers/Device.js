@@ -393,10 +393,11 @@ export default {
     updateNotificationSettings: isLoggedin.createResolver(
       async (
         parent,
-        { enabled, disableUntil, procedures, tags, newVote, newPreperation },
+        { enabled, disableUntil, procedures, tags, newVote, newPreperation, conferenceWeekPushs, voteConferenceWeekPushs, voteTOP100Pushs },
         { device },
       ) => {
         Log.graphql('Device.mutation.updateNotificationSettings');
+
         device.notificationSettings = {
           ...device.notificationSettings,
           ..._.omitBy(
@@ -407,6 +408,10 @@ export default {
               tags,
               newVote,
               newPreperation,
+              // traversal of old settings -> new settings
+              conferenceWeekPushs,
+              voteConferenceWeekPushs: (newVote && !voteConferenceWeekPushs) ? newVote : voteConferenceWeekPushs,
+              voteTOP100Pushs: (newPreperation && !voteTOP100Pushs) ? newPreperation : voteTOP100Pushs,
             },
             _.isNil,
           ),

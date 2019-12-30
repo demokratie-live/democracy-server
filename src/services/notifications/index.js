@@ -167,7 +167,10 @@ export const quePushsConferenceWeek = async () => {
   const procedureIds = procedures.map(p => p.procedureId);
 
   // Find Devices & Tokens
-  const devices = await DeviceModel.find({ 'notificationSettings.enabled': true });
+  const devices = await DeviceModel.find({
+    'notificationSettings.enabled': true,
+    'notificationSettings.conferenceWeekPushs': true,
+  });
   const tokens = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
 
   // Only send Message if at least one vote & one token is found
@@ -219,6 +222,7 @@ export const quePushsVoteTop100 = async () => {
   // Find Devices
   let devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
+    'notificationSettings.voteTOP100Pushs': true,
     pushTokens: { $gt: [] },
   });
 
@@ -428,6 +432,7 @@ export const quePushsVoteConferenceWeek = async () => {
   // Find Devices
   let devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
+    'notificationSettings.voteConferenceWeekPushs': true,
     pushTokens: { $gt: [] },
   });
 
