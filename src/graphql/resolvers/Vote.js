@@ -289,7 +289,7 @@ export default {
       async (
         parent,
         { procedure: procedureId, selection, constituency },
-        { VoteModel, ProcedureModel, ActivityModel, user, device, phone },
+        { VoteModel, ProcedureModel, ActivityModel, DeviceModel, user, device, phone },
       ) => {
         Log.graphql('Vote.mutation.vote');
         // Find procedure
@@ -397,6 +397,13 @@ export default {
             device,
           },
         );
+
+        // Autosubscribe to Pushs for this Procedure & User
+        await DeviceModel.updateOne(
+          { _id: device._id },
+          { $addToSet: { 'notificationSettings.procedures': procedureId } },
+        );
+
         // Return new User Vote Results
         return queryVotes(
           parent,
