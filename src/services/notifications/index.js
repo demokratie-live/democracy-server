@@ -14,10 +14,21 @@ import PushNotificationModel, {
   PUSH_OS,
 } from '../../models/PushNotification';
 
+import { getCron, setCronStart, setCronSuccess } from './../cronJobs/tools';
+
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
 
 export const sendQuedPushs = async () => {
+  const CRON_NAME = 'sendQuedPushs'
+  const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
+  
   // Query Database
   const pushs = await PushNotificationModel.find({ sent: false, time: { $lte: new Date() } });
   // send all pushs in there
@@ -114,6 +125,8 @@ export const sendQuedPushs = async () => {
     Log.info(`[PUSH] Sent ${sentPushs.length} Pushs`);
   }
 
+  await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
+
   return true;
 };
 
@@ -153,6 +166,15 @@ export const quePushsConferenceWeek = async () => {
   (Sonntag vor Sitzungswoche, alle)
   */
 
+  const CRON_NAME = 'quePushsConferenceWeek'
+  const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
+
   // Find coresponding Procedures
   const startOfWeek = moment()
     .startOf('week')
@@ -189,6 +211,7 @@ export const quePushsConferenceWeek = async () => {
       tokens,
     });
   }
+  await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
 export const quePushsVoteTop100 = async () => {
@@ -197,6 +220,15 @@ export const quePushsVoteTop100 = async () => {
   Lorem Ipsum Titel
   (Top 100, Außerhalb der Sitzungwoche, 1x pro Tag, individuell)
   */
+
+  const CRON_NAME = 'quePushsVoteTop100'
+  const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
 
   // Check if we have a ConferenceWeek
   const startOfWeek = moment()
@@ -211,6 +243,7 @@ export const quePushsVoteTop100 = async () => {
 
   // Dont Push TOP100 if we have an active conferenceWeek
   if (conferenceProceduresCount > 0) {
+    await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
     return;
   }
 
@@ -313,6 +346,7 @@ export const quePushsVoteTop100 = async () => {
     // Count the Top Number up
     topId += 1;
   }
+  await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
 export const quePushsOutcome = async procedureId => {
@@ -399,6 +433,15 @@ export const quePushsVoteConferenceWeek = async () => {
   (Innerhalb der Sitzungswoche, nicht abgestimmt, nicht vergangen, 1x pro Tag, individuell)
   */
 
+  const CRON_NAME = 'quePushsVoteConferenceWeek'
+  const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
+
   // Check if we have a ConferenceWeek
   const startOfWeek = moment()
     .startOf('isoweek')
@@ -412,6 +455,7 @@ export const quePushsVoteConferenceWeek = async () => {
 
   // Dont Push ConfereceWeek Updates if we have dont have an active conferenceWeek
   if (conferenceProceduresCount === 0) {
+    await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
     return;
   }
 
@@ -519,4 +563,5 @@ export const quePushsVoteConferenceWeek = async () => {
       [],
     );
   }
+  await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
