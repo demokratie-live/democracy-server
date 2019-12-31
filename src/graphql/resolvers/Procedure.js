@@ -151,7 +151,7 @@ export default {
           ],
           ...filterQuery,
         })
-          .sort({ voteDate: -1, voteEnd: -1, activities: -1 })
+          .sort({ voteDate: 1, voteEnd: 1, activities: -1 })
           .skip(offset)
           .limit(pageSize);
 
