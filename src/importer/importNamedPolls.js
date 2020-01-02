@@ -4,9 +4,9 @@ import { unionBy } from 'lodash';
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
-import { getCron, setCronStart, setCronSuccess, setCronError } from './../services/cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
-export const CRON_NAME = 'NamedPolls'
+export const CRON_NAME = 'NamedPolls';
 
 export default async () => {
   // New SuccessStartDate

@@ -7,7 +7,7 @@ import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bunde
 // GraphQL
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
-import { getCron, setCronStart, setCronSuccess, setCronError } from './../services/cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
 // Models
 import Procedure from '../models/Procedure';
@@ -16,7 +16,7 @@ import Procedure from '../models/Procedure';
 import { quePushsOutcome } from '../services/notifications';
 import { convertPartyName } from './tools';
 
-export const CRON_NAME = 'Procedures'
+export const CRON_NAME = 'Procedures';
 
 /* const deputiesNumber = {
   8: 518,
@@ -168,7 +168,7 @@ export default async () => {
   await setCronStart({ name: CRON_NAME, startDate });
   // Last SuccessStartDate
   const since = new Date(cron.lastSuccessStartDate);
-  
+
   // Query Bundestag.io
   try {
     const client = createClient();

@@ -14,13 +14,13 @@ import PushNotificationModel, {
   PUSH_OS,
 } from '../../models/PushNotification';
 
-import { getCron, setCronStart, setCronSuccess } from './../cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
 
 export const sendQuedPushs = async () => {
-  const CRON_NAME = 'sendQuedPushs'
+  const CRON_NAME = 'sendQuedPushs';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -28,7 +28,7 @@ export const sendQuedPushs = async () => {
     return;
   }
   await setCronStart({ name: CRON_NAME, startDate });
-  
+
   // Query Database
   const pushs = await PushNotificationModel.find({ sent: false, time: { $lte: new Date() } });
   // send all pushs in there
@@ -126,8 +126,6 @@ export const sendQuedPushs = async () => {
   }
 
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
-
-  return true;
 };
 
 export const quePushs = async ({
@@ -166,7 +164,7 @@ export const quePushsConferenceWeek = async () => {
   (Sonntag vor Sitzungswoche, alle)
   */
 
-  const CRON_NAME = 'quePushsConferenceWeek'
+  const CRON_NAME = 'quePushsConferenceWeek';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -221,7 +219,7 @@ export const quePushsVoteTop100 = async () => {
   (Top 100, Außerhalb der Sitzungwoche, 1x pro Tag, individuell)
   */
 
-  const CRON_NAME = 'quePushsVoteTop100'
+  const CRON_NAME = 'quePushsVoteTop100';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -433,7 +431,7 @@ export const quePushsVoteConferenceWeek = async () => {
   (Innerhalb der Sitzungswoche, nicht abgestimmt, nicht vergangen, 1x pro Tag, individuell)
   */
 
-  const CRON_NAME = 'quePushsVoteConferenceWeek'
+  const CRON_NAME = 'quePushsVoteConferenceWeek';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {

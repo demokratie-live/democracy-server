@@ -2,9 +2,15 @@ import { CronJob } from 'cron';
 
 import CONFIG from '../../config';
 
-import importDeputyProfiles, {CRON_NAME as CRON_NAME_DEPUTY_PROFILES} from '../../importer/importDeputyProfiles';
-import importNamedPolls, {CRON_NAME as CRON_NAME_NAMED_POLLS} from '../../importer/importNamedPolls';
-import importProcedures, {CRON_NAME as CRON_NAME_PROCEDURES} from '../../importer/importProcedures';
+import importDeputyProfiles, {
+  CRON_NAME as CRON_NAME_DEPUTY_PROFILES,
+} from '../../importer/importDeputyProfiles';
+import importNamedPolls, {
+  CRON_NAME as CRON_NAME_NAMED_POLLS,
+} from '../../importer/importNamedPolls';
+import importProcedures, {
+  CRON_NAME as CRON_NAME_PROCEDURES,
+} from '../../importer/importProcedures';
 import { resetCronSuccessStartDate, resetCronRunningState } from './tools';
 import {
   quePushsConferenceWeek,
@@ -55,38 +61,38 @@ const cronJobs = async () => {
     'SheduleBIOResync',
     CONFIG.CRON_SHEDULE_BIO_RESYNC, // 55 3 * */1 *
     resetCronSuccessStartDate,
-    /*CONFIG.CRON_START_ON_INIT*/false, //dangerous
+    /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   );
   // sendQuedPushs
   registerCronJob(
     'sendQuedPushs',
     CONFIG.CRON_SEND_QUED_PUSHS, // */15 7-22 * * *
     sendQuedPushs,
-    /*CONFIG.CRON_START_ON_INIT*/false, //dangerous
+    /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   );
   // quePushsConferenceWeek
   registerCronJob(
     'quePushsConferenceWeek',
     CONFIG.CRON_QUE_PUSHS_CONFERENCE_WEEK, // 0 14 * * SUN
     quePushsConferenceWeek,
-    /*CONFIG.CRON_START_ON_INIT*/false, //dangerous
+    /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   );
   // quePushsVoteTop100
   registerCronJob(
     'quePushsVoteTop100',
     CONFIG.CRON_QUE_PUSHS_VOTE_TOP100, // 0 4 * * MON-FRI
     quePushsVoteTop100,
-    /*CONFIG.CRON_START_ON_INIT*/false, // dangerous
+    /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   );
   // quePushsVoteConferenceWeek
   registerCronJob(
     'quePushsVoteConferenceWeek',
     CONFIG.CRON_QUE_PUSHS_VOTE_CONFERENCE_WEEK, // 0 4 * * MON-FRI
     quePushsVoteConferenceWeek,
-    /*CONFIG.CRON_START_ON_INIT*/false, // dangerous
+    /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   );
   // Return
   return jobs;
-}
+};
 
 module.exports = cronJobs;

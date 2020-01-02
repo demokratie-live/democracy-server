@@ -2,9 +2,9 @@ import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
 import { convertPartyName } from './tools';
-import { getCron, setCronStart, setCronSuccess, setCronError } from './../services/cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
-export const CRON_NAME = 'DeputyProfiles'
+export const CRON_NAME = 'DeputyProfiles';
 
 export default async () => {
   // New SuccessStartDate
@@ -17,7 +17,7 @@ export default async () => {
   await setCronStart({ name: CRON_NAME, startDate });
   // Last SuccessStartDate
   const since = new Date(cron.lastSuccessStartDate);
-  
+
   // Query Bundestag.io
   try {
     const client = createClient();
