@@ -385,6 +385,35 @@ export default {
           { ...voteUpdate },
         );
 
+        // Recalculate Votes Cache
+        // TODO for performance we could also increase the counter by one instead
+        const votes = await VoteModel.aggregate([
+          // Find Procedure
+          {
+            $match: {
+              procedure: procedure._id,
+              type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+            },
+          },
+          // Sum both objects (state)
+          {
+            $group: {
+              _id: '$procedure',
+              yes: { $sum: '$votes.cache.yes' },
+              no: { $sum: '$votes.cache.no' },
+              abstination: { $sum: '$votes.cache.abstain' },
+            },
+          },
+          {
+            $addFields: {
+              total: { $add: ['$yes', '$no', '$abstination'] },
+            },
+          },
+        ]);
+        if (votes.length) {
+          await ProcedureModel.findByIdAndUpdate(procedure._id, { votes: votes[0].total });
+        }
+
         // Increate Activity
         await Activity.Mutation.increaseActivity(
           parent,
