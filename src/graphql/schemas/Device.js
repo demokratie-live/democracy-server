@@ -28,6 +28,7 @@ export default `
     conferenceWeekPushs: Boolean
     voteConferenceWeekPushs: Boolean
     voteTOP100Pushs: Boolean
+    outcomePushs: Boolean
     disableUntil: Date
     procedures: [String]
     tags: [String]
@@ -51,6 +52,8 @@ export default `
       conferenceWeekPushs: Boolean,
       voteConferenceWeekPushs: Boolean,
       voteTOP100Pushs: Boolean,
+      outcomePushs: Boolean,
+      outcomePushsEnableOld: Boolean,
       disableUntil: Date, 
       procedures: [String], 
       tags: [String]

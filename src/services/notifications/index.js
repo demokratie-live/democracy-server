@@ -371,8 +371,9 @@ export const quePushsOutcome = async procedureId => {
   // Find Devices
   const devices = await DeviceModel.find({
     'notificationSettings.enabled': true,
-    pushTokens: { $gt: [] },
+    'notificationSettings.outcome': true,
     'notificationSettings.procedures': procedure._id,
+    pushTokens: { $gt: [] },
   });
 
   // loop through the devices and send Pushs

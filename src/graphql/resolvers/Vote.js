@@ -427,11 +427,13 @@ export default {
           },
         );
 
-        // Autosubscribe to Pushs for this Procedure & User
-        await DeviceModel.updateOne(
-          { _id: device._id },
-          { $addToSet: { 'notificationSettings.procedures': procedureId } },
-        );
+        // Autosubscribe to Pushs for this Procedure & User if the user has the outcomePushs-Setting enabled
+        if (device.notificationSettings.outcomePushs) {
+          await DeviceModel.updateOne(
+            { _id: device._id },
+            { $addToSet: { 'notificationSettings.procedures': procedureId } },
+          );
+        }
 
         // Return new User Vote Results
         return queryVotes(
