@@ -393,10 +393,23 @@ export default {
     updateNotificationSettings: isLoggedin.createResolver(
       async (
         parent,
-        { enabled, disableUntil, procedures, tags, newVote, newPreperation },
-        { device },
+        {
+          enabled,
+          disableUntil,
+          procedures,
+          tags,
+          newVote,
+          newPreperation,
+          conferenceWeekPushs,
+          voteConferenceWeekPushs,
+          voteTOP100Pushs,
+          outcomePushs,
+          outcomePushsEnableOld,
+        },
+        { phone, device, DeviceModel, VoteModel },
       ) => {
         Log.graphql('Device.mutation.updateNotificationSettings');
+
         device.notificationSettings = {
           ...device.notificationSettings,
           ..._.omitBy(
@@ -407,11 +420,44 @@ export default {
               tags,
               newVote,
               newPreperation,
+              // traversal of old settings -> new settings
+              conferenceWeekPushs,
+              voteConferenceWeekPushs:
+                newVote && !voteConferenceWeekPushs ? newVote : voteConferenceWeekPushs,
+              voteTOP100Pushs:
+                newPreperation && !voteTOP100Pushs ? newPreperation : voteTOP100Pushs,
+              // new setting
+              outcomePushs,
             },
             _.isNil,
           ),
         };
+
         await device.save();
+
+        // Enable all old Procedures to be pushed
+        // TODO here we use two write Operations since $addToSet is used
+        // to ensure uniqueness of items - this can be done serverside aswell
+        // reducing write operations - but required ObjectId comparison
+        if (outcomePushs && outcomePushsEnableOld) {
+          const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+          const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
+          const votedProcedures = await VoteModel.find(
+            { type: kind, 'voters.voter': actor },
+            { procedure: 1 },
+          );
+
+          const proceduresOld = votedProcedures.map(({ procedure }) => procedure);
+
+          await DeviceModel.updateOne(
+            { _id: device._id },
+            { $addToSet: { 'notificationSettings.procedures': { $each: proceduresOld } } },
+          );
+          // TODO this additional read operation is also not nessecarily required
+          // if the calculation is done serverside
+          device = await DeviceModel.findOne({ _id: device._id });
+        }
+
         return device.notificationSettings;
       },
     ),

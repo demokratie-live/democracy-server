@@ -2,16 +2,21 @@ import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
 import { convertPartyName } from './tools';
-import { getCron, setCronSuccess, setCronError } from '../services/cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
+
+export const CRON_NAME = 'DeputyProfiles';
 
 export default async () => {
-  Log.info('Start Importing Deputy Profiles');
-  const name = 'importDeputyProfiles';
-  const cron = await getCron({ name });
-  // Last SuccessStartDate
-  const since = new Date(cron.lastSuccessStartDate);
   // New SuccessStartDate
   const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
+  // Last SuccessStartDate
+  const since = new Date(cron.lastSuccessStartDate);
 
   // Query Bundestag.io
   try {
@@ -65,12 +70,9 @@ export default async () => {
       offset += limit;
     }
     // Update Cron - Success
-    await setCronSuccess({ name, successStartDate: startDate });
+    await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
   } catch (error) {
     // If address is not reachable the query will throw
-    // Update Cron - Error
-    await setCronError({ name });
-    Log.error(error);
+    await setCronError({ name: CRON_NAME, error: JSON.stringify(error) });
   }
-  Log.info('Finish Importing Deputy Profiles');
 };

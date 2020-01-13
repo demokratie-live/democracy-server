@@ -6,6 +6,7 @@
 import jwt from './jwt';
 import smsverification from './smsverification';
 import humanconnection from './humanconnection';
+import cronjobConfig from './cronjobConfig';
 
 const requiredConfigs = {
   // No default Values
@@ -46,6 +47,7 @@ const recommendedConfigs = {
     ? process.env.WHITELIST_DATA_SOURCES.split(',')
     : ['::ffff:127.0.0.1', '::1'],
   ...humanconnection,
+  ...cronjobConfig,
 };
 
 const optionalConfigs = {

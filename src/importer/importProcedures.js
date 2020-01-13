@@ -7,7 +7,7 @@ import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bunde
 // GraphQL
 import createClient from '../graphql/client';
 import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
-import { getCron, setCronError, setCronSuccess } from '../services/cronJobs/tools';
+import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
 // Models
 import Procedure from '../models/Procedure';
@@ -15,6 +15,8 @@ import Procedure from '../models/Procedure';
 // Queries
 import { quePushsOutcome } from '../services/notifications';
 import { convertPartyName } from './tools';
+
+export const CRON_NAME = 'Procedures';
 
 /* const deputiesNumber = {
   8: 518,
@@ -156,13 +158,16 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
 };
 
 export default async () => {
-  Log.info('Start Importing Procedures');
-  const name = 'importProcedures';
-  const cron = await getCron({ name });
-  // Last SuccessStartDate
-  const since = new Date(cron.lastSuccessStartDate);
   // New SuccessStartDate
   const startDate = new Date();
+  const cron = await getCron({ name: CRON_NAME });
+  if (cron.running) {
+    Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
+    return;
+  }
+  await setCronStart({ name: CRON_NAME, startDate });
+  // Last SuccessStartDate
+  const since = new Date(cron.lastSuccessStartDate);
 
   // Query Bundestag.io
   try {
@@ -203,13 +208,9 @@ export default async () => {
       offset += limit;
     }
     // Update Cron - Success
-    await setCronSuccess({ name, successStartDate: startDate });
+    await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
   } catch (error) {
     // If address is not reachable the query will throw
-    // Update Cron - Error
-    await setCronError({ name });
-    Log.error(error);
+    await setCronError({ name: CRON_NAME, error: JSON.stringify(error) });
   }
-
-  Log.info('Finish Importing Procedures');
 };

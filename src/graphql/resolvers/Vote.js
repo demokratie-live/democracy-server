@@ -289,7 +289,7 @@ export default {
       async (
         parent,
         { procedure: procedureObjId, procedureId, selection, constituency },
-        { VoteModel, ProcedureModel, ActivityModel, user, device, phone },
+        { VoteModel, ProcedureModel, ActivityModel, DeviceModel, user, device, phone },
       ) => {
         Log.graphql('Vote.mutation.vote');
         // Find procedure
@@ -389,6 +389,35 @@ export default {
           { ...voteUpdate },
         );
 
+        // Recalculate Votes Cache
+        // TODO for performance we could also increase the counter by one instead
+        const votes = await VoteModel.aggregate([
+          // Find Procedure
+          {
+            $match: {
+              procedure: procedure._id,
+              type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+            },
+          },
+          // Sum both objects (state)
+          {
+            $group: {
+              _id: '$procedure',
+              yes: { $sum: '$votes.cache.yes' },
+              no: { $sum: '$votes.cache.no' },
+              abstination: { $sum: '$votes.cache.abstain' },
+            },
+          },
+          {
+            $addFields: {
+              total: { $add: ['$yes', '$no', '$abstination'] },
+            },
+          },
+        ]);
+        if (votes.length) {
+          await ProcedureModel.findByIdAndUpdate(procedure._id, { votes: votes[0].total });
+        }
+
         // Increate Activity
         await Activity.Mutation.increaseActivity(
           parent,
@@ -401,6 +430,15 @@ export default {
             device,
           },
         );
+
+        // Autosubscribe to Pushs for this Procedure & User if the user has the outcomePushs-Setting enabled
+        if (device.notificationSettings.outcomePushs) {
+          await DeviceModel.updateOne(
+            { _id: device._id },
+            { $addToSet: { 'notificationSettings.procedures': procedureId } },
+          );
+        }
+
         // Return new User Vote Results
         return queryVotes(
           parent,
