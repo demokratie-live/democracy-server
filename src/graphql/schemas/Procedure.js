@@ -35,8 +35,10 @@ type Procedure {
   subjectGroups: [String!]
   submissionDate: Date
   activityIndex: ActivityIndex!
+  votes: Int!
   importantDocuments: [Document]
   voteResults: VoteResult
+  communityVotes(constituencies: [String!]): CommunityVotes
   voted: Boolean!
   votedGovernment: Boolean
   completed: Boolean

@@ -50,6 +50,7 @@
     "ms": "^2.1.2",
     "node-fetch": "^2.6.0",
     "node-gcm": "^1.0.2",
+    "p-iteration": "^1.1.8",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "prettier-eslint": "^9.0.1",

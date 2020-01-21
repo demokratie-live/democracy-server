@@ -12,12 +12,14 @@ export default `
     yes: Int!
     no: Int!
     abstination: Int!
+    total: Int
   }
 
   type CommunityVotes {
     yes: Int
     no: Int
     abstination: Int
+    total: Int
     constituencies: [CommunityConstituencyVotes]
   }
 
