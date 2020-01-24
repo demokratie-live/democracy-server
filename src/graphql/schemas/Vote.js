@@ -20,7 +20,7 @@ export default `
     no: Int
     abstination: Int
     total: Int
-    constituencies: [CommunityConstituencyVotes]
+    constituencies: [CommunityConstituencyVotes!]!
   }
 
   type DeputyVote {
