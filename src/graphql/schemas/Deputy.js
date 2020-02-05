@@ -7,7 +7,7 @@ type DeputyLink {
 type DeputyContact {
   address: String
   email: String
-  links: [DeputyLink]
+  links: [DeputyLink!]!
 }
 
 type DeputyProcedure {
