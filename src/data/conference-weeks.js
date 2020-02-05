@@ -3,8 +3,27 @@
 // convert german date to js Date
 function parseDate(input) {
   const parts = input.match(/(\d+)/g);
-  return new Date(parts[2], parts[1] - 1, parts[0]);
+  const date = new Date(parts[2], parts[1] - 1, parts[0]);
+
+  // fix german time
+  date.setHours(date.getHours() + 2);
+  return date;
 }
+
+const getWeekNumber = d => {
+  // Copy date so don't modify original
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // Set to nearest Thursday: current date + 4 - current day number
+  // Make Sunday's day number 7
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  // Get first day of year
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  // Calculate full weeks to nearest Thursday
+  const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  // Return array of year and week number
+//   return [d.getUTCFullYear(), weekNo];
+   return weekNo;
+};
 
 export const conferenceWeeks = [
   {
@@ -107,12 +126,14 @@ export const getCurrentConferenceWeek = () => {
   });
   // if there is one running return
   if (currentConferenceWeek) {
-    return currentConferenceWeek;
+    return { ...currentConferenceWeek, calendarWeek: getWeekNumber(currentConferenceWeek.start) };
   }
 
   // else return next conference week
   const nextConferenceWeek = conferenceWeeks.find(({ start, end }) => {
     return curDate < start;
   });
-  return nextConferenceWeek;
+
+  console.log(getWeekNumber(nextConferenceWeek.start))
+  return { ...nextConferenceWeek, calendarWeek: getWeekNumber(nextConferenceWeek.start) };
 };
