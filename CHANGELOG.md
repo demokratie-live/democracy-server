@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.21
+
+- [ADD] conferenceWeek api endpoint
+
 ### 0.1.20
 
 - [FIX] Named Polls import
