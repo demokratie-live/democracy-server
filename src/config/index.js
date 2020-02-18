@@ -26,6 +26,8 @@ const recommendedConfigs = {
   BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/',
   APN_TOPIC: (() => {
     switch (process.env.STAGE) {
+      case 'dev':
+        return 'de.democracy-deutschland.clientapp.new';
       case 'internal':
         return 'de.democracy-deutschland.clientapp.internal';
       case 'alpha':
