@@ -54,10 +54,10 @@ export default {
         }
 
         // check newPhone prefix & length, 3 prefix, min. length 10
-        if (newPhone.substr(0, 3) !== '+49' || newPhone.length < 13) {
+        if (newPhone.substr(0, 3) !== '+49' || newPhone.length < 12) {
           return {
             reason:
-              'newPhone is invalid - does not have the required length of min. 13 digits or does not start with countrycode +49',
+              'newPhone is invalid - does not have the required length of min. 12 digits or does not start with countrycode +49',
             succeeded: false,
           };
         }
