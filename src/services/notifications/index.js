@@ -113,17 +113,16 @@ export const sendQuedPushs = async () => {
       }
       // Return id
       Log.info('### Push sent');
+      // Set sent = true
+      await PushNotificationModel.update(
+        { _id },
+        { $set: { sent: true } },
+      );
       return _id;
     },
   );
   Log.info('### Push counter', sentPushs.length);
 
-  // Set sent = true
-  await PushNotificationModel.update(
-    { _id: { $in: sentPushs } },
-    { $set: { sent: true } },
-    { multi: true },
-  );
 
   if (sentPushs.length > 0) {
     Log.info(`[PUSH] Sent ${sentPushs.length} Pushs`);
