@@ -112,11 +112,11 @@ export const sendQuedPushs = async () => {
           Log.error(`[PUSH] unknown Token-OS`);
       }
       // Return id
-      console.log("### Push sent")
+      Log.info('### Push sent');
       return _id;
     },
   );
-  console.log('### Push counter', sentPushs.length);
+  Log.info('### Push counter', sentPushs.length);
 
   // Set sent = true
   await PushNotificationModel.update(
@@ -194,9 +194,9 @@ export const quePushsConferenceWeek = async () => {
     'notificationSettings.enabled': true,
     'notificationSettings.conferenceWeekPushs': true,
   });
-  
+
   const tokens = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-  
+
   // Only send Message if at least one vote & one token is found
   if (tokens.length > 0 && procedureIds.length > 0) {
     const title = 'Kommende Woche ist Sitzungswoche!';
@@ -213,12 +213,12 @@ export const quePushsConferenceWeek = async () => {
       tokens,
     });
   }
-  
+
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
 export const quePushsVoteTop100 = async () => {
-  console.log('quePushsVoteTop100');
+  Log.info('quePushsVoteTop100');
   /*
   TOP 100 - #1: Jetzt Abstimmen!
   Lorem Ipsum Titel
@@ -245,7 +245,7 @@ export const quePushsVoteTop100 = async () => {
     $and: [{ voteDate: { $gte: startOfWeek } }, { voteDate: { $lte: endOfWeek } }],
   });
 
-  console.log({ conferenceProceduresCount });
+  Log.info({ conferenceProceduresCount });
 
   // Dont Push TOP100 if we have an active conferenceWeek
   if (conferenceProceduresCount > 0) {
