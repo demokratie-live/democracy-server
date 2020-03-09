@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import moment from 'moment';
-import { filter, reduce } from 'p-iteration';
+import { filter, reduce, mapSeries } from 'p-iteration';
 
 import CONFIG from '../../config';
 
@@ -32,8 +32,9 @@ export const sendQuedPushs = async () => {
   // Query Database
   const pushs = await PushNotificationModel.find({ sent: false, time: { $lte: new Date() } });
   // send all pushs in there
-  const sentPushs = await pushs.map(
-    ({ _id, type, category, title, message, procedureIds, token, os }) => {
+  const sentPushs = await mapSeries(
+    pushs,
+    async ({ _id, type, category, title, message, procedureIds, token, os }) => {
       // Construct Payload
       const payload = {
         type,
@@ -47,7 +48,7 @@ export const sendQuedPushs = async () => {
       // Send Pushs
       switch (os) {
         case PUSH_OS.ANDROID:
-          pushAndroid({
+          await pushAndroid({
             title,
             message,
             payload,
@@ -75,7 +76,7 @@ export const sendQuedPushs = async () => {
           });
           break;
         case PUSH_OS.IOS:
-          pushIOS({
+          await pushIOS({
             title,
             message,
             payload,
@@ -111,9 +112,12 @@ export const sendQuedPushs = async () => {
           Log.error(`[PUSH] unknown Token-OS`);
       }
       // Return id
+      console.log("### Push sent")
       return _id;
     },
   );
+  console.log('### Push counter', sentPushs.length);
+
   // Set sent = true
   await PushNotificationModel.update(
     { _id: { $in: sentPushs } },
@@ -172,7 +176,6 @@ export const quePushsConferenceWeek = async () => {
     return;
   }
   await setCronStart({ name: CRON_NAME, startDate });
-
   // Find coresponding Procedures
   const startOfWeek = moment()
     .startOf('week')
@@ -191,8 +194,9 @@ export const quePushsConferenceWeek = async () => {
     'notificationSettings.enabled': true,
     'notificationSettings.conferenceWeekPushs': true,
   });
+  
   const tokens = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
-
+  
   // Only send Message if at least one vote & one token is found
   if (tokens.length > 0 && procedureIds.length > 0) {
     const title = 'Kommende Woche ist Sitzungswoche!';
@@ -209,10 +213,12 @@ export const quePushsConferenceWeek = async () => {
       tokens,
     });
   }
+  
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
 export const quePushsVoteTop100 = async () => {
+  console.log('quePushsVoteTop100');
   /*
   TOP 100 - #1: Jetzt Abstimmen!
   Lorem Ipsum Titel
@@ -238,6 +244,8 @@ export const quePushsVoteTop100 = async () => {
   const conferenceProceduresCount = await ProcedureModel.count({
     $and: [{ voteDate: { $gte: startOfWeek } }, { voteDate: { $lte: endOfWeek } }],
   });
+
+  console.log({ conferenceProceduresCount });
 
   // Dont Push TOP100 if we have an active conferenceWeek
   if (conferenceProceduresCount > 0) {
