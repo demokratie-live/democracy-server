@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.22
+
+- [FIX] Push memory issue
+
 ### 0.1.21
 
 - [ADD] conferenceWeek api endpoint
