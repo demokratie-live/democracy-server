@@ -111,18 +111,15 @@ export const sendQuedPushs = async () => {
         default:
           Log.error(`[PUSH] unknown Token-OS`);
       }
-      // Return id
-      Log.info('### Push sent');
       // Set sent = true
-      await PushNotificationModel.update(
-        { _id },
-        { $set: { sent: true } },
-      );
+      await PushNotificationModel.update({ _id }, { $set: { sent: true } }).then(() => {
+        Log.info('### Push sent');
+      });
+      // Return id
       return _id;
     },
   );
   Log.info('### Push counter', sentPushs.length);
-
 
   if (sentPushs.length > 0) {
     Log.info(`[PUSH] Sent ${sentPushs.length} Pushs`);
