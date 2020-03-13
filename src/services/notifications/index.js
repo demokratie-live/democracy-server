@@ -1,6 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import moment from 'moment';
-import { filter, reduce, mapSeries } from 'p-iteration';
+import { reduce, mapSeries, filterSeries } from 'p-iteration';
 
 import CONFIG from '../../config';
 
@@ -271,7 +271,7 @@ export const quePushsVoteTop100 = async () => {
     }
     // loop through the devices and remove those we send a Push
     // eslint-disable-next-line no-await-in-loop
-    devices = await filter(
+    devices = await filterSeries(
       devices,
       // eslint-disable-next-line no-loop-func
       async device => {
@@ -492,7 +492,7 @@ export const quePushsVoteConferenceWeek = async () => {
     }
     // loop through the devices and remove those we send a Push
     // eslint-disable-next-line no-await-in-loop
-    devices = await filter(
+    devices = await filterSeries(
       devices,
       async device => {
         let voted = null;
@@ -550,8 +550,8 @@ export const quePushsVoteConferenceWeek = async () => {
         // Calculate random Time:
         const time = new Date();
         time.setHours(9 + Math.round(Math.random() * 9));
-        // Send Pushs
-        quePushs({
+        // Save Pushs
+        await quePushs({
           type: PUSH_TYPE.PROCEDURE,
           category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
           title: 'Diese Woche im Bundestag: Jetzt Abstimmen!',
@@ -563,7 +563,6 @@ export const quePushsVoteConferenceWeek = async () => {
         // We have qued a Push, remove device from list.
         return false;
       },
-      [],
     );
   }
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
