@@ -492,78 +492,75 @@ export const quePushsVoteConferenceWeek = async () => {
     }
     // loop through the devices and remove those we send a Push
     // eslint-disable-next-line no-await-in-loop
-    devices = await filterSeries(
-      devices,
-      async device => {
-        let voted = null;
-        // Check if device is associcated with a vote on the procedure
-        if (CONFIG.SMS_VERIFICATION) {
-          const user = await UserModel.findOne({ device: device._id, verified: true });
-          if (user) {
-            voted = await VoteModel.findOne({
-              procedure: procedure._id,
-              type: 'Phone',
-              voters: {
-                $elemMatch: {
-                  voter: user.phone,
-                },
-              },
-            });
-          }
-        } else {
+    devices = await filterSeries(devices, async device => {
+      let voted = null;
+      // Check if device is associcated with a vote on the procedure
+      if (CONFIG.SMS_VERIFICATION) {
+        const user = await UserModel.findOne({ device: device._id, verified: true });
+        if (user) {
           voted = await VoteModel.findOne({
             procedure: procedure._id,
-            type: 'Device',
+            type: 'Phone',
             voters: {
               $elemMatch: {
-                voter: device._id,
+                voter: user.phone,
               },
             },
           });
         }
-        // Dont send Pushs - User has voted already
-        if (voted) {
-          return true;
-        }
-        // Check if we sent the user a notifiation in the past time on that procedure
-        const tokens = await reduce(
-          device.pushTokens,
-          async (acc, token) => {
-            const pastPushs = await PushNotificationModel.count({
-              category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
-              procedureIds: procedure.procedureId,
-              token: token.token,
-              os: token.os,
-              time: { $gte: moment().subtract(1, 'weeks') },
-            });
-            if (pastPushs === 0) {
-              return [...acc, token];
-            }
-            return acc;
+      } else {
+        voted = await VoteModel.findOne({
+          procedure: procedure._id,
+          type: 'Device',
+          voters: {
+            $elemMatch: {
+              voter: device._id,
+            },
           },
-          [],
-        );
-        // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
-        if (tokens.length === 0) {
-          return true;
-        }
-        // Calculate random Time:
-        const time = new Date();
-        time.setHours(9 + Math.round(Math.random() * 9));
-        // Save Pushs
-        await quePushs({
-          type: PUSH_TYPE.PROCEDURE,
-          category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
-          title: 'Diese Woche im Bundestag: Jetzt Abstimmen!',
-          message: procedure.title,
-          procedureIds: [procedure.procedureId],
-          tokens,
-          time,
         });
-        // We have qued a Push, remove device from list.
-        return false;
-      },
-    );
+      }
+      // Dont send Pushs - User has voted already
+      if (voted) {
+        return true;
+      }
+      // Check if we sent the user a notifiation in the past time on that procedure
+      const tokens = await reduce(
+        device.pushTokens,
+        async (acc, token) => {
+          const pastPushs = await PushNotificationModel.count({
+            category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
+            procedureIds: procedure.procedureId,
+            token: token.token,
+            os: token.os,
+            time: { $gte: moment().subtract(1, 'weeks') },
+          });
+          if (pastPushs === 0) {
+            return [...acc, token];
+          }
+          return acc;
+        },
+        [],
+      );
+      // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
+      if (tokens.length === 0) {
+        return true;
+      }
+      // Calculate random Time:
+      const time = new Date();
+      time.setHours(9 + Math.round(Math.random() * 9));
+      // Save Pushs
+      await quePushs({
+        type: PUSH_TYPE.PROCEDURE,
+        category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
+        title: 'Diese Woche im Bundestag: Jetzt Abstimmen!',
+        message: procedure.title,
+        procedureIds: [procedure.procedureId],
+        tokens,
+        time,
+      });
+      // We have qued a Push, remove device from list.
+      return false;
+    });
   }
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
