@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.23
+
+- [FIX] Push queue memory issue
+
 ### 0.1.22
 
 - [FIX] Push memory issue
