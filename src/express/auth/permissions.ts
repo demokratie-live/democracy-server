@@ -30,7 +30,7 @@ export const isDataSource = createExpressResolver((req, res) => {
       address => address.length >= 3 && req.connection.remoteAddress.indexOf(address) !== -1,
     )
   ) {
-    Log.warn('Permission denied: isDataSource = false');
+    global.Log.warn('Permission denied: isDataSource = false');
     res.send({
       error: 'Permission denied',
       succeeded: false,
@@ -43,7 +43,7 @@ export const isDataSource = createExpressResolver((req, res) => {
 // User & Device is existent in Database
 export const isLoggedin = createGraphQLResolver((parent, args, { user, device }) => {
   if (!user || !device) {
-    Log.warn('Permission denied: You need to login with your Device');
+    global.Log.warn('Permission denied: You need to login with your Device');
     throw new Error('Permission Denied');
   }
 });
@@ -51,7 +51,7 @@ export const isLoggedin = createGraphQLResolver((parent, args, { user, device })
 // User has verified flag
 export const isVerified = createGraphQLResolver((parent, args, { user, phone }) => {
   if (!user || (CONFIG.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
-    Log.warn('Permission denied: isVerified = false');
+    global.Log.warn('Permission denied: isVerified = false');
     throw new Error('Permission Denied');
   }
 });

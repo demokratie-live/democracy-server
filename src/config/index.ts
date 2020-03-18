@@ -59,8 +59,8 @@ const optionalConfigs = {
   ENGINE_DEBUG_MODE: process.env.ENGINE_DEBUG_MODE === 'true',
   VOYAGER: process.env.VOYAGER || false,
   // Logging
-  LOGGING_CONSOLE: process.env.LOGGING_CONSOLE || false,
-  LOGGING_FILE: process.env.LOGGING_FILE || false,
+  LOGGING_CONSOLE: process.env.LOGGING_CONSOLE,
+  LOGGING_FILE: process.env.LOGGING_FILE,
   LOGGING_DISCORD: process.env.LOGGING_DISCORD || false,
   LOGGING_DISCORD_WEBHOOK: process.env.LOGGING_DISCORD_WEBHOOK || false,
   LOGGING_MONGO: process.env.LOGGING_MONGO || false,

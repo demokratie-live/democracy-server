@@ -6,9 +6,9 @@
   "license": "Apache2",
   "private": true,
   "scripts": {
-    "build": "babel ./ -d dist -s --ignore node_modules,dist",
+    "build": "tsc",
     "serve": "node dist/src/index.js",
-    "dev": "nodemon -L -e js,graphql src/index.js --exec \"node --require dotenv/config --require babel-register\"",
+    "dev": "ts-node-dev -r dotenv/config src/index.js",
     "inspect": "nodemon -L -e js,graphql src/index.js --exec \"node --inspect --require dotenv/config --require babel-register\"",
     "dev:serve": "node -r dotenv/config dist/src/index.js",
     "lint": "eslint .",
@@ -62,6 +62,8 @@
     "winston-discord": "^0.2.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.3.8",
+    "@types/mongoose": "^5.7.6",
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
@@ -77,6 +79,8 @@
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-react": "^7.17.0",
     "nodemon": "^2.0.1",
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
   }
 }

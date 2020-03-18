@@ -1,5 +1,11 @@
-import { Schema } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 import CONFIG from '../../config';
+
+export interface IUser extends Document {
+  device: String;
+  phone?: String;
+  verified?: boolean;
+}
 
 const UserSchema = new Schema(
   {
