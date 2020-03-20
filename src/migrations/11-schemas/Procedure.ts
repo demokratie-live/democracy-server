@@ -27,6 +27,7 @@ const ProcedureSchema = createSchema(
     activities: Type.number({ default: 0 }), // cache from activity collection
     votes: Type.number({ default: 0 }), // cache from votes collection
     voteResults: Type.object().of({
+      procedureId: Type.string(),
       yes: Type.number({ required: true }),
       no: Type.number({ required: true }),
       abstination: Type.number({ required: true }),
@@ -53,6 +54,9 @@ const ProcedureSchema = createSchema(
     }),
     ...({} as {
       isCompleted: () => boolean;
+      voteResults: {
+        procedureId: string;
+      };
     }),
   },
   { timestamps: true },

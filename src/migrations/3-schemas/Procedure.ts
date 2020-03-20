@@ -22,6 +22,7 @@ const ProcedureSchema = createSchema(
     importantDocuments: Type.array().of(Type.schema().of(ProcedureDocument)),
     activities: Type.number({ default: 0 }),
     voteResults: {
+      procedureId: Type.string(),
       yes: Type.number({ required: true }),
       no: Type.number({ required: true }),
       abstination: Type.number({ required: true }),

@@ -460,6 +460,7 @@ export enum VotedTimeSpan {
 
 export type VoteResult = {
    __typename?: 'VoteResult';
+  procedureId?: Maybe<Scalars['String']>;
   yes?: Maybe<Scalars['Int']>;
   no?: Maybe<Scalars['Int']>;
   abstination?: Maybe<Scalars['Int']>;
@@ -933,6 +934,7 @@ export type VoteResolvers<ContextType = GraphQlContext, ParentType extends Resol
 };
 
 export type VoteResultResolvers<ContextType = GraphQlContext, ParentType extends ResolversParentTypes['VoteResult'] = ResolversParentTypes['VoteResult']> = {
+  procedureId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   yes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>,
   no?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>,
   abstination?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>,
