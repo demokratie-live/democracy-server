@@ -1,14 +1,14 @@
-import { Schema } from 'mongoose';
+import { Type, createSchema } from 'ts-mongoose';
 
-const CronJobSchema = new Schema(
+const CronJobSchema = createSchema(
   {
-    name: { type: String, unique: true, index: true, required: true },
-    lastStartDate: { type: Date, default: null },
-    lastErrorDate: { type: Date, default: null },
-    lastError: { type: String, default: null },
-    lastSuccessDate: { type: Date, default: null },
-    lastSuccessStartDate: { type: Date, default: null },
-    running: { type: Boolean, default: false },
+    name: Type.string({ unique: true, index: true, required: true }),
+    lastStartDate: Type.date({ default: null }),
+    lastErrorDate: Type.date({ default: null }),
+    lastError: Type.string({ default: null }),
+    lastSuccessDate: Type.date({ default: null }),
+    lastSuccessStartDate: Type.date({ default: null }),
+    running: Type.boolean({ default: false }),
   },
   { timestamps: true },
 );

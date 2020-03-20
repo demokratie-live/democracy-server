@@ -39,9 +39,10 @@ const refreshTokens = async refreshToken => {
   }
   // Decode Token
   let userid = null;
-  try {
-    userid = jwt.decode(refreshToken).user;
-  } catch (err) {
+  const jwtUser = jwt.decode(refreshToken);
+  if (typeof jwtUser === 'object' && jwtUser.user) {
+    userid = jwtUser.user;
+  } else {
     return {};
   }
   // Validate UserData if an old User was set
@@ -50,7 +51,7 @@ const refreshTokens = async refreshToken => {
   if (!user) {
     return {};
   }
-  Log.jwt(`JWT: Token Refresh for User: ${user._id}`);
+  global.Log.jwt(`JWT: Token Refresh for User: ${user._id}`);
   // Generate new Tokens
   const [newToken, newRefreshToken] = await createTokens(user._id);
   return {
@@ -72,7 +73,7 @@ export const headerToken = async ({ res, token, refreshToken }) => {
 };
 
 export const auth = async (req, res, next) => {
-  Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
+  global.Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
   let token = req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
   // In some cases the old Client transmitts the token via authorization header as 'Bearer [token]'
   if (CONFIG.JWT_BACKWARD_COMPATIBILITY && !token && req.headers.authorization) {
@@ -83,16 +84,17 @@ export const auth = async (req, res, next) => {
   const phoneHash =
     req.headers['x-phone-hash'] || (CONFIG.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
-    Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+    global.Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
 
   let success = false;
   // Check existing JWT Session
   // If Credentials are also present use them instead
   if (token && !deviceHash) {
-    Log.jwt(`JWT: Token: ${token}`);
+    global.Log.jwt(`JWT: Token: ${token}`);
     try {
-      const userid = jwt.verify(token, CONFIG.AUTH_JWT_SECRET).user;
+      const jwtUser: any = jwt.verify(token, CONFIG.AUTH_JWT_SECRET);
+      const userid = jwtUser.user;
       // Set request variables
       req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
@@ -111,10 +113,10 @@ export const auth = async (req, res, next) => {
         }
       }
       success = true;
-      Log.jwt(`JWT: Token valid: ${token}`);
+      global.Log.jwt(`JWT: Token valid: ${token}`);
     } catch (err) {
       // Check for JWT Refresh Ability
-      Log.jwt(`JWT: Token Error: ${err}`);
+      global.Log.jwt(`JWT: Token Error: ${err}`);
       const refreshToken =
         req.headers['x-refresh-token'] || (CONFIG.DEBUG ? req.cookies.debugRefreshToken : null);
       const newTokens = await refreshTokens(refreshToken);
@@ -138,8 +140,8 @@ export const auth = async (req, res, next) => {
           }
         }
         success = true;
-        Log.jwt(`JWT: Token Refresh (t): ${newTokens.token}`);
-        Log.jwt(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
+        global.Log.jwt(`JWT: Token Refresh (t): ${newTokens.token}`);
+        global.Log.jwt(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
       }
     }
   }
@@ -149,7 +151,7 @@ export const auth = async (req, res, next) => {
     let device = null;
     let phone = null;
     if (deviceHash) {
-      Log.jwt('JWT: Credentials present');
+      global.Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
         deviceHash: crypto
@@ -167,7 +169,7 @@ export const auth = async (req, res, next) => {
         : null;
       user = await UserModel.findOne({ device, phone });
       if (!user) {
-        Log.jwt('JWT: Create new User');
+        global.Log.jwt('JWT: Create new User');
         // Device
         if (!device) {
           device = new DeviceModel({
@@ -183,7 +185,7 @@ export const auth = async (req, res, next) => {
         user = new UserModel({ device, phone });
         await user.save();
       }
-      Log.jwt(`JWT: Token New for User: ${user._id}`);
+      global.Log.jwt(`JWT: Token New for User: ${user._id}`);
       const [createToken, createRefreshToken] = await createTokens(user._id);
       headerToken({ res, token: createToken, refreshToken: createRefreshToken });
       // Set new timestamps
@@ -195,8 +197,8 @@ export const auth = async (req, res, next) => {
         phone.markModified('updatedAt');
         await phone.save();
       }
-      Log.jwt(`JWT: Token New (t): ${createToken}`);
-      Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
+      global.Log.jwt(`JWT: Token New (t): ${createToken}`);
+      global.Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
     }
     // Set request variables
     req.user = user;

@@ -1,4 +1,4 @@
 import { model } from 'mongoose';
-import CronJobSchema from '../migrations/10-schemas/CronJob';
+import CronJobSchema, { ICronJob } from '../migrations/10-schemas/CronJob';
 
-export default model('CronJob', CronJobSchema);
+export default model<ICronJob>('CronJob', CronJobSchema);

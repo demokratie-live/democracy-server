@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
-import UserSchema, { IUser } from '../migrations/1-schemas/User';
+import { typedModel } from 'ts-mongoose';
+import UserSchema from '../migrations/1-schemas/User';
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default typedModel('User', UserSchema);

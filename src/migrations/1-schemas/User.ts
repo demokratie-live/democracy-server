@@ -1,25 +1,15 @@
-import { Schema, Document } from 'mongoose';
+import { Type, createSchema } from 'ts-mongoose';
 import CONFIG from '../../config';
+import DeviceSchema from '../12-schemas/Device';
+import PhoneSchema from '../3-schemas/Phone';
 
-export interface IUser extends Document {
-  device: String;
-  phone?: String;
-  verified?: boolean;
-}
-
-const UserSchema = new Schema(
+const UserSchema = createSchema(
   {
-    device: {
-      type: Schema.Types.ObjectId,
-      ref: 'Device',
-      required: true,
-    },
-    phone: {
-      type: Schema.Types.ObjectId,
-      ref: 'Phone',
-      default: null,
-    },
-    verified: { type: Boolean, default: false },
+    // device: Type.schema({ required: true }).of(DeviceSchema),
+    device: Type.ref(Type.objectId()).to('Device', DeviceSchema),
+    phone: Type.ref(Type.objectId()).to('Phone', PhoneSchema),
+
+    verified: Type.boolean({ default: false }),
   },
   { timestamps: true },
 );
