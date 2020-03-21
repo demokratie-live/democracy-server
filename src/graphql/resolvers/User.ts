@@ -4,8 +4,9 @@ import crypto from 'crypto';
 
 import { createTokens, headerToken } from '../../express/auth';
 import CONFIG from '../../config';
+import { Resolvers } from '../../generated/graphql';
 
-export default {
+const UserApi: Resolvers = {
   Query: {
     me: async (parent, args, { UserModel, user, device }) => {
       global.Log.graphql('User.query.me');
@@ -59,3 +60,5 @@ export default {
     },
   },
 };
+
+export default UserApi;

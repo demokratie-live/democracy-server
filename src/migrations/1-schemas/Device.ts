@@ -1,4 +1,3 @@
-import { Schema } from 'mongoose';
 import { Type, createSchema } from 'ts-mongoose';
 import ProcedureSchema from '../11-schemas/Procedure';
 

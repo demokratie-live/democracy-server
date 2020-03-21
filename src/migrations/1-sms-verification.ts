@@ -1,7 +1,7 @@
 /* eslint no-await-in-loop: 0 */
 import crypto from 'crypto';
-import mongoose from 'mongoose';
 
+import { typedModel } from 'ts-mongoose';
 import UserSchema from './1-schemas/User';
 import DeviceSchema from './1-schemas/Device';
 import ActivitySchema from './1-schemas/Activity';
@@ -53,10 +53,10 @@ module.exports.up = async function(done) {
     const oldActivities = this.db.collection('old_activities');
 
     // load models
-    const DeviceModel = mongoose.model('Device', DeviceSchema);
-    const UserModel = mongoose.model('User', UserSchema);
-    const ActivityModel = mongoose.model('Activity', ActivitySchema);
-    const VoteModel = mongoose.model('Vote', VoteSchema);
+    const DeviceModel = typedModel('Device', DeviceSchema);
+    const UserModel = typedModel('User', UserSchema);
+    const ActivityModel = typedModel('Activity', ActivitySchema);
+    const VoteModel = typedModel('Vote', VoteSchema);
 
     // Transform oldUsers -> Users + Devices
     const userCursor = oldUsers.find();

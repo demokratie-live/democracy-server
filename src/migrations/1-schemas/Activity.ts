@@ -1,5 +1,4 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import mongoose from 'mongoose';
 import { createSchema, Type, typedModel, ExtractDoc, ExtractProps } from 'ts-mongoose';
 import CONFIG from '../../config';
 import ProcedureSchema from '../11-schemas/Procedure';
@@ -21,11 +20,10 @@ ActivitySchema.index({ actor: 1, procedure: 1 }, { unique: true });
 
 ActivitySchema.post<ActivityDoc>('save', async doc => {
   const procedureObjId = '_id' in doc.procedure ? doc.procedure._id : doc.procedure;
-  const activities = await mongoose
-    .model('Activity')
+  const activities = await typedModel('Activity', ActivitySchema)
     .find({ procedure: procedureObjId, kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device' })
     .count();
-  await mongoose.model('Procedure').findByIdAndUpdate(procedureObjId, { activities });
+  await typedModel('Procedure').findByIdAndUpdate(procedureObjId, { activities });
 });
 
 export default ActivitySchema;

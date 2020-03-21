@@ -1,28 +1,28 @@
-import { Schema } from 'mongoose';
+import { createSchema, Type } from 'ts-mongoose';
 
-const PushNotificationSchema = new Schema(
+const PushNotificationSchema = createSchema(
   {
-    procedureId: { type: String, required: true },
-    type: {
+    procedureId: Type.string({ type: String, required: true }),
+    type: Type.string({
       type: String,
       enum: ['new', 'newVote', 'update'],
       required: true,
-    },
-    updatedValues: [String],
-    status: {
+    }),
+    updatedValues: Type.array().of(Type.string()),
+    status: Type.string({
       type: String,
       enum: ['new', 'running', 'complete'],
       default: 'new',
-    },
-    sentTokens: [
-      {
-        token: {
+    }),
+    sentTokens: Type.array().of(
+      Type.object().of({
+        token: Type.string({
           type: String,
           required: true,
-        },
-        error: String,
-      },
-    ],
+        }),
+        error: Type.string(),
+      }),
+    ),
   },
   { timestamps: true },
 );

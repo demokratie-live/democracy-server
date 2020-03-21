@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 
+import { typedModel } from 'ts-mongoose';
 import ProcedureSchema from './11-schemas/Procedure';
 import CONFIG from '../config';
 
 module.exports.id = 'votesCache';
 
-module.exports.up = async function (done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Remove Model from Mongoose if needed
@@ -14,7 +16,7 @@ module.exports.up = async function (done) { // eslint-disable-line
     }
 
     // Load new models
-    mongoose.model('Procedure', ProcedureSchema);
+    typedModel('Procedure', ProcedureSchema);
 
     // transform data
     const votes = this.db.collection('votes');
@@ -68,7 +70,8 @@ module.exports.up = async function (done) { // eslint-disable-line
   }
 };
 
-module.exports.down = function (done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - since this will result in dataloss
   done(new Error('Not supported rollback!'));
 };

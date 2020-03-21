@@ -1,7 +1,7 @@
 import { ApolloServer, makeExecutableSchema } from 'apollo-server-express';
 import { applyMiddleware } from 'graphql-middleware';
 import CONFIG from '../../config';
-import { ExpressContext } from '../../types/graphqlContext';
+import { ExpressReqContext } from '../../types/graphqlContext';
 
 import typeDefs from '../../graphql/schemas';
 import resolvers from '../../graphql/resolvers';
@@ -36,7 +36,7 @@ const graphql = new ApolloServer({
   resolvers,
   introspection: true,
   playground: false,
-  context: <ExpressContext>({ req, res }) => ({
+  context: ({ req, res }: { req: ExpressReqContext; res: Express.Response }) => ({
     // Connection
     res,
     // user

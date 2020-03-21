@@ -8,8 +8,17 @@ import crypto from 'crypto';
 import CONFIG from '../../config';
 import { createTokens, headerToken } from '../../express/auth';
 import { sendSMS, statusSMS } from '../../services/sms';
+import { Resolvers, NotificationSettings } from '../../generated/graphql';
 
-const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
+const calculateResendTime = ({
+  latestCodeTime,
+  codesCount,
+  expires,
+}: {
+  latestCodeTime: number;
+  codesCount: number;
+  expires: number;
+}) =>
   new Date(
     Math.min(
       expires,
@@ -18,11 +27,20 @@ const calculateResendTime = ({ latestCodeTime, codesCount, expires }) =>
     ),
   );
 
-export default {
+const DeviceApi: Resolvers = {
   Query: {
-    notificationSettings: (parent, args, { device }) => {
+    notificationSettings: async (parent, args, { device, ProcedureModel }) => {
       global.Log.graphql('Device.query.notificationSettings');
-      return device.notificationSettings;
+      const result: NotificationSettings = {
+        ...device.notificationSettings,
+        procedures: device.notificationSettings.procedures.map(procedure => {
+          if ('procedureId' in procedure) {
+            return procedure._id.toHexString();
+          }
+          return procedure.toHexString();
+        }),
+      };
+      return result;
     },
   },
 
@@ -110,7 +128,7 @@ export default {
 
       const now = new Date();
       // Check if there is still a valid Code
-      const activeCode = verification.verifications.find(({ expires }) => now < expires);
+      const activeCode = verification.verifications.find(({ expires }) => now < new Date(expires));
       if (activeCode) {
         // ***********
         // Resend Code
@@ -283,7 +301,11 @@ export default {
       }
 
       // User has phoneHash, but no oldPhoneHash?
-      if (verification.oldPhoneHash && (!phone || phone.phoneHash !== verification.oldPhoneHash)) {
+      if (
+        verification.oldPhoneHash &&
+        (!phone ||
+          (typeof phone.phoneHash === 'string' && phone.phoneHash !== verification.oldPhoneHash))
+      ) {
         return {
           reason: 'User phoneHash and oldPhoneHash inconsistent',
           succeeded: false,
@@ -352,14 +374,14 @@ export default {
       );
 
       // Create new User and update session User
-      user = await UserModel.create({
+      const saveUser = await UserModel.create({
         device: device._id,
         phone: newPhone._id,
         verified: true,
       });
-      await user.save();
+      await saveUser.save();
       // This should not be necessary since the call ends here - but you never know
-      phone = newPhone;
+      // phone = newPhone;
 
       // Send new tokens since user id has been changed
       const [token, refreshToken] = await createTokens(user._id);
@@ -447,7 +469,16 @@ export default {
         device = await DeviceModel.findOne({ _id: device._id });
       }
 
-      return device.notificationSettings;
+      const result: NotificationSettings = {
+        ...device.notificationSettings,
+        procedures: device.notificationSettings.procedures.map(procedure => {
+          if ('procedureId' in procedure) {
+            return procedure._id.toHexString();
+          }
+          return procedure.toHexString();
+        }),
+      };
+      return result;
     },
 
     toggleNotification: async (parent, { procedureId }, { device, ProcedureModel }) => {
@@ -468,3 +499,5 @@ export default {
     },
   },
 };
+
+export default DeviceApi;

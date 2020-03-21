@@ -1,5 +1,3 @@
-import { Schema } from 'mongoose';
-
 import { createSchema, Type } from 'ts-mongoose';
 import procedureStates from '../../config/procedureStates';
 import ProcedureDocument from './Procedure/Document';

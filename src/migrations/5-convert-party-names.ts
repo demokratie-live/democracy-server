@@ -1,5 +1,3 @@
-import mongoose from 'mongoose';
-
 import { typedModel } from 'ts-mongoose';
 import ProcedureSchema from './3-schemas/Procedure';
 import { convertPartyName } from '../importer/tools';

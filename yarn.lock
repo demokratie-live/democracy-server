@@ -1235,6 +1235,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/graphql-date@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@types/graphql-date/-/graphql-date-1.0.5.tgz#ded126f5244e0ba3192134b9da0074526be839be"
+  integrity sha512-iZiy6OYbZ9WHgW8YdKQ7W+PmGWFZPvpYuCKCxpkLiwZRE/Z1M9ggojbPa4rliw1fKs3LOClKbwyg29IrK4vdGQ==
+  dependencies:
+    graphql "^14.5.3"
+
 "@types/graphql-upload@^8.0.0":
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/@types/graphql-upload/-/graphql-upload-8.0.3.tgz#b371edb5f305a2a1f7b7843a890a2a7adc55c3ec"
@@ -1325,6 +1332,11 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
+"@types/lodash@^4.14.149":
+  version "4.14.149"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.149.tgz#1342d63d948c6062838fbf961012f74d4e638440"
+  integrity sha512-ijGqzZt/b7BfzcK9vTrS6MFljQRPn5BFWOx8oE0GYxribu6uV+aA9zZuXI1zc/etK9E8nrgdoF2+LgUw7+9tJQ==
+
 "@types/long@^4.0.0":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.1.tgz#459c65fa1867dafe6a8f322c4c51695663cc55e9"
@@ -1357,6 +1369,11 @@
   dependencies:
     "@types/mongodb" "*"
     "@types/node" "*"
+
+"@types/ms@^0.7.31":
+  version "0.7.31"
+  resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
+  integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
 "@types/node-fetch@2.5.5":
   version "2.5.5"

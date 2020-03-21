@@ -7,7 +7,12 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "lib": ["ESNext"],
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true
+    // "noUnusedLocals": true,
+    // "noImplicitAny": true
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "generated"]

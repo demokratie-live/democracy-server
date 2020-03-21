@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+import { typedModel } from 'ts-mongoose';
 import PushNotificationSchema from './8-schemas/PushNotification';
 
 module.exports.id = 'new-push-notifications';
@@ -45,7 +46,7 @@ module.exports.up = async function(done) {
       delete mongoose.connection.models.PushNotification;
     }
 
-    const PushNotifications = mongoose.model('PushNotification', PushNotificationSchema);
+    const PushNotifications = typedModel('PushNotification', PushNotificationSchema);
     await PushNotifications.ensureIndexes();
 
     done();

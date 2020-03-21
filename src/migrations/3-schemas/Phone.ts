@@ -1,4 +1,3 @@
-import { Schema } from 'mongoose';
 import { createSchema, Type } from 'ts-mongoose';
 
 const PhoneSchema = createSchema(

@@ -1,5 +1,4 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { Schema, Document } from 'mongoose';
 import { createSchema, Type } from 'ts-mongoose';
 import ProcedureSchema from '../11-schemas/Procedure';
 

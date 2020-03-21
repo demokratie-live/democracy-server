@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
+import { typedModel } from 'ts-mongoose';
 import DeviceSchema from './9-schemas/Device';
 
 module.exports.id = 'new-push-settings';
 
-module.exports.up = async function (done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Remove Model from Mongoose if needed - should not be the case
@@ -11,7 +13,7 @@ module.exports.up = async function (done) { // eslint-disable-line
       delete mongoose.connection.models.Device;
     }
 
-    const Devices = mongoose.model('Device', DeviceSchema);
+    const Devices = typedModel('Device', DeviceSchema);
     await Devices.ensureIndexes();
 
     // transform data
@@ -36,7 +38,8 @@ module.exports.up = async function (done) { // eslint-disable-line
   }
 };
 
-module.exports.down = function (done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };

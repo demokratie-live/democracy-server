@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 // import utils from 'mongoose/lib/utils';
 
+import { typedModel } from 'ts-mongoose';
 import ActivitySchema from './1-schemas/Activity';
 import DeputySchema from './3-schemas/Deputy';
 import DeviceSchema from './1-schemas/Device';
@@ -14,7 +15,8 @@ import VoteSchema from './2-schemas/Vote';
 module.exports.id = 'initialize-database';
 
 // Better late the never - initialize database
-module.exports.up = async function(done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Since we have no Modelchanges here, we do not need to remove Models from mongoose
@@ -24,23 +26,23 @@ module.exports.up = async function(done) { // eslint-disable-line
     await this.db.createCollection('pushnotifications');
 
     // The following models do have indexes and the coresponding collection will be created
-    const Activities = mongoose.model('Activity', ActivitySchema);
+    const Activities = typedModel('Activity', ActivitySchema);
     await Activities.ensureIndexes();
-    const Deputies = mongoose.model('Deputy', DeputySchema);
+    const Deputies = typedModel('Deputy', DeputySchema);
     await Deputies.ensureIndexes();
-    const Devices = mongoose.model('Device', DeviceSchema);
+    const Devices = typedModel('Device', DeviceSchema);
     await Devices.ensureIndexes();
-    const Phones = mongoose.model('Phone', PhoneSchema);
+    const Phones = typedModel('Phone', PhoneSchema);
     await Phones.ensureIndexes();
-    const Procedures = mongoose.model('Procedure', ProcedureSchema);
+    const Procedures = typedModel('Procedure', ProcedureSchema);
     await Procedures.ensureIndexes();
-    const SearchTerms = mongoose.model('SearchTerm', SearchTermSchema);
+    const SearchTerms = typedModel('SearchTerm', SearchTermSchema);
     await SearchTerms.ensureIndexes();
-    const Users = mongoose.model('User', UserSchema);
+    const Users = typedModel('User', UserSchema);
     await Users.ensureIndexes();
-    const Verifications = mongoose.model('Verification', VerificationSchema);
+    const Verifications = typedModel('Verification', VerificationSchema);
     await Verifications.ensureIndexes();
-    const Votes = mongoose.model('Vote', VoteSchema);
+    const Votes = typedModel('Vote', VoteSchema);
     await Votes.ensureIndexes();
     done();
   } catch (err) {
@@ -48,7 +50,8 @@ module.exports.up = async function(done) { // eslint-disable-line
   }
 };
 
-module.exports.down = function(done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };

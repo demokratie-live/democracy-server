@@ -1,6 +1,7 @@
 import { getCurrentConferenceWeek } from '../../data/conference-weeks';
+import { Resolvers } from '../../generated/graphql';
 
-export default {
+const ConferenceWeekApi: Resolvers = {
   Query: {
     currentConferenceWeek: async () => {
       global.Log.graphql('ConferenceWeek.query.currentConferenceWeek');
@@ -8,3 +9,5 @@ export default {
     },
   },
 };
+
+export default ConferenceWeekApi;

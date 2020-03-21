@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 
+import { typedModel } from 'ts-mongoose';
 import CronJobSchema from './10-schemas/CronJob';
 
 module.exports.id = 'cronjobs2';
 
-module.exports.up = async function (done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // rename collection
@@ -16,14 +18,15 @@ module.exports.up = async function (done) { // eslint-disable-line
     }
 
     // Load new models
-    mongoose.model('CronJob', CronJobSchema);
+    typedModel('CronJob', CronJobSchema);
     done();
   } catch (err) {
     done(err);
   }
 };
 
-module.exports.down = function (done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - since this will result in dataloss
   done(new Error('Not supported rollback!'));
 };

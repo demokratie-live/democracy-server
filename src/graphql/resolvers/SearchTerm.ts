@@ -1,6 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
-export default {
+import { Resolvers } from '../../generated/graphql';
+
+const SearchTermApi: Resolvers = {
   Query: {
     mostSearched: async (parent, args, { SearchTermModel }) => {
       global.Log.graphql('SearchTerm.query.mostSearched');
@@ -44,3 +46,5 @@ export default {
     },
   },
 };
+
+export default SearchTermApi;

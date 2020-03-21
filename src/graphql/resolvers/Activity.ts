@@ -1,8 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import { Types } from 'mongoose';
 import CONFIG from '../../config';
+import { Resolvers } from '../../generated/graphql';
 
-export default {
+const ActivityApi: Resolvers = {
   Query: {
     activityIndex: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
       global.Log.graphql('Activity.query.activityIndex');
@@ -53,3 +54,5 @@ export default {
     },
   },
 };
+
+export default ActivityApi;

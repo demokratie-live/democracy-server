@@ -1,9 +1,9 @@
-import { Schema } from 'mongoose';
+import { createSchema, Type } from 'ts-mongoose';
 
-const SearchTermSchema = new Schema(
+const SearchTermSchema = createSchema(
   {
-    term: { type: String, required: true, unique: true },
-    times: [{ type: Date, required: true }],
+    term: Type.string({ type: String, required: true, unique: true }),
+    times: Type.array().of(Type.date({ type: Date, required: true })),
   },
   { timestamps: false },
 );

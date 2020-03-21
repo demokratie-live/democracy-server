@@ -2,12 +2,21 @@
 import { Types } from 'mongoose';
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import { MongooseFilterQuery } from 'mongoose';
+import { DeepPartial } from 'utility-types';
+import Maybe from 'graphql/tsutils/Maybe';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import Activity from './Activity';
-import { Resolvers, VoteSelection } from '../../generated/graphql';
+import resolvers from './index';
+import {
+  Resolvers,
+  VoteSelection,
+  DeputyVote,
+  Deputy,
+  ResolversTypes,
+} from '../../generated/graphql';
 import { VoteDoc } from '../../migrations/2-schemas/Vote';
-import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
+import { DeputyDoc, DeputyProps } from '../../migrations/4-schemas/Deputy';
 
 const queryVotes: Resolvers['Query']['votes'] = async (
   parent,
@@ -17,7 +26,7 @@ const queryVotes: Resolvers['Query']['votes'] = async (
   global.Log.graphql('Vote.query.votes');
   // Has user voted?
   const voted = await VoteModel.findOne({
-    procedure: Types.ObjectId(procedure),
+    procedure,
     type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
       voter: CONFIG.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
@@ -29,7 +38,7 @@ const queryVotes: Resolvers['Query']['votes'] = async (
     // Find Procedure, including type; results in up to two objects for state
     {
       $match: {
-        procedure: Types.ObjectId(procedure),
+        procedure,
         type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
       },
     },
@@ -66,7 +75,7 @@ const queryVotes: Resolvers['Query']['votes'] = async (
           // Find Procedure, including type; results in up to two objects for state
           {
             $match: {
-              procedure: Types.ObjectId(procedure),
+              procedure,
               type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             },
           },
@@ -431,7 +440,7 @@ const VoteApi: Resolvers = {
       }
 
       // Increate Activity
-      await Activity.Mutation.increaseActivity(
+      await resolvers.Activity.Mutation.increaseActivity(
         parent,
         { procedureId },
         {
@@ -470,11 +479,14 @@ const VoteApi: Resolvers = {
   },
   VoteResult: {
     governmentDecision: ({ yes, no }) => (yes > no ? VoteSelection.Yes : VoteSelection.No),
+
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
       console.log({ voteResult });
       global.Log.graphql('VoteResult.deputyVotes');
       // Default is empty
-      let deputyVotes = [];
+      let deputyVotes: DeepPartial<
+        Omit<DeputyVote, 'deputy'> & { deputy?: Maybe<ResolversTypes['Deputy']> }
+      >[] = [];
       // Do we have a procedureId and not an empty array for constituencies?
       if (
         voteResult.procedureId &&
@@ -496,17 +508,16 @@ const VoteApi: Resolvers = {
         }
 
         // Query
-        const deputies = await DeputyModel.aggregate<MongooseFilterQuery<DeputyDoc>>([match]);
+        const deputies = await DeputyModel.aggregate<DeputyDoc>([match]);
 
         // Construct result
-        deputies.map(deputy => {
+        deputies.forEach(deputy => {
           const deputyVote = {
             decision: deputy.votes.find(({ procedureId }) => procedureId === voteResult.procedureId)
-              .decision,
-            deputy,
+              .decision as VoteSelection,
+            deputy: deputy.toObject(),
           };
           deputyVotes = [...deputyVotes, deputyVote];
-          return null;
         });
         return deputyVotes;
       }

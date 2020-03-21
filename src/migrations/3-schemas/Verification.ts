@@ -1,42 +1,20 @@
-import { Schema, Document } from 'mongoose';
+import { createSchema, Type } from 'ts-mongoose';
 
-export interface IVerification extends Document {
-  phoneHash: string;
-  verifications: [
-    {
-      deviceHash: String;
-      oldPhoneHash: String;
-      codes: [
-        {
-          code: String;
-          time: String;
-          SMSID?: string;
-        },
-      ];
-      SMSStatus: number;
-      expires: string;
-    },
-  ];
-}
-
-const VerificationSchema = new Schema(
+const VerificationSchema = createSchema(
   {
-    phoneHash: { type: String, required: true, unique: true },
-    verifications: [
-      {
-        deviceHash: String,
-        oldPhoneHash: String,
-        codes: [
-          {
-            code: { type: String, required: true },
-            time: { type: Date, required: true },
-            SMSID: { type: String, default: null },
-          },
-        ],
-        SMSStatus: { type: Number },
-        expires: { type: Date, required: true },
-      },
-    ],
+    phoneHash: Type.string({ type: String, required: true, unique: true }),
+    verifications: Type.array().of({
+      _id: Type.objectId(),
+      deviceHash: Type.string(),
+      oldPhoneHash: Type.string(),
+      codes: Type.array().of({
+        code: Type.string({ type: String, required: true }),
+        time: Type.date({ type: Date, required: true }),
+        SMSID: Type.string({ type: String, default: null }),
+      }),
+      SMSStatus: Type.number(),
+      expires: Type.date({ type: Date, required: true }),
+    }),
   },
   { timestamps: true },
 );
