@@ -21,7 +21,7 @@ const ProcedureSchema = createSchema(
     subjectGroups: Type.array().of(Type.string()),
     importantDocuments: Type.array().of(Type.schema().of(ProcedureDocument)),
     activities: Type.number({ default: 0 }),
-    voteResults: {
+    voteResults: Type.object().of({
       procedureId: Type.string(),
       yes: Type.number({ required: true }),
       no: Type.number({ required: true }),
@@ -30,20 +30,20 @@ const ProcedureSchema = createSchema(
       decisionText: Type.string(),
       namedVote: Type.boolean(),
       partyVotes: Type.array().of({
-        _id: false,
+        _id: Type.boolean({ default: false }),
         party: Type.string({ required: true }),
         main: Type.string({
           enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'],
           required: true,
         }),
-        deviants: {
+        deviants: Type.object().of({
           yes: Type.number({ required: true }),
           no: Type.number({ required: true }),
           abstination: Type.number({ required: true }),
           notVoted: Type.number(),
-        },
+        }),
       }),
-    },
+    }),
   },
   { timestamps: true },
 );

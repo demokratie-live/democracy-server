@@ -19,7 +19,7 @@ module.exports.up = async function(done) {
           resolve(names);
         }
       });
-    }).then(c => c.map(({ name }) => name));
+    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
 
     const neededCollections = ['votes'];
     const crashingCollections = ['old_votes-geographical-urn-book'];

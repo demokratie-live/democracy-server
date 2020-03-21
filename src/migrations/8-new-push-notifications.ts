@@ -4,7 +4,8 @@ import PushNotificationSchema from './8-schemas/PushNotification';
 
 module.exports.id = 'new-push-notifications';
 
-module.exports.up = async function (done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
@@ -16,7 +17,7 @@ module.exports.up = async function (done) { // eslint-disable-line
           resolve(names);
         }
       });
-    }).then(c => c.map(({ name }) => name));
+    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
 
     const neededCollections = ['pushnotifications'];
     const crashingCollections = ['old_pushnotifications'];
@@ -53,7 +54,8 @@ module.exports.up = async function (done) { // eslint-disable-line
   }
 };
 
-module.exports.down = function (done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };

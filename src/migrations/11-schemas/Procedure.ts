@@ -54,9 +54,6 @@ const ProcedureSchema = createSchema(
     }),
     ...({} as {
       isCompleted: () => boolean;
-      voteResults: {
-        procedureId: string;
-      };
     }),
   },
   { timestamps: true },

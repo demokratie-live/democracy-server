@@ -15,6 +15,8 @@ import Procedure from '../models/Procedure';
 // Queries
 import { quePushsOutcome } from '../services/notifications';
 import { convertPartyName } from './tools';
+import { ProcedureDoc } from '../migrations/11-schemas/Procedure';
+import { VoteSelection } from '../generated/graphql';
 
 export const CRON_NAME = 'Procedures';
 
@@ -41,7 +43,7 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
   }
 
   // check vote results
-  let voteResults = {
+  let voteResults: ProcedureDoc['voteResults'] = {
     yes: null,
     no: null,
     abstination: null,
@@ -83,7 +85,7 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
           partyVotes: voteResults.partyVotes.map(({ main, deviants, ...rest }) => {
             let mainDecision = main;
             if (main !== 'ABSTINATION') {
-              mainDecision = main === 'YES' ? 'NO' : 'YES';
+              mainDecision = main === VoteSelection.Yes ? VoteSelection.No : VoteSelection.Yes;
             }
             return {
               ...rest,

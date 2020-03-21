@@ -9,7 +9,8 @@ import VoteSchema from './1-schemas/Vote';
 
 module.exports.id = 'sms-verification';
 
-module.exports.up = async function (done) { // eslint-disable-line
+module.exports.up = async function(done) {
+  // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
@@ -21,7 +22,7 @@ module.exports.up = async function (done) { // eslint-disable-line
           resolve(names);
         }
       });
-    }).then(c => c.map(({ name }) => name));
+    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
 
     const neededCollections = ['users', 'votes', 'activities'];
     const crashingCollections = ['old_users', 'old_votes', 'old_activities'];
@@ -136,7 +137,8 @@ module.exports.up = async function (done) { // eslint-disable-line
   }
 };
 
-module.exports.down = function (done) { // eslint-disable-line
+module.exports.down = function(done) {
+  // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };

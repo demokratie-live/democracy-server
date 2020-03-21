@@ -1,5 +1,6 @@
 import { MongooseFilterQuery } from 'mongoose';
 import { ExtractDoc } from 'ts-mongoose';
+import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import DeputyModel from '../../models/Deputy';
 import {
   Resolvers,
@@ -33,22 +34,16 @@ const DeputyApi: Resolvers = {
       { ProcedureModel },
       info,
     ) => {
-      // get query property procedures
-      const proceduresSelection = info.operation.selectionSet.selections[0].selectionSet.selections.find(
-        ({ name: { value } }) => value === 'procedures',
-      );
-      let selectedProcedureFields = [];
-
-      // check which fields are requrested for procedure
-      if (proceduresSelection) {
-        // get procedure selection query info
-        const procedureSelection = proceduresSelection.selectionSet.selections.find(
-          ({ name: { value } }) => value === 'procedure',
-        );
-        // get procedure fields selection query info
-        selectedProcedureFields = procedureSelection.selectionSet.selections.map(
-          ({ name: { value } }) => value,
-        );
+      const requestedFields = parseResolveInfo(info);
+      let didRequestProcedureId = false;
+      if (
+        requestedFields &&
+        requestedFields.name === 'procedures' &&
+        'procedure' in requestedFields.fieldsByTypeName.DeputyProcedure &&
+        'procedureId' in
+          requestedFields.fieldsByTypeName.DeputyProcedure.procedure.fieldsByTypeName.Procedure
+      ) {
+        didRequestProcedureId = true;
       }
 
       // if procedureIds is given filter procedures to given procedureIds
@@ -58,9 +53,9 @@ const DeputyApi: Resolvers = {
 
       // flattern procedureId's
       const procedureIdsSelected = filteredVotes.map(({ procedureId }) => procedureId);
-
+      console.log({ didRequestProcedureId });
       // get needed procedure Data only from votes object
-      if (selectedProcedureFields.length === 1 && selectedProcedureFields[0] === 'procedureId') {
+      if (didRequestProcedureId) {
         const returnValue = filteredVotes
           .reduce((prev, { procedureId, decision }) => {
             const procedure = ProcedureModel.findOne({ procedureId });
