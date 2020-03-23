@@ -3,6 +3,10 @@ import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
 import DeputyModel from '../models/Deputy';
 import { convertPartyName } from './tools';
 import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
+import {
+  DeputyUpdates,
+  DeputyUpdatesVariables,
+} from '../graphql/queries/__generated__/DeputyUpdates';
 
 export const CRON_NAME = 'DeputyProfiles';
 
@@ -32,7 +36,7 @@ export default async () => {
         },
       } =
         // eslint-disable-next-line no-await-in-loop
-        await client.query({
+        await client.query<DeputyUpdates, DeputyUpdatesVariables>({
           query: getDeputyUpdates,
           variables: { since, limit, offset },
         });

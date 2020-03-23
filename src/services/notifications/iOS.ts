@@ -29,7 +29,19 @@ export const provider = (
 };
 
 // Send single iOS notification
-export const push = ({ title, message, payload, token, callback }) => {
+export const push = ({
+  title,
+  message,
+  payload,
+  token,
+  callback,
+}: {
+  title: string;
+  message: string;
+  payload: any;
+  token: string;
+  callback: (response: apn.Responses) => void;
+}) => {
   const apnProvider = provider();
 
   // Check if Sending Interface is present

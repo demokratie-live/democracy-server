@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query namedPollUpdates($since: Date!, $limit: Int, $offset: Int, $associated: Boolean) {
+  query NamedPollUpdates($since: Date!, $limit: Int, $offset: Int, $associated: Boolean) {
     namedPollUpdates(since: $since, limit: $limit, offset: $offset, associated: $associated) {
       beforeCount
       afterCount

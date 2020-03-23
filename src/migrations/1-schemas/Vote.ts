@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { createSchema, Type } from 'ts-mongoose';
+import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
 import ProcedureSchema from '../11-schemas/Procedure';
 
 const VoteSchema = createSchema({
@@ -8,6 +8,7 @@ const VoteSchema = createSchema({
   voters: Type.array().of({
     voter: Type.objectId(),
     _id: Type.boolean({ default: false }),
+    kind: Type.string(),
   }),
   voteResults: Type.object().of({
     device: Type.object().of({
@@ -24,5 +25,8 @@ const VoteSchema = createSchema({
 });
 
 VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
+
+export type VoteDoc = ExtractDoc<typeof VoteSchema>;
+export type VoteProps = ExtractProps<typeof VoteSchema>;
 
 export default VoteSchema;

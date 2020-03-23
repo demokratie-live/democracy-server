@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query deputyUpdates($since: Date!, $limit: Int, $offset: Int) {
+  query DeputyUpdates($since: Date!, $limit: Int, $offset: Int) {
     deputyUpdates(since: $since, limit: $limit, offset: $offset) {
       beforeCount
       afterCount

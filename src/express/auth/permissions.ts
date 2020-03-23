@@ -1,6 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { Resolver } from 'apollo-client';
-import { rule, shield, and, or, not } from 'graphql-shield';
+import { rule, shield } from 'graphql-shield';
 import CONFIG from '../../config';
 
 // const createExpressResolver = <T>(resolver: T) => {

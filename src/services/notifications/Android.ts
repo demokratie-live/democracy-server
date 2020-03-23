@@ -1,4 +1,4 @@
-import gcm from 'node-gcm';
+import gcm, { IResponseBody } from 'node-gcm';
 import CONFIG from '../../config';
 
 export const provider = (key = CONFIG.NOTIFICATION_ANDROID_SERVER_KEY) => {
@@ -12,7 +12,19 @@ export const provider = (key = CONFIG.NOTIFICATION_ANDROID_SERVER_KEY) => {
   return new gcm.Sender(key);
 };
 
-export const push = async ({ title, message, payload, token, callback }) => {
+export const push = async ({
+  title,
+  message,
+  payload,
+  token,
+  callback,
+}: {
+  title: string;
+  message: string;
+  payload: any;
+  token: string;
+  callback: (err: any, resJson: IResponseBody) => void;
+}) => {
   const gcmProvider = provider();
 
   // Check if Sending Interface is present
@@ -34,7 +46,17 @@ export const push = async ({ title, message, payload, token, callback }) => {
 };
 
 // send bulk android notifications
-export const pushBulk = ({ title, message, payload, tokens }) => {
+export const pushBulk = ({
+  title,
+  message,
+  payload,
+  tokens,
+}: {
+  title: string;
+  message: string;
+  payload: string;
+  tokens: string[];
+}) => {
   const gcmProvider = provider();
 
   // Check if Sending Interface is present

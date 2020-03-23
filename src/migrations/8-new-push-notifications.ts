@@ -1,24 +1,17 @@
 import mongoose from 'mongoose';
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 
 import { typedModel } from 'ts-mongoose';
 import PushNotificationSchema from './8-schemas/PushNotification';
 
 module.exports.id = 'new-push-notifications';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
-    const collections = await new Promise((resolve, reject) => {
-      this.db.listCollections().toArray((err, names) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(names);
-        }
-      });
-    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
+    const collections = Object.keys(this.db.collections);
 
     const neededCollections = ['pushnotifications'];
     const crashingCollections = ['old_pushnotifications'];
@@ -55,8 +48,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

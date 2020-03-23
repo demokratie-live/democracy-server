@@ -1,12 +1,14 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { Response, NextFunction } from 'express';
 import CONFIG from '../../config';
 import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
 import PhoneModel from '../../models/Phone';
+import { ExpressReqContext } from '../../types/graphqlContext';
 
-export const createTokens = async user => {
+export const createTokens = async (user: string) => {
   const token = jwt.sign(
     {
       user,
@@ -30,7 +32,7 @@ export const createTokens = async user => {
   return Promise.all([token, refreshToken]);
 };
 
-const refreshTokens = async refreshToken => {
+const refreshTokens = async (refreshToken?: string) => {
   // Verify Token
   try {
     jwt.verify(refreshToken, CONFIG.AUTH_JWT_SECRET);
@@ -61,7 +63,15 @@ const refreshTokens = async refreshToken => {
   };
 };
 
-export const headerToken = async ({ res, token, refreshToken }) => {
+export const headerToken = async ({
+  res,
+  token,
+  refreshToken,
+}: {
+  res: Response;
+  token: string;
+  refreshToken: string;
+}) => {
   res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
   res.set('x-token', token);
   res.set('x-refresh-token', refreshToken);
@@ -72,7 +82,7 @@ export const headerToken = async ({ res, token, refreshToken }) => {
   }
 };
 
-export const auth = async (req, res, next) => {
+export const auth = async (req: ExpressReqContext, res: Response, next: NextFunction) => {
   global.Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
   let token = req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
   // In some cases the old Client transmitts the token via authorization header as 'Bearer [token]'

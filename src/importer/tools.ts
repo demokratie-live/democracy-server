@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/prefer-default-export
-export const convertPartyName = party => {
+export const convertPartyName = (party: string) => {
   switch (party) {
     case 'CDU/CSU':
       // case 'Union':

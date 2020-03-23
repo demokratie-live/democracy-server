@@ -1,5 +1,6 @@
 import winston from 'winston';
-import DiscordLogger from 'winston-discord';
+import Discord from 'discord.js';
+import DiscordTransport from 'winston-discordjs';
 
 import CONFIG from '../../config';
 
@@ -39,14 +40,17 @@ const transports = [
     format: alignedWithTime,
   }),
 ];
-if (CONFIG.LOGGING_DISCORD && CONFIG.LOGGING_DISCORD_WEBHOOK) {
-  transports.push(
-    new DiscordLogger({
-      webhooks: CONFIG.LOGGING_DISCORD_WEBHOOK,
-      level: CONFIG.LOGGING_DISCORD,
-      inline: { server: 'Democracy' },
-    }),
-  );
+let discordLogger: DiscordTransport | undefined;
+if (CONFIG.LOGGING_DISCORD && CONFIG.LOGGING_DISCORD_TOKEN) {
+  const client = new Discord.Client();
+  client.login(CONFIG.LOGGING_DISCORD_TOKEN);
+  discordLogger = new DiscordTransport({
+    discordChannel: 'internal',
+    level: 'silly',
+  });
+  client.on('ready', () => {
+    console.info(`DISCORD BOT Logged in as ${client.user.tag}!`);
+  });
 }
 const myLevels = {
   levels: {
@@ -78,6 +82,9 @@ const logger = winston.createLogger({
   levels: myLevels.levels,
   transports,
 });
+if (discordLogger) {
+  logger.add(discordLogger);
+}
 winston.addColors(myLevels.colors);
 
 global.Log = logger;

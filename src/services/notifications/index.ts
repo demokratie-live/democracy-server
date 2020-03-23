@@ -18,6 +18,7 @@ import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
+import { DeviceDoc } from '../../migrations/12-schemas/Device';
 
 export const sendQuedPushs = async () => {
   const CRON_NAME = 'sendQuedPushs';
@@ -141,6 +142,14 @@ export const quePushs = async ({
   procedureIds,
   tokens,
   time = new Date(),
+}: {
+  type: string;
+  category: string;
+  title: string;
+  message: string;
+  procedureIds: string[];
+  tokens: DeviceDoc['pushTokens'];
+  time?: Date;
 }) => {
   // Generate one push for each token
   const docs = tokens.map(({ token, os }) => {
@@ -196,7 +205,12 @@ export const quePushsConferenceWeek = async () => {
     'notificationSettings.conferenceWeekPushs': true,
   });
 
-  const tokens = devices.reduce((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokens = devices.reduce<
+    {
+      token?: string;
+      os?: string;
+    }[]
+  >((array, { pushTokens }) => [...array, ...pushTokens], []);
 
   // Only send Message if at least one vote & one token is found
   if (tokens.length > 0 && procedureIds.length > 0) {
@@ -360,7 +374,7 @@ export const quePushsVoteTop100 = async () => {
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
-export const quePushsOutcome = async procedureId => {
+export const quePushsOutcome = async (procedureId: string) => {
   /*
   Offizielles Ergebnis zu Deiner Abstimmung
   Lorem Ipsum Titel

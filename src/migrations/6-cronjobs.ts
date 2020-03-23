@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
+
 import { typedModel } from 'ts-mongoose';
 import CronJobSchema from './6-schemas/CronJob';
 
 module.exports.id = 'cronjobs';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
@@ -23,8 +25,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

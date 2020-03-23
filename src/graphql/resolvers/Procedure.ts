@@ -9,7 +9,7 @@ import CONFIG from '../../config';
 import elasticsearch from '../../services/search';
 
 import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
-import { ProcedureDoc } from '../../migrations/11-schemas/Procedure';
+import { ProcedureDoc, ProcedureProps } from '../../migrations/11-schemas/Procedure';
 
 const ProcedureApi: Resolvers = {
   Query: {
@@ -38,8 +38,18 @@ const ProcedureApi: Resolvers = {
       let listTypes = listTypeParam;
       if (type) {
         switch (type) {
-          case 'VOTING':
+          case ProcedureType.InVote:
+          case ProcedureType.Voting:
             listTypes = [ListType.InVote, ListType.Past];
+            break;
+          case ProcedureType.Preparation:
+            listTypes = [ListType.Preparation];
+            break;
+          case ProcedureType.Past:
+            listTypes = [ListType.Past];
+            break;
+          case ProcedureType.Hot:
+            listTypes = [ListType.Hot];
             break;
           default:
             listTypes = [ListType[type]];
@@ -211,7 +221,7 @@ const ProcedureApi: Resolvers = {
         ]);
       }
 
-      let pastVotings = [];
+      let pastVotings: ProcedureDoc[] = [];
       if (listTypes.indexOf(ListType.Past) > -1) {
         if (activeVotings.length < pageSize) {
           const activeVotingsCount =
@@ -328,7 +338,7 @@ const ProcedureApi: Resolvers = {
       { ProcedureModel },
     ) => {
       // Vote Results are present Filter
-      const voteResultsQuery = {
+      const voteResultsQuery: MongooseFilterQuery<ProcedureDoc> = {
         'voteResults.yes': { $ne: null },
         'voteResults.no': { $ne: null },
         'voteResults.abstination': { $ne: null },
@@ -393,7 +403,7 @@ const ProcedureApi: Resolvers = {
       }
 
       // Prepare Find Query
-      const findQuery = {
+      const findQuery: MongooseFilterQuery<ProcedureDoc> = {
         // Vote Results are present
         ...voteResultsQuery,
         // Timespan Selection
@@ -412,36 +422,37 @@ const ProcedureApi: Resolvers = {
       }
 
       // Find selected procedures matching given Filter
-      let procedures = await ProcedureModel.find(findQuery)
+      const procedures = await ProcedureModel.find(findQuery)
         // Sorting last voted first
         .sort({ voteDate: -1 })
         // Pagination
         .limit(pageSize)
-        .skip(offset);
+        .skip(offset)
+        .then(procedures => {
+          // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
+          return procedures.map(p => {
+            // MongoObject to JS Object
+            const procedure: ProcedureProps = p.toObject();
+            // eslint-disable-next-line no-param-reassign
+            procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
+              ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
+            );
 
-      // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
-      procedures = procedures.map(p => {
-        // MongoObject to JS Object
-        const procedure = p.toObject();
-        // eslint-disable-next-line no-param-reassign
-        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
-          ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
-        );
+            // Rename Fractions
+            procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.map(
+              ({ party, ...rest }) => {
+                switch (party.trim()) {
+                  case 'CDU':
+                    return { ...rest, party: 'Union' };
 
-        // Rename Fractions
-        procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.map(
-          ({ party, ...rest }) => {
-            switch (party.trim()) {
-              case 'CDU':
-                return { ...rest, party: 'Union' };
-
-              default:
-                return { ...rest, party };
-            }
-          },
-        );
-        return { ...procedure };
-      });
+                  default:
+                    return { ...rest, party };
+                }
+              },
+            );
+            return procedure;
+          });
+        });
 
       // Return result
       return { total, procedures };
@@ -454,12 +465,6 @@ const ProcedureApi: Resolvers = {
       if (!procedure) {
         return null;
       }
-      // eslint-disable-next-line
-      const listType = PROCEDURE_STATES.IN_VOTE.concat(PROCEDURE_STATES.COMPLETED).some(
-        status => procedure.currentStatus === status,
-      )
-        ? 'VOTING'
-        : 'PREPARATION';
 
       return {
         ...procedure.toObject(),
@@ -470,7 +475,7 @@ const ProcedureApi: Resolvers = {
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
       global.Log.graphql('Procedure.query.searchProceduresAutocomplete');
-      let autocomplete = [];
+      const autocomplete: string[] = [];
 
       // Search by procedureID or Document id
       const directProcedures = await ProcedureModel.find({
@@ -488,7 +493,7 @@ const ProcedureApi: Resolvers = {
         };
       }
 
-      const { hits, suggest } = await elasticsearch.search({
+      const { hits } = await elasticsearch.search<{ procedureId: string }>({
         index: 'procedures',
         type: 'procedure',
         body: {
@@ -536,20 +541,20 @@ const ProcedureApi: Resolvers = {
       const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
 
       // prepare autocomplete
-      if (suggest.autocomplete[0]) {
-        autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
-      }
+      // if (suggest.autocomplete[0]) {
+      //   autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
+      // }
       return {
         procedures:
           _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId)) || [],
-        autocomplete,
+        autocomplete: [],
       };
     },
 
     // DEPRECATED
     searchProcedures: async (parent, { term }, { ProcedureModel }) => {
       global.Log.graphql('Procedure.query.searchProcedures');
-      const { hits } = await elasticsearch.search({
+      const { hits } = await elasticsearch.search<{ procedureId: string }>({
         index: 'procedures',
         type: 'procedure',
         body: {

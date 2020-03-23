@@ -1,17 +1,8 @@
 import { MongooseFilterQuery } from 'mongoose';
-import { ExtractDoc } from 'ts-mongoose';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import DeputyModel from '../../models/Deputy';
-import {
-  Resolvers,
-  VoteSelection,
-  Resolver,
-  Maybe,
-  ResolversTypes,
-  DeputyProcedure,
-  Procedure,
-} from '../../generated/graphql';
-import DeputySchema, { DeputyDoc } from '../../migrations/4-schemas/Deputy';
+import { Resolvers, VoteSelection } from '../../generated/graphql';
+import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
 
 const DeputyApi: Resolvers = {
   Query: {

@@ -1,28 +1,21 @@
 /* eslint no-await-in-loop: 0 */
 import crypto from 'crypto';
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 
 import { typedModel } from 'ts-mongoose';
+import DeviceSchema from './12-schemas/Device';
 import UserSchema from './1-schemas/User';
-import DeviceSchema from './1-schemas/Device';
 import ActivitySchema from './1-schemas/Activity';
-import VoteSchema from './1-schemas/Vote';
+import VoteSchema from './2-schemas/Vote';
 
 module.exports.id = 'sms-verification';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
-    const collections = await new Promise((resolve, reject) => {
-      this.db.listCollections().toArray((err, names) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(names);
-        }
-      });
-    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
+    const collections = Object.keys(this.db.collections);
 
     const neededCollections = ['users', 'votes', 'activities'];
     const crashingCollections = ['old_users', 'old_votes', 'old_activities'];
@@ -84,7 +77,7 @@ module.exports.up = async function(done) {
       const oldVote = await voteCursor.next();
       // Transform Voters
       const voters = await Promise.all(
-        oldVote.users.map(async id => {
+        oldVote.users.map(async (id: string) => {
           const oldVoter = await oldUsers.findOne({ _id: id }); // eslint-disable-line no-underscore-dangle
           const device = await DeviceModel.findOne({
             deviceHash: crypto
@@ -137,8 +130,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

@@ -20,9 +20,14 @@ import {
 } from '../notifications';
 
 // global variable to store cronjobs
-const jobs = [];
+const jobs: CronJob[] = [];
 
-const registerCronJob = (name, cronTime, cronTask, startOnInit) => {
+const registerCronJob = (
+  name: string,
+  cronTime: string,
+  cronTask: () => void,
+  startOnInit: boolean,
+) => {
   if (cronTime) {
     jobs.push(new CronJob(cronTime, cronTask, null, true, 'Europe/Berlin', null, startOnInit));
     global.Log.info(`[Cronjob][${name}] registered: ${cronTime}`);

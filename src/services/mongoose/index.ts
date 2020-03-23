@@ -10,8 +10,8 @@ import CONFIG from '../../config';
 export default async () => {
   // Mongo Debug
   if (CONFIG.LOGGING_MONGO) {
-    mongoose.set('debug', (...rest) => {
-      global.Log[CONFIG.LOGGING_MONGO](inspect(rest));
+    mongoose.set('debug', () => {
+      global.Log[CONFIG.LOGGING_MONGO](inspect(true));
     });
   }
 

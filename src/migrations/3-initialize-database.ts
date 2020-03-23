@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
 // import utils from 'mongoose/lib/utils';
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 
 import { typedModel } from 'ts-mongoose';
 import ActivitySchema from './1-schemas/Activity';
@@ -15,7 +15,7 @@ import VoteSchema from './2-schemas/Vote';
 module.exports.id = 'initialize-database';
 
 // Better late the never - initialize database
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
@@ -50,8 +50,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

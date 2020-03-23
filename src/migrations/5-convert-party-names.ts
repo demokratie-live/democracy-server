@@ -1,10 +1,11 @@
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 import { typedModel } from 'ts-mongoose';
 import ProcedureSchema from './3-schemas/Procedure';
 import { convertPartyName } from '../importer/tools';
 
 module.exports.id = 'convert-party-names';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
@@ -29,8 +30,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // Unification is not rolled back
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

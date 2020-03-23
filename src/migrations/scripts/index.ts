@@ -1,7 +1,7 @@
 import mm from 'mongodb-migrations';
-import config from '../../../mm-config';
+import config from '../../mm-config';
 
-export const create = name => {
+export const create = (name: string) => {
   const migrator = new mm.Migrator(config);
   migrator.create(`${__dirname}/../`, name, err => {
     if (err) {

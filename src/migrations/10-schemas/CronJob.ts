@@ -1,4 +1,4 @@
-import { Type, createSchema } from 'ts-mongoose';
+import { Type, createSchema, ExtractDoc, ExtractProps } from 'ts-mongoose';
 
 const CronJobSchema = createSchema(
   {
@@ -12,5 +12,8 @@ const CronJobSchema = createSchema(
   },
   { timestamps: true },
 );
+
+export type CronJobDoc = ExtractDoc<typeof CronJobSchema>;
+export type CronJobProps = ExtractProps<typeof CronJobSchema>;
 
 export default CronJobSchema;

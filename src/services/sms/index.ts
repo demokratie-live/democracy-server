@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import CONFIG from '../../config';
 
-export const statusSMS = async SMSID => {
+export const statusSMS = async (SMSID: string) => {
   if (CONFIG.SMS_SIMULATE) {
     return true;
   }
@@ -132,8 +132,8 @@ export const statusSMS = async SMSID => {
 };
 
 export const sendSMS = async (
-  phone,
-  code,
+  phone: string,
+  code: string,
 ): Promise<{
   status: boolean;
   statusCode: number;

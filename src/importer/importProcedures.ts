@@ -17,6 +17,12 @@ import { quePushsOutcome } from '../services/notifications';
 import { convertPartyName } from './tools';
 import { ProcedureDoc } from '../migrations/11-schemas/Procedure';
 import { VoteSelection } from '../generated/graphql';
+import {
+  ProcedureUpdates,
+  ProcedureUpdatesVariables,
+  ProcedureUpdates_procedureUpdates_procedures,
+} from '../graphql/queries/__generated__/ProcedureUpdates';
+import { VoteDecision } from '../../__generated__/globalTypes';
 
 export const CRON_NAME = 'Procedures';
 
@@ -35,11 +41,18 @@ export const CRON_NAME = 'Procedures';
   19: 709,
 }; */
 
-const importProcedures = async (bIoProcedure, { push = false }) => {
+const importProcedures = async (
+  bIoProcedure: ProcedureUpdates_procedureUpdates_procedures,
+  { push = false },
+) => {
+  const importProcedure: Partial<ProcedureDoc> = {
+    ...bIoProcedure,
+    importantDocuments: undefined,
+  };
   if (bIoProcedure && bIoProcedure.history) {
     const [lastHistory] = bIoProcedure.history.slice(-1);
-    bIoProcedure.lastUpdateDate = lastHistory.date; // eslint-disable-line no-param-reassign
-    bIoProcedure.submissionDate = bIoProcedure.history[0].date; // eslint-disable-line no-param-reassign
+    importProcedure.lastUpdateDate = lastHistory.date; // eslint-disable-line no-param-reassign
+    importProcedure.submissionDate = bIoProcedure.history[0].date; // eslint-disable-line no-param-reassign
   }
 
   // check vote results
@@ -67,10 +80,34 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
 
     if (bIoProcedure.customData.voteResults.partyVotes) {
       voteResults.partyVotes = bIoProcedure.customData.voteResults.partyVotes.map(
-        ({ party, ...rest }) => ({
-          ...rest,
-          party: convertPartyName(party),
-        }),
+        ({ party, main, ...rest }) => {
+          let mainValue: VoteSelection;
+          switch (main) {
+            case VoteDecision.ABSTINATION:
+              mainValue = VoteSelection.Abstination;
+              break;
+            case VoteDecision.NO:
+              mainValue = VoteSelection.No;
+              break;
+            case VoteDecision.YES:
+              mainValue = VoteSelection.Yes;
+              break;
+            case VoteDecision.ABSTINATION:
+              mainValue = VoteSelection.Abstination;
+              break;
+            case VoteDecision.NOTVOTED:
+              mainValue = VoteSelection.Notvoted;
+              break;
+            default:
+              mainValue = main;
+          }
+          return {
+            ...rest,
+            _id: false,
+            party: convertPartyName(party),
+            main: mainValue,
+          };
+        },
       );
 
       // toggle votingData (Yes & No) if needed
@@ -101,23 +138,23 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
       }
     }
   }
-  bIoProcedure.voteResults = voteResults; // eslint-disable-line no-param-reassign
+  importProcedure.voteResults = voteResults; // eslint-disable-line no-param-reassign
 
   // Extract Session info
   if (bIoProcedure.sessions) {
     // This assumes that the last entry will always be the vote
     const lastSession = bIoProcedure.sessions.pop();
     if (lastSession && lastSession.session.top.topic.isVote) {
-      bIoProcedure.voteWeek = lastSession.thisWeek; // eslint-disable-line no-param-reassign
-      bIoProcedure.voteYear = lastSession.thisYear; // eslint-disable-line no-param-reassign
-      bIoProcedure.sessionTOPHeading = lastSession.session.top.heading; // eslint-disable-line no-param-reassign
+      importProcedure.voteWeek = lastSession.thisWeek; // eslint-disable-line no-param-reassign
+      importProcedure.voteYear = lastSession.thisYear; // eslint-disable-line no-param-reassign
+      importProcedure.sessionTOPHeading = lastSession.session.top.heading; // eslint-disable-line no-param-reassign
     }
   }
   // Set CalendarWeek & Year even if no sessions where found
   // Always override Week & Year by voteDate since we sort by this and the session match is not too accurate
   if (bIoProcedure.voteDate /* && (!bIoProcedure.voteWeek || !bIoProcedure.voteYear) */) {
-    bIoProcedure.voteWeek = moment(bIoProcedure.voteDate).format('W'); // eslint-disable-line no-param-reassign
-    bIoProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
+    importProcedure.voteWeek = parseInt(moment(bIoProcedure.voteDate).format('W')); // eslint-disable-line no-param-reassign
+    importProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
   }
 
   const oldProcedure = await Procedure.findOne({
@@ -125,8 +162,8 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
   });
 
   return Procedure.findOneAndUpdate(
-    { procedureId: bIoProcedure.procedureId },
-    _(bIoProcedure)
+    { procedureId: importProcedure.procedureId },
+    _(importProcedure)
       .omitBy(x => _.isUndefined(x))
       .value(),
     {
@@ -137,22 +174,22 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
     if (push) {
       // We have a vote result in new Procedure
       if (
-        bIoProcedure.voteResults.yes !== null ||
-        bIoProcedure.voteResults.no !== null ||
-        bIoProcedure.voteResults.abstination !== null ||
-        bIoProcedure.voteResults.notVoted !== null
+        importProcedure.voteResults.yes !== null ||
+        importProcedure.voteResults.no !== null ||
+        importProcedure.voteResults.abstination !== null ||
+        importProcedure.voteResults.notVoted !== null
       ) {
         // We have no old Procedure or no VoteResult on old Procedure
         if (!oldProcedure || !oldProcedure.voteResults) {
-          quePushsOutcome(bIoProcedure.procedureId);
+          quePushsOutcome(importProcedure.procedureId);
           // We have different values for VoteResult
         } else if (
-          bIoProcedure.voteResults.yes !== oldProcedure.voteResults.yes ||
-          bIoProcedure.voteResults.no !== oldProcedure.voteResults.no ||
-          bIoProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
-          bIoProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted
+          importProcedure.voteResults.yes !== oldProcedure.voteResults.yes ||
+          importProcedure.voteResults.no !== oldProcedure.voteResults.no ||
+          importProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
+          importProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted
         ) {
-          quePushsOutcome(bIoProcedure.procedureId);
+          quePushsOutcome(importProcedure.procedureId);
         }
       }
     }
@@ -176,7 +213,6 @@ export default async () => {
     const client = createClient();
     const limit = 50;
     let offset = 0;
-    const associated = true;
     let done = false;
     while (!done) {
       // fetch
@@ -186,9 +222,9 @@ export default async () => {
         },
       } =
         // eslint-disable-next-line no-await-in-loop
-        await client.query({
+        await client.query<ProcedureUpdates, ProcedureUpdatesVariables>({
           query: getProcedureUpdates,
-          variables: { since, limit, offset, associated },
+          variables: { since, limit, offset },
         });
 
       // handle results

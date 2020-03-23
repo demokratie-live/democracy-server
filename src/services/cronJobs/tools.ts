@@ -1,17 +1,18 @@
 import { CronTime } from 'cron';
 
 import CronJobModel from '../../models/CronJob';
+import { CronJobProps } from '../../migrations/10-schemas/CronJob';
 
-export const testCronTime = time => {
+export const testCronTime = (time: string) => {
   try {
-    const p = new CronTime(time); // eslint-disable-line no-unused-vars
+    new CronTime(time);
   } catch (e) {
     return false;
   }
   return true;
 };
 
-export const getCron = async ({ name }) => {
+export const getCron = async ({ name }: { name: string }): Promise<Partial<CronJobProps>> => {
   const cronjob = await CronJobModel.findOne({ name });
   if (!cronjob) {
     return {
@@ -27,7 +28,15 @@ export const getCron = async ({ name }) => {
   return cronjob;
 };
 
-export const setCronStart = async ({ name, startDate = new Date(), running = true }) => {
+export const setCronStart = async ({
+  name,
+  startDate = new Date(),
+  running = true,
+}: {
+  name: string;
+  startDate?: Date;
+  running?: boolean;
+}) => {
   global.Log.info(`[Cronjob][${name}] started: ${startDate}`);
   await CronJobModel.findOneAndUpdate(
     { name },
@@ -41,6 +50,11 @@ export const setCronSuccess = async ({
   successDate = new Date(),
   successStartDate,
   running = false,
+}: {
+  name: string;
+  successDate?: Date;
+  successStartDate: Date;
+  running?: boolean;
 }) => {
   global.Log.info(`[Cronjob][${name}] finished: ${successStartDate} - ${successDate}`);
   await CronJobModel.findOneAndUpdate(
@@ -55,6 +69,11 @@ export const setCronError = async ({
   errorDate = new Date(),
   running = false,
   error = null,
+}: {
+  name: string;
+  errorDate?: Date;
+  running?: boolean;
+  error?: string;
 }) => {
   global.Log.error(`[Cronjob][${name}] errored: ${error}`);
   await CronJobModel.findOneAndUpdate(

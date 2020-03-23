@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 
 import { typedModel } from 'ts-mongoose';
 import ProcedureSchema from './7-schemas/Procedure';
 
 module.exports.id = 'new-bio-data';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
@@ -23,8 +24,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We should not revert this - this could cause dataloss
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

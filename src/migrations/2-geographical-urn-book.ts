@@ -1,25 +1,19 @@
 /* eslint no-await-in-loop: 0 */
 import mongoose from 'mongoose';
+import { up as MigrationUp, down as MigrationDown } from 'mongodb-migrations';
 
 import { typedModel } from 'ts-mongoose';
 import VoteSchema from './2-schemas/Vote';
+import { VoteDoc } from './1-schemas/Vote';
 
 module.exports.id = 'geographical-urn-book';
 
-module.exports.up = async function(done) {
+const up: MigrationUp = async function(done) {
   // eslint-disable-line
   // Why do we have to catch here - makes no sense!
   try {
     // Do we have a fresh install? - Mark as done
-    const collections = await new Promise((resolve, reject) => {
-      this.db.listCollections().toArray((err, names) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(names);
-        }
-      });
-    }).then(c => (Array.isArray(c) ? c.map(({ name }) => name) : []));
+    const collections = Object.keys(this.db.collections);
 
     const neededCollections = ['votes'];
     const crashingCollections = ['old_votes-geographical-urn-book'];
@@ -56,7 +50,7 @@ module.exports.up = async function(done) {
 
     // Transform oldVotes -> Votes
     global.Log.info('Migration: Transform collection old_votes-geographical-urn-book -> votes');
-    const voteCursor = oldVotes.find();
+    const voteCursor = oldVotes.find<VoteDoc>();
     while (await voteCursor.hasNext()) {
       const oldVote = await voteCursor.next();
       // New Vote Type Phone
@@ -141,8 +135,10 @@ module.exports.up = async function(done) {
   }
 };
 
-module.exports.down = function(done) {
+const down: MigrationDown = async function(done) {
   // eslint-disable-line
   // We could revert this - but why make the effort?
   done(new Error('Not supported rollback!'));
 };
+
+export { up, down };

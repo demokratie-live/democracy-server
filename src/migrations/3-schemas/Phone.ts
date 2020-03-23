@@ -1,4 +1,4 @@
-import { createSchema, Type } from 'ts-mongoose';
+import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
 
 const PhoneSchema = createSchema(
   {
@@ -6,5 +6,8 @@ const PhoneSchema = createSchema(
   },
   { timestamps: true },
 );
+
+export type PhoneDoc = ExtractDoc<typeof PhoneSchema>;
+export type PhoneProps = ExtractProps<typeof PhoneSchema>;
 
 export default PhoneSchema;

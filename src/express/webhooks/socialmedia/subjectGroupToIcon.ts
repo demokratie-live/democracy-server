@@ -1,5 +1,11 @@
 // TODO use definition file for Sachgebiete
-const subjectGroups = {
+const subjectGroups: {
+  [subject: string]: {
+    icon: string;
+    displayTitle?: string;
+    image: string;
+  };
+} = {
   'Arbeit und Beschäftigung': {
     icon: 'hammer',
     image: '/static/images/sachgebiete/arbeit_beschaeftigung',
@@ -118,14 +124,14 @@ const subjectGroups = {
   },
 };
 
-const getDisplayTitle = subjectGroup => {
+const getDisplayTitle = (subjectGroup: string) => {
   if (subjectGroups[subjectGroup] && subjectGroups[subjectGroup].displayTitle) {
     return subjectGroups[subjectGroup].displayTitle;
   }
   return subjectGroup;
 };
 
-const getImage = subjectGroup => {
+const getImage = (subjectGroup: string) => {
   if (subjectGroups[subjectGroup] && subjectGroups[subjectGroup].image) {
     return subjectGroups[subjectGroup].image;
   }
@@ -134,7 +140,7 @@ const getImage = subjectGroup => {
 
 export { subjectGroups, getDisplayTitle, getImage };
 
-export default subjectGroup => {
+export default (subjectGroup: string) => {
   if (subjectGroups[subjectGroup]) {
     return subjectGroups[subjectGroup].icon;
   }

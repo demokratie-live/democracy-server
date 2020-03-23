@@ -1,4 +1,4 @@
-import { Type, createSchema } from 'ts-mongoose';
+import { Type, createSchema, ExtractDoc, ExtractProps } from 'ts-mongoose';
 import CONFIG from '../../config';
 import DeviceSchema from '../12-schemas/Device';
 import PhoneSchema from '../3-schemas/Phone';
@@ -23,5 +23,8 @@ UserSchema.methods = {
 };
 
 UserSchema.index({ device: 1, phone: 1 }, { unique: true });
+
+export type UserDoc = ExtractDoc<typeof UserSchema>;
+export type UserProps = ExtractProps<typeof UserSchema>;
 
 export default UserSchema;

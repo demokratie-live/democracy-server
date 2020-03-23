@@ -1,9 +1,9 @@
 // TODO replace this with a scraper for automatiation
 
 // convert german date to js Date
-function parseDate(input) {
+function parseDate(input: string) {
   const parts = input.match(/(\d+)/g);
-  const date = new Date(parts[2], parts[1] - 1, parts[0]);
+  const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
 
   // fix german time
   date.setHours(date.getHours() + 2);

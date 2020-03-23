@@ -1,22 +1,15 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { Types } from 'mongoose';
+
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import { MongooseFilterQuery } from 'mongoose';
 import { DeepPartial } from 'utility-types';
 import Maybe from 'graphql/tsutils/Maybe';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
-import Activity from './Activity';
 import resolvers from './index';
-import {
-  Resolvers,
-  VoteSelection,
-  DeputyVote,
-  Deputy,
-  ResolversTypes,
-} from '../../generated/graphql';
+import { Resolvers, VoteSelection, DeputyVote, ResolversTypes } from '../../generated/graphql';
 import { VoteDoc } from '../../migrations/2-schemas/Vote';
-import { DeputyDoc, DeputyProps } from '../../migrations/4-schemas/Deputy';
+import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
 
 const queryVotes: Resolvers['Query']['votes'] = async (
   parent,

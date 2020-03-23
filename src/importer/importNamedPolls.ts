@@ -5,6 +5,10 @@ import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
 import DeputyModel from '../models/Deputy';
 import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
+import {
+  NamedPollUpdates,
+  NamedPollUpdatesVariables,
+} from '../graphql/queries/__generated__/NamedPollUpdates';
 
 export const CRON_NAME = 'NamedPolls';
 
@@ -29,7 +33,9 @@ export default async () => {
     let done = false;
     while (!done) {
       // Data storage
-      const updates = {};
+      const updates: {
+        [webId: string]: { procedureId: string; decision: string }[];
+      } = {};
 
       // fetch
       const {
@@ -38,7 +44,7 @@ export default async () => {
         },
       } =
         // eslint-disable-next-line no-await-in-loop
-        await client.query({
+        await client.query<NamedPollUpdates, NamedPollUpdatesVariables>({
           query: getNamedPollUpdates,
           variables: { since, limit, offset, associated },
         });
