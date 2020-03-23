@@ -1,5 +1,5 @@
 declare module 'mongodb-migrations' {
-  import * as mongoose from 'mongoose';
+  import mongoose from 'mongoose';
 
   export interface Migrator {
     db: mongoose.Connection;

@@ -67,7 +67,7 @@ const myLevels = {
 };
 
 const logger = winston.createLogger({
-  // levels: myLevels.levels,
+  levels: myLevels.levels,
   transports,
 });
 winston.addColors(myLevels.colors);
