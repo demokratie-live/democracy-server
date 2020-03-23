@@ -34,23 +34,21 @@ const ProcedureSchema = createSchema(
       notVoted: Type.number(),
       decisionText: Type.string(),
       namedVote: Type.boolean(),
-      partyVotes: Type.array().of(
-        Type.object().of({
-          _id: false,
-          party: Type.string({ required: true }),
-          main: Type.string({
-            enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'],
-            required: true,
-          }) as VoteSelection,
+      partyVotes: Type.array().of({
+        _id: false,
+        party: Type.string({ required: true }),
+        main: Type.string({
+          enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'],
+          required: true,
+        }) as VoteSelection,
 
-          deviants: Type.object().of({
-            yes: Type.number({ required: true }),
-            no: Type.number({ required: true }),
-            abstination: Type.number({ required: true }),
-            notVoted: Type.number(),
-          }),
+        deviants: Type.object().of({
+          yes: Type.number({ required: true }),
+          no: Type.number({ required: true }),
+          abstination: Type.number({ required: true }),
+          notVoted: Type.number(),
         }),
-      ),
+      }),
     }),
     ...({} as {
       isCompleted: () => boolean;

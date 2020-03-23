@@ -16,15 +16,13 @@ const VoteSchema = createSchema({
       no: Type.number({ default: 0 }),
       abstain: Type.number({ default: 0 }),
     }),
-    constituencies: Type.array().of(
-      Type.object().of({
-        constituency: { required: true },
-        yes: Type.number({ default: 0 }),
-        no: Type.number({ default: 0 }),
-        abstain: Type.number({ default: 0 }),
-        _id: false,
-      }),
-    ),
+    constituencies: Type.array().of({
+      constituency: { required: true },
+      yes: Type.number({ default: 0 }),
+      no: Type.number({ default: 0 }),
+      abstain: Type.number({ default: 0 }),
+      _id: false,
+    }),
     cache: Type.object().of({
       yes: Type.number({ default: 0 }),
       no: Type.number({ default: 0 }),

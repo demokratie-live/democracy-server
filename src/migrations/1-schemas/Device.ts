@@ -4,12 +4,10 @@ import ProcedureSchema from '../11-schemas/Procedure';
 const DeviceSchema = createSchema(
   {
     deviceHash: Type.string({ type: String, required: true, unique: true }),
-    pushTokens: Type.array().of(
-      Type.object().of({
-        token: Type.string(),
-        os: Type.string(),
-      }),
-    ),
+    pushTokens: Type.array().of({
+      token: Type.string(),
+      os: Type.string(),
+    }),
     notificationSettings: Type.object().of({
       enabled: Type.boolean({ type: Boolean, default: true }),
       disableUntil: Type.date(),

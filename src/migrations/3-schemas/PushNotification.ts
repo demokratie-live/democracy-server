@@ -14,15 +14,13 @@ const PushNotificationSchema = createSchema(
       enum: ['new', 'running', 'complete'],
       default: 'new',
     }),
-    sentTokens: Type.array().of(
-      Type.object().of({
-        token: Type.string({
-          type: String,
-          required: true,
-        }),
-        error: Type.string(),
+    sentTokens: Type.array().of({
+      token: Type.string({
+        type: String,
+        required: true,
       }),
-    ),
+      error: Type.string(),
+    }),
   },
   { timestamps: true },
 );
