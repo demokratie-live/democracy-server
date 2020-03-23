@@ -1,6 +1,5 @@
 import winston from 'winston';
-import Discord from 'discord.js';
-import DiscordTransport from 'winston-discordjs';
+import { MongoDB } from 'winston-mongodb';
 
 import CONFIG from '../../config';
 
@@ -16,42 +15,31 @@ const alignedWithColorsAndTime = winston.format.combine(
     }`;
   }),
 );
-const alignedWithTime = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.align(),
-  winston.format.printf(info => {
-    const { timestamp, level, message, ...args } = info;
+// const alignedWithTime = winston.format.combine(
+//   winston.format.timestamp(),
+//   winston.format.align(),
+//   winston.format.printf(info => {
+//     const { timestamp, level, message, ...args } = info;
 
-    const ts = timestamp.slice(0, 19).replace('T', ' ');
-    return `${ts} [${level}]: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
-    }`;
-  }),
-);
+//     const ts = timestamp.slice(0, 19).replace('T', ' ');
+//     return `${ts} [${level}]: ${message} ${
+//       Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
+//     }`;
+//   }),
+// );
 
 const transports = [
   new winston.transports.Console({
     level: CONFIG.LOGGING_CONSOLE,
     format: alignedWithColorsAndTime,
   }),
-  new winston.transports.File({
-    filename: 'logs/combined.log',
-    level: CONFIG.LOGGING_FILE,
-    format: alignedWithTime,
-  }),
+  // new winston.transports.File({
+  //   filename: 'logs/combined.log',
+  //   level: CONFIG.LOGGING_FILE,
+  //   format: alignedWithTime,
+  // }),
 ];
-let discordLogger: DiscordTransport | undefined;
-if (CONFIG.LOGGING_DISCORD && CONFIG.LOGGING_DISCORD_TOKEN) {
-  const client = new Discord.Client();
-  client.login(CONFIG.LOGGING_DISCORD_TOKEN);
-  discordLogger = new DiscordTransport({
-    discordChannel: 'internal',
-    level: 'silly',
-  });
-  client.on('ready', () => {
-    console.info(`DISCORD BOT Logged in as ${client.user.tag}!`);
-  });
-}
+
 const myLevels = {
   levels: {
     error: 0,
@@ -79,12 +67,14 @@ const myLevels = {
 };
 
 const logger = winston.createLogger({
-  levels: myLevels.levels,
+  // levels: myLevels.levels,
   transports,
 });
-if (discordLogger) {
-  logger.add(discordLogger);
-}
 winston.addColors(myLevels.colors);
-
+logger.add(
+  new MongoDB({
+    db: CONFIG.DB_URL,
+    level: 'warn',
+  }),
+);
 global.Log = logger;

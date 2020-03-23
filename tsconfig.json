@@ -13,7 +13,10 @@
     "allowUnusedLabels": false,
     "alwaysStrict": true,
     "noUnusedLocals": true,
-    "noImplicitAny": true
+    "noUnusedParameters": false,
+    "noImplicitAny": true,
+    "suppressExcessPropertyErrors": false,
+    "suppressImplicitAnyIndexErrors": false
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "generated"]

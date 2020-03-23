@@ -82,7 +82,9 @@ const main = async () => {
 
   // Start Server
   server.listen({ port: CONFIG.PORT }, () => {
-    global.Log.warn(`🚀 Server ready at http://localhost:${CONFIG.PORT}${CONFIG.GRAPHQL_PATH}`);
+    global.Log.info(`🚀 Server ready at http://localhost:${CONFIG.PORT}${CONFIG.GRAPHQL_PATH}`, {
+      metaKey: 'metaValue',
+    });
   });
 
   // Start CronJobs (Bundestag Importer)
