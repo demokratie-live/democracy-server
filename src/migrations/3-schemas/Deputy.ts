@@ -11,7 +11,7 @@ const DeputySchema = createSchema(
     biography: Type.string({ type: String }),
     constituency: Type.string({ type: String }),
     directCandidate: Type.boolean({ type: Boolean }),
-    contact: Type.schema(DeputyContact),
+    contact: Type.schema().of(DeputyContact),
   },
   { timestamps: true },
 );
