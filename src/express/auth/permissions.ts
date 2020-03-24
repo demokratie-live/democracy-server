@@ -53,8 +53,8 @@ export const isVerified = rule({ cache: 'no_cache' })(
 export const permissions = shield(
   {
     Query: {
-      procedures: isLoggedin,
-      activityIndex: isLoggedin,
+      // procedures: isLoggedin,
+      // activityIndex: isLoggedin,
       notificationSettings: isLoggedin,
       notifiedProcedures: isLoggedin,
       votes: isLoggedin,
