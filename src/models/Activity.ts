@@ -1,4 +1,4 @@
-import ActivitySchema from '../migrations/1-schemas/Activity';
+import ActivitySchema, { Activity } from '../migrations/1-schemas/Activity';
 import { model } from 'mongoose';
 
-export default model('Activity', ActivitySchema);
+export default model<Activity>('Activity', ActivitySchema);

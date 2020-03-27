@@ -1,11 +1,17 @@
-import { createSchema, Type } from 'ts-mongoose';
-import DeputyLink from './Link';
+import { Schema } from 'mongoose';
+import DeputyLink, { IDeputyLink } from './Link';
 
-const DeputyContactSchema = createSchema(
+export interface IDeputyContact {
+  address?: string | null;
+  email?: string | null;
+  links: IDeputyLink[];
+}
+
+const DeputyContactSchema = new Schema<IDeputyContact>(
   {
-    address: Type.string(),
-    email: Type.string(),
-    links: Type.array({ required: true }).of(DeputyLink),
+    address: { type: String },
+    email: { type: String },
+    links: [{ type: DeputyLink }],
   },
   { _id: false },
 );

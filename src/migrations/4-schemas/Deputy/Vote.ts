@@ -1,12 +1,15 @@
-import { createSchema, Type } from 'ts-mongoose';
+import { Schema } from 'mongoose';
+import { VoteSelection } from '../../../generated/graphql';
 
-const DeputyVoteSchema = createSchema(
+export interface IDeputyVote {
+  procedureId: string;
+  decision: VoteSelection;
+}
+
+const DeputyVoteSchema = new Schema<IDeputyVote>(
   {
-    procedureId: Type.string({ required: true }),
-    decision: Type.string({
-      enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'],
-      required: true,
-    }),
+    procedureId: { type: String, required: true },
+    decision: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
   },
   { _id: false },
 );

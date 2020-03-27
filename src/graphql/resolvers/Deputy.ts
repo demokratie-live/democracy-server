@@ -1,13 +1,13 @@
 import { MongooseFilterQuery } from 'mongoose';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import DeputyModel from '../../models/Deputy';
-import { Resolvers, VoteSelection } from '../../generated/graphql';
-import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
+import { Resolvers } from '../../generated/graphql';
+import { IDeputy } from '../../migrations/4-schemas/Deputy';
 
 const DeputyApi: Resolvers = {
   Query: {
     deputiesOfConstituency: async (parent, { constituency, directCandidate = false }) => {
-      const query: MongooseFilterQuery<DeputyDoc> = {
+      const query: MongooseFilterQuery<IDeputy> = {
         constituency,
       };
       if (directCandidate) {
@@ -52,7 +52,7 @@ const DeputyApi: Resolvers = {
           if (procedure) {
             const deputyProcedure = {
               procedure,
-              decision: decision as VoteSelection,
+              decision,
             };
 
             return [...prev, deputyProcedure];
@@ -85,7 +85,7 @@ const DeputyApi: Resolvers = {
             ({ procedureId }) => procedure.procedureId === procedureId,
           );
           return {
-            decision: p?.decision as VoteSelection,
+            decision: p?.decision,
             procedure: { ...procedure.toObject(), activityIndex: undefined, voted: undefined },
           };
         }),

@@ -1,19 +1,27 @@
-import { Type, createSchema, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import { Schema, Document } from 'mongoose';
+import { Timestamps } from '../schemas/timestapms';
 
-const CronJobSchema = createSchema(
+export interface ICronJob extends Document, Timestamps {
+  name: string;
+  lastStartDate: Date;
+  lastErrorDate: Date;
+  lastError: string;
+  lastSuccessDate: Date;
+  lastSuccessStartDate: Date;
+  running: boolean;
+}
+
+const CronJobSchema = new Schema<ICronJob>(
   {
-    name: Type.string({ unique: true, index: true }),
-    lastStartDate: Type.date({ default: null }),
-    lastErrorDate: Type.date({ default: null }),
-    lastError: Type.string({ default: null }),
-    lastSuccessDate: Type.date({ default: null }),
-    lastSuccessStartDate: Type.date({ default: null }),
-    running: Type.boolean({ default: false }),
+    name: { type: String, unique: true, index: true, required: true },
+    lastStartDate: { type: Date, default: null },
+    lastErrorDate: { type: Date, default: null },
+    lastError: { type: String, default: null },
+    lastSuccessDate: { type: Date, default: null },
+    lastSuccessStartDate: { type: Date, default: null },
+    running: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
-
-export type CronJobDoc = ExtractDoc<typeof CronJobSchema>;
-export type CronJobProps = ExtractProps<typeof CronJobSchema>;
 
 export default CronJobSchema;

@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { DeputyProps } from '../migrations/4-schemas/Deputy';
+import { IDeputy } from '../migrations/4-schemas/Deputy';
 import { IProcedure } from '../migrations/11-schemas/Procedure';
 import { GraphQlContext } from '../types/graphqlContext';
 import { DeepPartial } from 'utility-types';
@@ -553,7 +553,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<DeepPartial<Scalars['Boolean']>>;
   ConferenceWeek: ResolverTypeWrapper<DeepPartial<ConferenceWeek>>;
   Date: ResolverTypeWrapper<DeepPartial<Scalars['Date']>>;
-  Deputy: ResolverTypeWrapper<DeputyProps>;
+  Deputy: ResolverTypeWrapper<IDeputy>;
   ID: ResolverTypeWrapper<DeepPartial<Scalars['ID']>>;
   DeputyContact: ResolverTypeWrapper<DeepPartial<DeputyContact>>;
   DeputyLink: ResolverTypeWrapper<DeepPartial<DeputyLink>>;
@@ -624,7 +624,7 @@ export type ResolversParentTypes = {
   Boolean: DeepPartial<Scalars['Boolean']>;
   ConferenceWeek: DeepPartial<ConferenceWeek>;
   Date: DeepPartial<Scalars['Date']>;
-  Deputy: DeputyProps;
+  Deputy: IDeputy;
   ID: DeepPartial<Scalars['ID']>;
   DeputyContact: DeepPartial<DeputyContact>;
   DeputyLink: DeepPartial<DeputyLink>;

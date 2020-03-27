@@ -1,25 +1,36 @@
-import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
-import DeputyContact from '../3-schemas/Deputy/Contact';
-import DeputyVote from './Deputy/Vote';
+import { Schema, Document } from 'mongoose';
+import DeputyContact, { IDeputyContact } from '../3-schemas/Deputy/Contact';
+import DeputyVote, { IDeputyVote } from './Deputy/Vote';
+import { Timestamps } from '../schemas/timestapms';
 
-const DeputySchema = createSchema(
+export interface IDeputy extends Document, Timestamps {
+  webId: string;
+  imgURL: string;
+  name: string;
+  party?: string | null;
+  job?: string | null;
+  biography?: string | null;
+  constituency?: string | null;
+  directCandidate?: boolean | null;
+  contact?: IDeputyContact | null;
+  votes: IDeputyVote[];
+}
+
+const DeputySchema = new Schema(
   {
-    webId: Type.string({ required: true, unique: true, index: true }),
-    imgURL: Type.string({ required: true }),
-    name: Type.string({ required: true }),
-    party: Type.string({ required: true }),
-    job: Type.string(),
-    biography: Type.string(),
-    constituency: Type.string(),
-    directCandidate: Type.boolean({ required: true }),
-    contact: Type.schema().of(DeputyContact),
-    votes: Type.array({ required: true }).of(DeputyVote),
+    webId: { type: String, required: true, unique: true, index: true },
+    imgURL: { type: String, required: true },
+    name: { type: String, required: true },
+    party: { type: String },
+    job: { type: String },
+    biography: { type: String },
+    constituency: { type: String },
+    directCandidate: { type: Boolean },
+    contact: { type: DeputyContact },
+    votes: [{ type: DeputyVote }],
   },
   { timestamps: true },
 );
-
-export type DeputyDoc = ExtractDoc<typeof DeputySchema>;
-export type DeputyProps = ExtractProps<typeof DeputySchema>;
 
 DeputySchema.index({ webId: 1, 'votes.procedureId': 1 }, { unique: true });
 

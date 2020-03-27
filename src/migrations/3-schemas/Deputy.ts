@@ -1,17 +1,17 @@
-import { createSchema, Type } from 'ts-mongoose';
+import { Schema } from 'mongoose';
 import DeputyContact from './Deputy/Contact';
 
-const DeputySchema = createSchema(
+const DeputySchema = new Schema(
   {
-    webId: Type.string({ type: String, required: true, unique: true, index: true }),
-    imgURL: Type.string({ type: String }),
-    name: Type.string({ type: String }),
-    party: Type.string({ type: String }),
-    job: Type.string({ type: String }),
-    biography: Type.string({ type: String }),
-    constituency: Type.string({ type: String }),
-    directCandidate: Type.boolean({ type: Boolean }),
-    contact: Type.schema().of(DeputyContact),
+    webId: { type: String, required: true, unique: true, index: true },
+    imgURL: { type: String },
+    name: { type: String },
+    party: { type: String },
+    job: { type: String },
+    biography: { type: String },
+    constituency: { type: String },
+    directCandidate: { type: Boolean },
+    contact: { type: DeputyContact },
   },
   { timestamps: true },
 );

@@ -1,9 +1,14 @@
-import { createSchema, Type } from 'ts-mongoose';
+import { Schema } from 'mongoose';
 
-const DeputyLinkSchema = createSchema(
+export interface IDeputyLink {
+  name: string;
+  URL: string;
+}
+
+const DeputyLinkSchema = new Schema<IDeputyLink>(
   {
-    name: Type.string({ required: true }),
-    URL: Type.string({ required: true }),
+    name: { type: String },
+    URL: { type: String },
   },
   { _id: false },
 );

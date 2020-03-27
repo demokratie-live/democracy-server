@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
-import DeputySchema from '../migrations/4-schemas/Deputy';
+import DeputySchema, { IDeputy } from '../migrations/4-schemas/Deputy';
+import { model } from 'mongoose';
 
-export default typedModel('Deputy', DeputySchema);
+export default model<IDeputy>('Deputy', DeputySchema);

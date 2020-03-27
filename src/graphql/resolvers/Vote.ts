@@ -2,15 +2,13 @@
 
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import { MongooseFilterQuery } from 'mongoose';
-import { DeepPartial } from 'utility-types';
-import Maybe from 'graphql/tsutils/Maybe';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import resolvers from './index';
-import { Resolvers, VoteSelection, DeputyVote, ResolversTypes } from '../../generated/graphql';
-import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
+import { Resolvers, VoteSelection } from '../../generated/graphql';
 import { GraphQlContext } from '../../types/graphqlContext';
 import { Vote } from '../../migrations/2-schemas/Vote';
+import { IDeputy } from '../../migrations/4-schemas/Deputy';
 
 const queryVotes = async (
   _parent: any,
@@ -472,17 +470,13 @@ const VoteApi: Resolvers = {
 
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
       global.Log.graphql('VoteResult.deputyVotes');
-      // Default is empty
-      let deputyVotes: DeepPartial<
-        Omit<DeputyVote, 'deputy'> & { deputy?: Maybe<ResolversTypes['Deputy']> }
-      >[] = [];
       // Do we have a procedureId and not an empty array for constituencies?
       if (
         voteResult.procedureId &&
         ((constituencies && constituencies.length > 0) || constituencies === undefined)
       ) {
         // Match procedureId
-        const match: MongooseFilterQuery<DeputyDoc> = {
+        const match: MongooseFilterQuery<IDeputy> = {
           $match: {
             'votes.procedureId': voteResult.procedureId,
           },
@@ -497,24 +491,29 @@ const VoteApi: Resolvers = {
         }
 
         // Query
-        const deputies = await DeputyModel.aggregate<DeputyDoc>([match]);
+        const deputies = await DeputyModel.aggregate<IDeputy>([match]);
 
         // Construct result
-        deputies.forEach(deputy => {
+        return deputies.reduce<
+          {
+            decision: VoteSelection;
+            deputy: IDeputy;
+          }[]
+        >((pre, deputy) => {
           const pDeputyVote = deputy.votes.find(
             ({ procedureId }) => procedureId === voteResult.procedureId,
           );
           if (pDeputyVote) {
             const deputyVote = {
-              decision: pDeputyVote.decision as VoteSelection,
-              deputy: deputy.toObject(),
+              decision: pDeputyVote.decision,
+              deputy: deputy,
             };
-            deputyVotes = [...deputyVotes, deputyVote];
+            return [...pre, deputyVote];
           }
-        });
-        return deputyVotes;
+          return pre;
+        }, []);
       }
-      return deputyVotes;
+      return [];
     },
   },
 };

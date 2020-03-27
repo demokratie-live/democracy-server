@@ -1,7 +1,7 @@
 import { CronTime } from 'cron';
 
 import CronJobModel from '../../models/CronJob';
-import { CronJobProps } from '../../migrations/10-schemas/CronJob';
+import { ICronJob } from '../../migrations/10-schemas/CronJob';
 
 export const testCronTime = (time?: string) => {
   if (!time) {
@@ -15,7 +15,7 @@ export const testCronTime = (time?: string) => {
   return true;
 };
 
-export const getCron = async ({ name }: { name: string }): Promise<Partial<CronJobProps>> => {
+export const getCron = async ({ name }: { name: string }): Promise<Partial<ICronJob>> => {
   const cronjob = await CronJobModel.findOne({ name });
   if (!cronjob) {
     return {
