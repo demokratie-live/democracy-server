@@ -7,6 +7,7 @@ import {
   DeputyUpdates,
   DeputyUpdatesVariables,
 } from '../graphql/queries/__generated__/DeputyUpdates';
+import { nullToUndefined } from './importProcedures';
 
 export const CRON_NAME = 'DeputyProfiles';
 
@@ -20,7 +21,10 @@ export default async () => {
   }
   await setCronStart({ name: CRON_NAME, startDate });
   // Last SuccessStartDate
-  const since = new Date(cron.lastSuccessStartDate);
+  let since = new Date();
+  if (cron.lastSuccessStartDate) {
+    since = new Date(cron.lastSuccessStartDate);
+  }
 
   // Query Bundestag.io
   try {
@@ -31,45 +35,51 @@ export default async () => {
     while (!done) {
       // fetch
       const {
-        data: {
-          deputyUpdates: { deputies },
-        },
+        data: { deputyUpdates },
       } =
         // eslint-disable-next-line no-await-in-loop
         await client.query<DeputyUpdates, DeputyUpdatesVariables>({
           query: getDeputyUpdates,
           variables: { since, limit, offset },
         });
+      if (deputyUpdates) {
+        const { deputies } = deputyUpdates;
+        if (deputies) {
+          // handle results
+          deputies.map(async data => {
+            if (data) {
+              const deputy = {
+                webId: data.webId,
+                imgURL: data.imgURL,
+                name: data.name,
+                party: data.party ? convertPartyName(data.party) : undefined,
+                job: data.job,
+                biography: data.biography ? data.biography.join('\n\n') : undefined,
+                constituency: data.constituency
+                  ? parseInt(data.constituency, 10).toString()
+                  : undefined, // remove pre zeros
+                directCandidate: data.directCandidate,
+                contact: {
+                  address: data.office ? data.office.join('\n') : undefined,
+                  // email: { type: String },
+                  links: data.links,
+                },
+              };
+              // Update/Insert
+              await DeputyModel.findOneAndUpdate(
+                { webId: nullToUndefined(deputy.webId) },
+                { $set: deputy },
+                { upsert: true },
+              );
+            }
+            return null;
+          });
 
-      // handle results
-      deputies.map(async data => {
-        const deputy = {
-          webId: data.webId,
-          imgURL: data.imgURL,
-          name: data.name,
-          party: convertPartyName(data.party),
-          job: data.job,
-          biography: data.biography.join('\n\n'),
-          constituency: data.constituency ? parseInt(data.constituency, 10).toString() : undefined, // remove pre zeros
-          directCandidate: data.directCandidate,
-          contact: {
-            address: data.office.join('\n'),
-            // email: { type: String },
-            links: data.links,
-          },
-        };
-        // Update/Insert
-        await DeputyModel.findOneAndUpdate(
-          { webId: deputy.webId },
-          { $set: deputy },
-          { upsert: true },
-        );
-        return null;
-      });
-
-      // continue?
-      if (deputies.length < limit) {
-        done = true;
+          // continue?
+          if (deputies.length < limit) {
+            done = true;
+          }
+        }
       }
       offset += limit;
     }

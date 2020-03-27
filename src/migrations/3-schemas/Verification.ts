@@ -1,4 +1,4 @@
-import { createSchema, Type } from 'ts-mongoose';
+import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
 
 const VerificationSchema = createSchema(
   {
@@ -18,5 +18,8 @@ const VerificationSchema = createSchema(
   },
   { timestamps: true },
 );
+
+export type VerificationDoc = ExtractDoc<typeof VerificationSchema>;
+export type VerificationProps = ExtractProps<typeof VerificationSchema>;
 
 export default VerificationSchema;

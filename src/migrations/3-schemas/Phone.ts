@@ -1,13 +1,15 @@
-import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import { Schema, Document } from 'mongoose';
+import { Timestamps } from '../schemas/timestapms';
 
-const PhoneSchema = createSchema(
+export interface Phone extends Document, Timestamps {
+  phoneHash: string;
+}
+
+const PhoneSchema = new Schema<Phone>(
   {
-    phoneHash: Type.string({ required: true, unique: true }),
+    phoneHash: { type: String, required: true, unique: true },
   },
   { timestamps: true },
 );
-
-export type PhoneDoc = ExtractDoc<typeof PhoneSchema>;
-export type PhoneProps = ExtractProps<typeof PhoneSchema>;
 
 export default PhoneSchema;

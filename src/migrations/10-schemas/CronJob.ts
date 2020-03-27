@@ -2,7 +2,7 @@ import { Type, createSchema, ExtractDoc, ExtractProps } from 'ts-mongoose';
 
 const CronJobSchema = createSchema(
   {
-    name: Type.string({ unique: true, index: true, required: true }),
+    name: Type.string({ unique: true, index: true }),
     lastStartDate: Type.date({ default: null }),
     lastErrorDate: Type.date({ default: null }),
     lastError: Type.string({ default: null }),

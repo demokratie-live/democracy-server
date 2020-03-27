@@ -1,4 +1,4 @@
-declare module NodeJS {
+declare namespace NodeJS {
   import { Logger } from 'winston';
 
   interface Global {

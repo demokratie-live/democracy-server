@@ -1,24 +1,47 @@
-import { createSchema, Type } from 'ts-mongoose';
-import ProcedureSchema from '../11-schemas/Procedure';
+import { Schema, Document } from 'mongoose';
+import { Timestamps } from '../schemas/timestapms';
+import { IProcedure } from '../11-schemas/Procedure';
+import { Types } from 'mongoose';
 
-const DeviceSchema = createSchema(
+export interface Device extends Document, Timestamps {
+  deviceHash: string;
+  pushTokens: {
+    token: string;
+    os: string;
+  }[];
+  notificationSettings: {
+    enabled: boolean;
+    disableUntil: Date;
+    newVote: boolean; // TODO remove
+    newPreperation: boolean; // TODO remove
+    conferenceWeekPushs: boolean;
+    voteConferenceWeekPushs: boolean;
+    voteTOP100Pushs: boolean;
+    procedures: (IProcedure | Types.ObjectId)[];
+    tags: string[];
+  };
+}
+
+const DeviceSchema = new Schema<Device>(
   {
-    deviceHash: Type.string({ required: true, unique: true }),
-    pushTokens: Type.array().of({
-      token: Type.string({ required: true }),
-      os: Type.string({ required: true }),
-    }),
-    notificationSettings: Type.object().of({
-      enabled: Type.boolean({ default: true }),
-      disableUntil: Type.date(),
-      newVote: Type.boolean({ default: true }), // TODO remove
-      newPreperation: Type.boolean({ default: false }), // TODO remove
-      conferenceWeekPushs: Type.boolean({ default: true }),
-      voteConferenceWeekPushs: Type.boolean({ default: true }),
-      voteTOP100Pushs: Type.boolean({ default: true }),
-      procedures: Type.array().of(Type.ref(Type.objectId()).to('Procedure', ProcedureSchema)),
-      tags: Type.array().of(Type.string()),
-    }),
+    deviceHash: { type: String, required: true, unique: true },
+    pushTokens: [
+      {
+        token: String,
+        os: String,
+      },
+    ],
+    notificationSettings: {
+      enabled: { type: Boolean, default: true },
+      disableUntil: Date,
+      newVote: { type: Boolean, default: true }, // TODO remove
+      newPreperation: { type: Boolean, default: false }, // TODO remove
+      conferenceWeekPushs: { type: Boolean, default: true },
+      voteConferenceWeekPushs: { type: Boolean, default: true },
+      voteTOP100Pushs: { type: Boolean, default: true },
+      procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
+      tags: [],
+    },
   },
   { timestamps: true },
 );

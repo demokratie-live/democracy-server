@@ -22,7 +22,10 @@ export default async () => {
   }
   await setCronStart({ name: CRON_NAME, startDate });
   // Last SuccessStartDate
-  const since = new Date(cron.lastSuccessStartDate);
+  let since = new Date();
+  if (cron.lastSuccessStartDate) {
+    since = new Date(cron.lastSuccessStartDate);
+  }
 
   // Query Bundestag.io
   try {
@@ -39,73 +42,77 @@ export default async () => {
 
       // fetch
       const {
-        data: {
-          namedPollUpdates: { namedPolls },
-        },
+        data: { namedPollUpdates },
       } =
         // eslint-disable-next-line no-await-in-loop
         await client.query<NamedPollUpdates, NamedPollUpdatesVariables>({
           query: getNamedPollUpdates,
           variables: { since, limit, offset, associated },
         });
-
-      // handle results
-      namedPolls.map(data => {
-        // procedureId is not necessarily present
-        if (data.procedureId) {
-          // parse every deputies vote
-          data.votes.deputies.map(async voteData => {
-            let decision;
-            switch (voteData.vote) {
-              case 'ja':
-                decision = data.votes.inverseVoteDirection ? 'NO' : 'YES';
-                break;
-              case 'nein':
-                decision = data.votes.inverseVoteDirection ? 'YES' : 'NO';
-                break;
-              case 'na':
-                decision = 'NOTVOTED';
-                break;
-              case 'enthalten':
-                decision = 'ABSTINATION';
-                break;
-              default:
-                decision = null;
-            }
-            // Validate decision Data
-            if (!decision) {
-              global.Log.error(
-                `NamedPoll import vote missmatch on deputy vote string: ${voteData.vote}`,
-              );
-              return null;
-            }
-            // Prepare update
-            if (voteData.webId) {
-              updates[voteData.webId] = updates[voteData.webId]
-                ? [...updates[voteData.webId], { procedureId: data.procedureId, decision }]
-                : [{ procedureId: data.procedureId, decision }];
+      if (namedPollUpdates) {
+        const { namedPolls } = namedPollUpdates;
+        if (namedPolls) {
+          // handle results
+          namedPolls.map(data => {
+            // procedureId is not necessarily present
+            if (data?.procedureId && data.votes && data.votes.deputies) {
+              // parse every deputies vote
+              data.votes.deputies.map(async voteData => {
+                if (voteData && data.votes) {
+                  let decision;
+                  switch (voteData.vote) {
+                    case 'ja':
+                      decision = data.votes.inverseVoteDirection ? 'NO' : 'YES';
+                      break;
+                    case 'nein':
+                      decision = data.votes.inverseVoteDirection ? 'YES' : 'NO';
+                      break;
+                    case 'na':
+                      decision = 'NOTVOTED';
+                      break;
+                    case 'enthalten':
+                      decision = 'ABSTINATION';
+                      break;
+                    default:
+                      decision = null;
+                  }
+                  // Validate decision Data
+                  if (!decision) {
+                    global.Log.error(
+                      `NamedPoll import vote missmatch on deputy vote string: ${voteData.vote}`,
+                    );
+                    return null;
+                  }
+                  // Prepare update
+                  if (voteData.webId && data.procedureId) {
+                    updates[voteData.webId] = updates[voteData.webId]
+                      ? [...updates[voteData.webId], { procedureId: data.procedureId, decision }]
+                      : [{ procedureId: data.procedureId, decision }];
+                  }
+                }
+                return null;
+              });
             }
             return null;
           });
         }
-        return null;
-      });
 
-      // Insert Data
-      Object.keys(updates).map(async deputyWebId => {
-        // TODO try to update deputy without fetching. z.B. with aggregation setUnion
-        const deputy = await DeputyModel.findOne({ webId: deputyWebId });
-        if (deputy) {
-          // remove duplicates
-          const votes = unionBy(updates[deputyWebId], deputy.votes, 'procedureId');
-          // Insert
-          await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
+        // Insert Data
+        Object.keys(updates).map(async deputyWebId => {
+          // TODO try to update deputy without fetching. z.B. with aggregation setUnion
+          const deputy = await DeputyModel.findOne({ webId: deputyWebId });
+          if (deputy) {
+            // remove duplicates
+            const votes = unionBy(updates[deputyWebId], deputy.votes, 'procedureId');
+            // Insert
+            await DeputyModel.updateOne({ webId: deputyWebId }, { $set: { votes } });
+          }
+        });
+
+        // continue?
+        if (namedPolls && namedPolls.length < limit) {
+          done = true;
         }
-      });
-
-      // continue?
-      if (namedPolls.length < limit) {
-        done = true;
       }
       offset += limit;
     }

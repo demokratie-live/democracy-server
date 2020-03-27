@@ -1,23 +1,22 @@
-import { Type, createSchema } from 'ts-mongoose';
-import ProcedureSchema from '../11-schemas/Procedure';
+import { Schema } from 'mongoose';
 
-const DeviceSchema = createSchema(
+const DeviceSchema = new Schema(
   {
-    deviceHash: Type.string({ type: String, required: true, unique: true }),
-    pushTokens: Type.array().of({
-      token: Type.string(),
-      os: Type.string(),
-    }),
-    notificationSettings: Type.object().of({
-      enabled: Type.boolean({ type: Boolean, default: true }),
-      disableUntil: Type.date(),
-      newVote: Type.boolean({ type: Boolean, default: true }),
-      newPreperation: Type.boolean({ type: Boolean, default: false }),
-      procedures: Type.array({ required: true }).of(
-        Type.ref(Type.objectId()).to('Procedure', ProcedureSchema),
-      ),
-      tags: Type.array().of(Type.string()),
-    }),
+    deviceHash: { type: String, required: true, unique: true },
+    pushTokens: [
+      {
+        token: String,
+        os: String,
+      },
+    ],
+    notificationSettings: {
+      enabled: { type: Boolean, default: true },
+      disableUntil: Date,
+      newVote: { type: Boolean, default: true },
+      newPreperation: { type: Boolean, default: false },
+      procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
+      tags: [],
+    },
   },
   { timestamps: true },
 );

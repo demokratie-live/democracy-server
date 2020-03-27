@@ -1,4 +1,3 @@
-import { inspect } from 'util';
 import mongoose from 'mongoose';
 
 /*
@@ -11,7 +10,7 @@ export default async () => {
   // Mongo Debug
   if (CONFIG.LOGGING_MONGO) {
     mongoose.set('debug', () => {
-      global.Log[CONFIG.LOGGING_MONGO](inspect(true));
+      // global.Log[CONFIG.LOGGING_MONGO](inspect(true));
     });
   }
 

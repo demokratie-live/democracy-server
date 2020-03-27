@@ -17,14 +17,14 @@ const requiredConfigs = {
 const recommendedConfigs = {
   // No correct default Values
   PORT: process.env.PORT || 3000,
-  MIN_PERIOD: parseInt(process.env.MIN_PERIOD, 10) || 19,
+  MIN_PERIOD: parseInt(process.env.MIN_PERIOD || '19', 10),
   GRAPHQL_PATH: process.env.GRAPHQL_PATH || '/',
   // GRAPHIQL: process.env.GRAPHIQL === 'true',
   GRAPHIQL_PATH: process.env.GRAPHIQL_PATH || false,
   DB_URL: process.env.DB_URL || 'mongodb://localhost/democracy_development',
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'elasticsearch',
   BUNDESTAGIO_SERVER_URL: process.env.BUNDESTAGIO_SERVER_URL || 'http://localhost:3100/',
-  APN_TOPIC: (() => {
+  APN_TOPIC: ((): string => {
     switch (process.env.STAGE) {
       case 'dev':
         return 'de.democracy-deutschland.clientapp.new';

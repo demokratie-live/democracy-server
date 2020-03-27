@@ -18,7 +18,7 @@ import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
-import { DeviceDoc } from '../../migrations/12-schemas/Device';
+import { Device } from '../../migrations/12-schemas/Device';
 
 export const sendQuedPushs = async () => {
   const CRON_NAME = 'sendQuedPushs';
@@ -148,7 +148,7 @@ export const quePushs = async ({
   title: string;
   message: string;
   procedureIds: string[];
-  tokens: DeviceDoc['pushTokens'];
+  tokens: Device['pushTokens'];
   time?: Date;
 }) => {
   // Generate one push for each token
@@ -205,12 +205,10 @@ export const quePushsConferenceWeek = async () => {
     'notificationSettings.conferenceWeekPushs': true,
   });
 
-  const tokens = devices.reduce<
-    {
-      token?: string;
-      os?: string;
-    }[]
-  >((array, { pushTokens }) => [...array, ...pushTokens], []);
+  const tokens = devices.reduce<Device['pushTokens']>(
+    (array, { pushTokens }) => [...array, ...pushTokens],
+    [],
+  );
 
   // Only send Message if at least one vote & one token is found
   if (tokens.length > 0 && procedureIds.length > 0) {
@@ -259,8 +257,6 @@ export const quePushsVoteTop100 = async () => {
   const conferenceProceduresCount = await ProcedureModel.count({
     $and: [{ voteDate: { $gte: startOfWeek } }, { voteDate: { $lte: endOfWeek } }],
   });
-
-  global.Log.info({ conferenceProceduresCount });
 
   // Dont Push TOP100 if we have an active conferenceWeek
   if (conferenceProceduresCount > 0) {
@@ -344,7 +340,10 @@ export const quePushsVoteTop100 = async () => {
             }
             return acc;
           },
-          [],
+          [] as Array<{
+            token: string;
+            os: string;
+          }>,
         );
         // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
         if (tokens.length === 0) {
@@ -492,7 +491,7 @@ export const quePushsVoteConferenceWeek = async () => {
       {
         $and: [
           { voteDate: { $gte: new Date() } },
-          { $or: [{ voteEnd: { $exists: false } }, { voteEnd: { $eq: null } }] },
+          { $or: [{ voteEnd: { $exists: false } }, { voteEnd: undefined }] },
         ],
       },
       { voteEnd: { $gte: new Date() } },
@@ -566,7 +565,10 @@ export const quePushsVoteConferenceWeek = async () => {
           }
           return acc;
         },
-        [],
+        [] as Array<{
+          token: string;
+          os: string;
+        }>,
       );
       // Dont send Pushs - User has not Tokens registered or has recieved a Push for this Procedure lately
       if (tokens.length === 0) {

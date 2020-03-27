@@ -43,7 +43,7 @@ const PushNotificationSchema = createSchema(
       required: true,
     }),
     os: Type.string({
-      enum: [],
+      enum: ['android', 'ios'],
       required: true,
     }),
     time: Type.date({

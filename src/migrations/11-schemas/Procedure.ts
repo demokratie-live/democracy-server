@@ -1,66 +1,109 @@
-import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import { Schema, Document } from 'mongoose';
 
 import procedureStates from '../../config/procedureStates';
-import ProcedureDocument from '../3-schemas/Procedure/Document';
+import DocumentSchema, { ProcedureDocument } from '../3-schemas/Procedure/Document';
+import { Timestamps } from '../schemas/timestapms';
 import { VoteSelection } from '../../generated/graphql';
 
-const ProcedureSchema = createSchema(
-  {
-    procedureId: Type.string({ index: { unique: true } }),
-    type: Type.string({ required: true }),
-    period: Type.number({ required: true }),
-    title: Type.string({ required: true }),
-    currentStatus: Type.string(),
-    currentStatusHistory: Type.array({ required: true }).of(Type.string({ required: true })),
-    abstract: Type.string(),
-    tags: Type.array({ required: true }).of(Type.string({ required: true })),
-    voteDate: Type.date(),
-    voteEnd: Type.date(),
-    voteWeek: Type.number(),
-    voteYear: Type.number(),
-    sessionTOPHeading: Type.string(),
-    submissionDate: Type.date(), // Date of the first dip21 history element
-    lastUpdateDate: Type.date(), // Date of last dip21 history element for sorting in App
-    bioUpdateAt: Type.date(), // Date of last dip21 changes on bundestag.io
-    subjectGroups: Type.array({ required: true }).of(Type.string({ required: true })),
-    importantDocuments: Type.array({ required: true }).of(ProcedureDocument),
-    activities: Type.number({ default: 0 }), // cache from activity collection
-    votes: Type.number({ default: 0 }), // cache from votes collection
-    voteResults: Type.object().of({
-      procedureId: Type.string(),
-      yes: Type.number({ required: true }),
-      no: Type.number({ required: true }),
-      abstination: Type.number({ required: true }),
-      notVoted: Type.number(),
-      decisionText: Type.string(),
-      namedVote: Type.boolean(),
-      partyVotes: Type.array().of({
-        _id: false,
-        party: Type.string({ required: true }),
-        main: Type.string({
-          enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'],
-          required: true,
-        }) as VoteSelection,
+export interface PartyVotes {
+  _id: false;
+  party: string;
+  main: VoteSelection;
+  deviants: {
+    yes: number;
+    no: number;
+    abstination: number;
+    notVoted?: number | null;
+  };
+}
 
-        deviants: Type.object().of({
-          yes: Type.number({ required: true }),
-          no: Type.number({ required: true }),
-          abstination: Type.number({ required: true }),
-          notVoted: Type.number(),
-        }),
-      }),
-    }),
-    ...({} as {
-      isCompleted: () => boolean;
-    }),
+export interface IProcedure extends Document, Timestamps {
+  procedureId: string;
+  type: string;
+  period: number;
+  title: string;
+  currentStatus?: string;
+  currentStatusHistory: string[];
+  abstract?: string;
+  tags: string[];
+  voteDate?: Date;
+  voteEnd?: Date;
+  voteWeek?: number;
+  voteYear?: number;
+  sessionTOPHeading?: string;
+  submissionDate?: Date; // Date of the first dip21 history element
+  lastUpdateDate?: Date; // Date of last dip21 history element for sorting in App
+  bioUpdateAt?: Date; // Date of last dip21 changes on bundestag.io
+  subjectGroups: string[];
+  importantDocuments: ProcedureDocument[];
+  activities: number; // cache from activity collection
+  votes: number; // cache from votes collection
+  voteResults: {
+    yes: number;
+    no: number;
+    abstination: number;
+    notVoted?: number;
+    decisionText?: string;
+    namedVote?: boolean;
+    partyVotes: PartyVotes[];
+  };
+  // Resolver added
+  active?: boolean;
+  voted?: boolean;
+  // methods
+  isCompleted: () => boolean;
+}
+
+const ProcedureSchema = new Schema<IProcedure>(
+  {
+    procedureId: { type: String, index: { unique: true } },
+    type: { type: String, required: true },
+    period: { type: Number, required: true },
+    title: { type: String, required: true },
+    currentStatus: String,
+    currentStatusHistory: [String],
+    abstract: String,
+    tags: [String],
+    voteDate: Date,
+    voteEnd: Date,
+    voteWeek: Number,
+    voteYear: Number,
+    sessionTOPHeading: String,
+    submissionDate: Date, // Date of the first dip21 history element
+    lastUpdateDate: Date, // Date of last dip21 history element for sorting in App
+    bioUpdateAt: Date, // Date of last dip21 changes on bundestag.io
+    subjectGroups: [String],
+    importantDocuments: [DocumentSchema],
+    activities: { type: Number, default: 0 }, // cache from activity collection
+    votes: { type: Number, default: 0 }, // cache from votes collection
+    voteResults: {
+      yes: { type: Number, required: true },
+      no: { type: Number, required: true },
+      abstination: { type: Number, required: true },
+      notVoted: { type: Number },
+      decisionText: String,
+      namedVote: Boolean,
+      partyVotes: [
+        {
+          _id: false,
+          party: { type: String, required: true },
+          main: { type: String, enum: ['YES', 'NO', 'ABSTINATION', 'NOTVOTED'], required: true },
+
+          deviants: {
+            yes: { type: Number, required: true },
+            no: { type: Number, required: true },
+            abstination: { type: Number, required: true },
+            notVoted: { type: Number },
+          },
+        },
+      ],
+    },
   },
   { timestamps: true },
 );
 
-ProcedureSchema.methods = {
-  isCompleted(): boolean {
-    return this.voteDate || procedureStates.COMPLETED.some(s => s === this.currentStatus);
-  },
+ProcedureSchema.methods.isCompleted = function() {
+  return !!(this.voteDate || procedureStates.COMPLETED.some(s => s === this.currentStatus));
 };
 
 ProcedureSchema.index(
@@ -83,11 +126,5 @@ ProcedureSchema.index(
 
 ProcedureSchema.index({ voteDate: -1 }, { background: true });
 ProcedureSchema.index({ period: -1 }, { background: true });
-
-export type ProcedureDoc = ExtractDoc<typeof ProcedureSchema>;
-export type ProcedureProps = ExtractProps<typeof ProcedureSchema> & {
-  active?: boolean;
-  voted?: boolean;
-};
 
 export default ProcedureSchema;

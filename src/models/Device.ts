@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
-import DeviceSchema from '../migrations/12-schemas/Device';
+import DeviceSchema, { Device } from '../migrations/12-schemas/Device';
+import { model } from 'mongoose';
 
-export default typedModel('Device', DeviceSchema);
+export default model<Device>('Device', DeviceSchema);

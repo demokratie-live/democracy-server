@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
-import ProcedureSchema from '../migrations/11-schemas/Procedure';
+import ProcedureSchema, { IProcedure } from '../migrations/11-schemas/Procedure';
+import { model } from 'mongoose';
 
-export default typedModel('Procedure', ProcedureSchema);
+export default model<IProcedure>('Procedure', ProcedureSchema);

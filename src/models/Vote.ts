@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
-import VoteSchema from '../migrations/2-schemas/Vote';
+import VoteSchema, { Vote } from '../migrations/2-schemas/Vote';
+import { model } from 'mongoose';
 
-export default typedModel('Vote', VoteSchema);
+export default model<Vote>('Vote', VoteSchema);

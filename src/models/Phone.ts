@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
-import PhoneSchema from '../migrations/3-schemas/Phone';
+import PhoneSchema, { Phone } from '../migrations/3-schemas/Phone';
+import { model } from 'mongoose';
 
-export default typedModel('Phone', PhoneSchema);
+export default model<Phone>('Phone', PhoneSchema);

@@ -47,21 +47,24 @@ const DeputyApi: Resolvers = {
 
       // get needed procedure Data only from votes object
       if (didRequestProcedureId) {
-        const returnValue = filteredVotes
-          .reduce((prev, { procedureId, decision }) => {
-            const procedure = ProcedureModel.findOne({ procedureId });
-            if (procedure) {
-              const deputyProcedure = {
-                procedure,
-                decision,
-              };
+        const returnValue = filteredVotes.reduce<any>((prev, { procedureId, decision }) => {
+          const procedure = ProcedureModel.findOne({ procedureId });
+          if (procedure) {
+            const deputyProcedure = {
+              procedure,
+              decision: decision as VoteSelection,
+            };
 
-              return [...prev, deputyProcedure];
-            }
-            return prev;
-          }, [])
-          .slice(offset, offset + pageSize);
+            return [...prev, deputyProcedure];
+          }
+          return prev;
+        }, []);
+        // .slice(offset, offset + pageSize);
         return returnValue;
+      }
+
+      if (!offset) {
+        offset = 0;
       }
 
       // if need more procedure data get procedure object from database
@@ -70,7 +73,7 @@ const DeputyApi: Resolvers = {
           lastUpdateDate: -1,
           title: 1,
         })
-        .limit(pageSize)
+        .limit(pageSize || 9999999)
         .skip(offset)
         .map(p => {
           return p;
@@ -78,10 +81,11 @@ const DeputyApi: Resolvers = {
 
       const result = await Promise.all(
         procedures.map(async procedure => {
+          const p = await filteredVotes.find(
+            ({ procedureId }) => procedure.procedureId === procedureId,
+          );
           return {
-            decision: (await filteredVotes.find(
-              ({ procedureId }) => procedure.procedureId === procedureId,
-            ).decision) as VoteSelection,
+            decision: p?.decision as VoteSelection,
             procedure: { ...procedure.toObject(), activityIndex: undefined, voted: undefined },
           };
         }),

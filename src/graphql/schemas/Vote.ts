@@ -38,7 +38,7 @@ export default `
     governmentDecision: VoteSelection
     decisionText: String
     namedVote: Boolean
-    partyVotes: [PartyVote]
+    partyVotes: [PartyVote!]!
     deputyVotes(constituencies: [String!], directCandidate: Boolean): [DeputyVote]
   }
 

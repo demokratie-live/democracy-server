@@ -7,6 +7,9 @@ import UserModel from '../../models/User';
 import DeviceModel from '../../models/Device';
 import PhoneModel from '../../models/Phone';
 import { ExpressReqContext } from '../../types/graphqlContext';
+import { User } from '../../migrations/1-schemas/User';
+import { Device } from '../../migrations/12-schemas/Device';
+import { Phone } from '../../migrations/3-schemas/Phone';
 
 export const createTokens = async (user: string) => {
   const token = jwt.sign(
@@ -32,7 +35,7 @@ export const createTokens = async (user: string) => {
   return Promise.all([token, refreshToken]);
 };
 
-const refreshTokens = async (refreshToken?: string) => {
+const refreshTokens = async (refreshToken: string) => {
   // Verify Token
   try {
     jwt.verify(refreshToken, CONFIG.AUTH_JWT_SECRET);
@@ -42,7 +45,7 @@ const refreshTokens = async (refreshToken?: string) => {
   // Decode Token
   let userid = null;
   const jwtUser = jwt.decode(refreshToken);
-  if (typeof jwtUser === 'object' && jwtUser.user) {
+  if (jwtUser && typeof jwtUser === 'object' && jwtUser.user) {
     userid = jwtUser.user;
   } else {
     return {};
@@ -84,14 +87,15 @@ export const headerToken = async ({
 
 export const auth = async (req: ExpressReqContext, res: Response, next: NextFunction) => {
   global.Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
-  let token = req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
+  let token: string | null =
+    req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
   // In some cases the old Client transmitts the token via authorization header as 'Bearer [token]'
   if (CONFIG.JWT_BACKWARD_COMPATIBILITY && !token && req.headers.authorization) {
     token = req.headers.authorization.substr(7);
   }
-  const deviceHash =
+  const deviceHash: string | null =
     req.headers['x-device-hash'] || (CONFIG.DEBUG ? req.query.deviceHash || null : null);
-  const phoneHash =
+  const phoneHash: string | null =
     req.headers['x-phone-hash'] || (CONFIG.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
     global.Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
@@ -106,10 +110,16 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       const jwtUser: any = jwt.verify(token, CONFIG.AUTH_JWT_SECRET);
       const userid = jwtUser.user;
       // Set request variables
-      req.user = await UserModel.findOne({ _id: userid });
+      req.user = await UserModel.findOne({ _id: userid }).then(user =>
+        user ? user.toObject() : null,
+      );
       if (req.user) {
-        req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
-        req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
+        req.device = await DeviceModel.findOne({ _id: req.user.device }).then(d =>
+          d ? d : undefined,
+        );
+        req.phone = await PhoneModel.findOne({ _id: req.user.phone }).then(p =>
+          p ? p : undefined,
+        );
         // Set new timestamps
         req.user.markModified('updatedAt');
         await req.user.save();
@@ -135,8 +145,12 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         // Set request variables
         req.user = newTokens.user;
         if (req.user) {
-          req.device = req.user.device ? await DeviceModel.findOne({ _id: req.user.device }) : null;
-          req.phone = req.user.phone ? await PhoneModel.findOne({ _id: req.user.phone }) : null;
+          req.device = await DeviceModel.findOne({ _id: req.user.device }).then(d =>
+            d ? d : undefined,
+          );
+          req.phone = await PhoneModel.findOne({ _id: req.user.phone }).then(p =>
+            p ? p : undefined,
+          );
           // Set new timestamps
           req.user.markModified('updatedAt');
           await req.user.save();
@@ -157,9 +171,9 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
   }
   // Login
   if (!success) {
-    let user = null;
-    let device = null;
-    let phone = null;
+    let user: User | null = null;
+    let device: Device | null = null;
+    let phone: Phone | null = null;
     if (deviceHash) {
       global.Log.jwt('JWT: Credentials present');
       // User
@@ -177,7 +191,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
               .digest('hex'),
           })
         : null;
-      user = await UserModel.findOne({ device, phone });
+      user = await UserModel.findOne({ device: device?._id, phone: phone?._id });
       if (!user) {
         global.Log.jwt('JWT: Create new User');
         // Device
@@ -201,8 +215,10 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       // Set new timestamps
       user.markModified('updatedAt');
       await user.save();
-      device.markModified('updatedAt');
-      await device.save();
+      if (device) {
+        device.markModified('updatedAt');
+        await device.save();
+      }
       if (phone) {
         phone.markModified('updatedAt');
         await phone.save();

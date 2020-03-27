@@ -17,7 +17,9 @@ const UserApi: Resolvers = {
       // Maybe return user; ?
       const dbUser = await UserModel.findById(user._id);
       const { deviceHash } = device;
-      return { ...dbUser.toObject(), deviceHash };
+      if (dbUser) {
+        return { ...dbUser.toObject(), deviceHash };
+      }
     } /* ) */,
   },
   Mutation: {

@@ -9,8 +9,8 @@ generates:
       defaultMapper: DeepPartial<{T}>
       mappers:
         Deputy: ../migrations/4-schemas/Deputy#DeputyProps
-        Procedure: ../migrations/11-schemas/Procedure#ProcedureProps
-        Vote: ../migrations/2-schemas/Vote#VoteProps
+        Procedure: ../migrations/11-schemas/Procedure#IProcedure
+        # Vote: ../migrations/2-schemas/Vote#VoteProps
     plugins:
       - 'typescript'
       - 'typescript-resolvers'

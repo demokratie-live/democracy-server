@@ -18,7 +18,7 @@ const calculateResendTime = ({
   latestCodeTime: number;
   codesCount: number;
   expires: number;
-}) =>
+}): Date =>
   new Date(
     Math.min(
       expires,
@@ -29,15 +29,15 @@ const calculateResendTime = ({
 
 const DeviceApi: Resolvers = {
   Query: {
-    notificationSettings: async (parent, args, { device, ProcedureModel }) => {
+    notificationSettings: async (_parent, _args, { device }) => {
       global.Log.graphql('Device.query.notificationSettings');
       const result: NotificationSettings = {
         ...device.notificationSettings,
         procedures: device.notificationSettings.procedures.map(procedure => {
-          if ('procedureId' in procedure) {
-            return procedure._id.toHexString();
+          if ('_id' in procedure) {
+            return procedure._id;
           }
-          return procedure.toHexString();
+          return procedure;
         }),
       };
       return result;
@@ -128,23 +128,24 @@ const DeviceApi: Resolvers = {
 
       const now = new Date();
       // Check if there is still a valid Code
-      const activeCode = verification.verifications.find(({ expires }) => now < new Date(expires));
+      const activeCode = verification.verifications?.find(({ expires }) => now < new Date(expires));
       if (activeCode) {
         // ***********
         // Resend Code
         // ***********
         // Find Code Count & latest Code Time
-        const codesCount = activeCode.codes.length;
-        const latestCode = activeCode.codes.reduce(
+        const codesCount = activeCode.codes?.length || 0;
+        const latestCode = activeCode.codes?.reduce(
           (max, p) => (p.time > max.time ? p : max),
           activeCode.codes[0],
         );
 
         // Check code time
         if (
+          latestCode &&
           latestCode.time.getTime() +
             ms(CONFIG.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
-          now.getTime()
+            now.getTime()
         ) {
           return {
             reason: 'You have to wait till you can request another Code',
@@ -159,7 +160,7 @@ const DeviceApi: Resolvers = {
         }
 
         // Validate that the Number has recieved the Code
-        const smsstatus = await statusSMS(latestCode.SMSID);
+        const smsstatus = await statusSMS(latestCode?.SMSID || '');
         if (!smsstatus) {
           return {
             reason: 'Your number seems incorrect, please correct it!',
@@ -170,7 +171,7 @@ const DeviceApi: Resolvers = {
         // Send SMS
         const { status, SMSID } = await sendSMS(newPhone, code);
 
-        activeCode.codes.push({
+        activeCode.codes?.push({
           code,
           time: now,
           SMSID,
@@ -218,9 +219,9 @@ const DeviceApi: Resolvers = {
 
       // Code expiretime
       const expires = new Date(now.getTime() + ms(CONFIG.SMS_VERIFICATION_CODE_TTL));
-      verification.verifications.push({
+      verification.verifications?.push({
         deviceHash: device.deviceHash,
-        oldPhoneHash: oldPhoneDBHash,
+        oldPhoneHash: oldPhoneDBHash || '',
         codes: [{ code, time: now, SMSID }],
         expires,
       });
@@ -280,8 +281,8 @@ const DeviceApi: Resolvers = {
 
       // Find Code
       const now = new Date();
-      const verification = verifications.verifications.find(
-        ({ expires, codes }) => now < expires && codes.find(({ code: dbCode }) => code === dbCode),
+      const verification = verifications.verifications?.find(
+        ({ expires, codes }) => now < expires && codes?.find(({ code: dbCode }) => code === dbCode),
       );
 
       // Code valid?
@@ -313,7 +314,7 @@ const DeviceApi: Resolvers = {
       }
 
       // Invalidate Code
-      verifications.verifications = verifications.verifications.map(obj => {
+      verifications.verifications = verifications.verifications?.map(obj => {
         if (obj._id === verification._id) {
           obj.expires = now;
         }
@@ -466,16 +467,18 @@ const DeviceApi: Resolvers = {
         );
         // TODO this additional read operation is also not nessecarily required
         // if the calculation is done serverside
-        device = await DeviceModel.findOne({ _id: device._id });
+        device = await DeviceModel.findOne({ _id: device._id }).then(d =>
+          d ? d.toObject() : null,
+        );
       }
 
       const result: NotificationSettings = {
         ...device.notificationSettings,
         procedures: device.notificationSettings.procedures.map(procedure => {
-          if ('procedureId' in procedure) {
-            return procedure._id.toHexString();
+          if ('_id' in procedure) {
+            return procedure._id;
           }
-          return procedure.toHexString();
+          return procedure;
         }),
       };
       return result;
@@ -484,18 +487,19 @@ const DeviceApi: Resolvers = {
     toggleNotification: async (parent, { procedureId }, { device, ProcedureModel }) => {
       global.Log.graphql('Device.mutation.toggleNotification');
       const procedure = await ProcedureModel.findOne({ procedureId });
-
-      const index = device.notificationSettings.procedures.indexOf(procedure._id);
-      let notify;
-      if (index > -1) {
-        notify = false;
-        device.notificationSettings.procedures.splice(index, 1);
-      } else {
-        notify = true;
-        device.notificationSettings.procedures.push(procedure._id);
+      if (procedure) {
+        const index = device.notificationSettings.procedures.indexOf(procedure?._id);
+        let notify;
+        if (index > -1) {
+          notify = false;
+          device.notificationSettings.procedures.splice(index, 1);
+        } else {
+          notify = true;
+          device.notificationSettings.procedures.push(procedure._id);
+        }
+        await device.save();
+        return { ...procedure.toObject(), notify };
       }
-      await device.save();
-      return { ...procedure.toObject(), notify };
     },
   },
 };

@@ -1,10 +1,8 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { DeepPartial } from 'utility-types';
 import { DeputyProps } from '../migrations/4-schemas/Deputy';
-import { ProcedureProps } from '../migrations/11-schemas/Procedure';
-import { VoteProps } from '../migrations/2-schemas/Vote';
+import { IProcedure } from '../migrations/11-schemas/Procedure';
 import { GraphQlContext } from '../types/graphqlContext';
-
+import { DeepPartial } from 'utility-types';
 export type Maybe<T> = T | null;
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } &
@@ -441,7 +439,7 @@ export type VoteResult = {
   governmentDecision?: Maybe<VoteSelection>;
   decisionText?: Maybe<Scalars['String']>;
   namedVote?: Maybe<Scalars['Boolean']>;
-  partyVotes?: Maybe<Array<Maybe<PartyVote>>>;
+  partyVotes: Array<PartyVote>;
   deputyVotes?: Maybe<Array<Maybe<DeputyVote>>>;
 };
 
@@ -565,7 +563,7 @@ export type ResolversTypes = {
     >
   >;
   VoteSelection: ResolverTypeWrapper<DeepPartial<VoteSelection>>;
-  Procedure: ResolverTypeWrapper<ProcedureProps>;
+  Procedure: ResolverTypeWrapper<IProcedure>;
   Document: ResolverTypeWrapper<DeepPartial<Document>>;
   VoteResult: ResolverTypeWrapper<
     DeepPartial<
@@ -603,7 +601,7 @@ export type ResolversTypes = {
   >;
   SearchTerm: ResolverTypeWrapper<DeepPartial<SearchTerm>>;
   User: ResolverTypeWrapper<DeepPartial<User>>;
-  Vote: ResolverTypeWrapper<VoteProps>;
+  Vote: ResolverTypeWrapper<DeepPartial<Vote>>;
   VoteStatistic: ResolverTypeWrapper<DeepPartial<VoteStatistic>>;
   Mutation: ResolverTypeWrapper<{}>;
   CodeResult: ResolverTypeWrapper<DeepPartial<CodeResult>>;
@@ -634,7 +632,7 @@ export type ResolversParentTypes = {
     Omit<DeputyProcedure, 'procedure'> & { procedure?: Maybe<ResolversParentTypes['Procedure']> }
   >;
   VoteSelection: DeepPartial<VoteSelection>;
-  Procedure: ProcedureProps;
+  Procedure: IProcedure;
   Document: DeepPartial<Document>;
   VoteResult: DeepPartial<
     Omit<VoteResult, 'deputyVotes'> & {
@@ -666,7 +664,7 @@ export type ResolversParentTypes = {
   >;
   SearchTerm: DeepPartial<SearchTerm>;
   User: DeepPartial<User>;
-  Vote: VoteProps;
+  Vote: DeepPartial<Vote>;
   VoteStatistic: DeepPartial<VoteStatistic>;
   Mutation: {};
   CodeResult: DeepPartial<CodeResult>;
@@ -1235,7 +1233,7 @@ export type VoteResultResolvers<
   governmentDecision?: Resolver<Maybe<ResolversTypes['VoteSelection']>, ParentType, ContextType>;
   decisionText?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   namedVote?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  partyVotes?: Resolver<Maybe<Array<Maybe<ResolversTypes['PartyVote']>>>, ParentType, ContextType>;
+  partyVotes?: Resolver<Array<ResolversTypes['PartyVote']>, ParentType, ContextType>;
   deputyVotes?: Resolver<
     Maybe<Array<Maybe<ResolversTypes['DeputyVote']>>>,
     ParentType,

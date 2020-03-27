@@ -8,8 +8,8 @@ import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
 
-import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
-import { ProcedureDoc, ProcedureProps } from '../../migrations/11-schemas/Procedure';
+import { Resolvers, ListType, ProcedureType, VoteSelection } from '../../generated/graphql';
+import { IProcedure } from '../../migrations/11-schemas/Procedure';
 
 const ProcedureApi: Resolvers = {
   Query: {
@@ -35,7 +35,7 @@ const ProcedureApi: Resolvers = {
       { ProcedureModel, user, VoteModel, device, phone },
     ) => {
       global.Log.graphql('Procedure.query.procedures');
-      let listTypes = listTypeParam;
+      let listTypes = listTypeParam as ListType[];
       if (type) {
         switch (type) {
           case ProcedureType.InVote:
@@ -57,14 +57,14 @@ const ProcedureApi: Resolvers = {
         }
       }
 
-      const filterQuery: MongooseFilterQuery<ProcedureDoc> = {};
-      if (filter.type && filter.type.length > 0) {
-        filterQuery.type = { $in: filter.type };
+      const filterQuery: MongooseFilterQuery<IProcedure> = {};
+      if (filter && filter.type && filter.type.length > 0) {
+        filterQuery.type = { $in: filter.type as string[] };
       }
-      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
-        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      if (filter && filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups as string[] };
       }
-      if (filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
+      if (filter && filter.activity && filter.activity.length > 0 && user && user.isVerified()) {
         const votedProcedures = await VoteModel.find(
           {
             type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
@@ -116,8 +116,8 @@ const ProcedureApi: Resolvers = {
           ...filterQuery,
         })
           .sort(sortQuery)
-          .limit(pageSize)
-          .skip(offset);
+          .limit(pageSize as number)
+          .skip(offset as number);
       }
 
       if (listTypes.indexOf(ListType.Hot) > -1) {
@@ -132,8 +132,8 @@ const ProcedureApi: Resolvers = {
           ...filterQuery,
         })
           .sort({ activities: -1, lastUpdateDate: -1, title: 1 })
-          .skip(offset)
-          .limit(pageSize);
+          .skip(offset as number)
+          .limit(pageSize as number);
 
         return hotProcedures;
       }
@@ -144,8 +144,8 @@ const ProcedureApi: Resolvers = {
           ...filterQuery,
         })
           .sort({ votes: -1, lastUpdateDate: -1, title: 1 })
-          .skip(offset)
-          .limit(pageSize);
+          .skip(offset as number)
+          .limit(pageSize as number);
 
         return top100Procedures;
       }
@@ -157,7 +157,7 @@ const ProcedureApi: Resolvers = {
             {
               $and: [
                 { voteDate: { $gte: new Date() } },
-                { $or: [{ voteEnd: { $exists: false } }, { voteEnd: { $eq: null } }] },
+                { $or: [{ voteEnd: { $exists: false } }, { voteEnd: undefined }] },
               ],
             },
             { voteEnd: { $gte: new Date() } },
@@ -165,8 +165,8 @@ const ProcedureApi: Resolvers = {
           ...filterQuery,
         })
           .sort({ voteDate: 1, voteEnd: 1, votes: -1 })
-          .skip(offset)
-          .limit(pageSize);
+          .skip(offset as number)
+          .limit(pageSize as number);
 
         return top100Procedures;
       }
@@ -221,9 +221,9 @@ const ProcedureApi: Resolvers = {
         ]);
       }
 
-      let pastVotings: ProcedureDoc[] = [];
+      let pastVotings: IProcedure[] = [];
       if (listTypes.indexOf(ListType.Past) > -1) {
-        if (activeVotings.length < pageSize) {
+        if (activeVotings.length < (pageSize as number)) {
           const activeVotingsCount =
             listTypes.indexOf(ListType.InVote) > -1
               ? await ProcedureModel.find({
@@ -256,8 +256,8 @@ const ProcedureApi: Resolvers = {
             ...filterQuery,
           })
             .sort(sortQuery)
-            .skip(Math.max(offset - activeVotingsCount, 0))
-            .limit(pageSize - activeVotings.length);
+            .skip(Math.max((offset as number) - activeVotingsCount, 0))
+            .limit((pageSize as number) - activeVotings.length);
         }
       }
 
@@ -273,7 +273,7 @@ const ProcedureApi: Resolvers = {
       const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
       const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
       const votedProcedures = await VoteModel.aggregate<{
-        procedure: ProcedureDoc & { active: boolean; voted: boolean };
+        procedure: IProcedure & { active: boolean; voted: boolean };
       }>([
         {
           $match: {
@@ -338,7 +338,7 @@ const ProcedureApi: Resolvers = {
       { ProcedureModel },
     ) => {
       // Vote Results are present Filter
-      const voteResultsQuery: MongooseFilterQuery<ProcedureDoc> = {
+      const voteResultsQuery: MongooseFilterQuery<IProcedure> = {
         'voteResults.yes': { $ne: null },
         'voteResults.no': { $ne: null },
         'voteResults.abstination': { $ne: null },
@@ -346,7 +346,7 @@ const ProcedureApi: Resolvers = {
       };
 
       // Timespan Selection
-      const timespanQuery: MongooseFilterQuery<ProcedureDoc> = {};
+      const timespanQuery: MongooseFilterQuery<IProcedure> = {};
       switch (timespan) {
         case 'CurrentSittingWeek':
         case 'LastSittingWeek':
@@ -396,14 +396,14 @@ const ProcedureApi: Resolvers = {
       }
 
       // WOM Filter
-      const filterQuery: MongooseFilterQuery<ProcedureDoc> = {};
+      const filterQuery: MongooseFilterQuery<IProcedure> = {};
       // WOM Filter Subject Group
-      if (filter.subjectGroups && filter.subjectGroups.length > 0) {
-        filterQuery.subjectGroups = { $in: filter.subjectGroups };
+      if (filter && filter.subjectGroups && filter.subjectGroups.length > 0) {
+        filterQuery.subjectGroups = { $in: filter.subjectGroups as string[] };
       }
 
       // Prepare Find Query
-      const findQuery: MongooseFilterQuery<ProcedureDoc> = {
+      const findQuery: MongooseFilterQuery<IProcedure> = {
         // Vote Results are present
         ...voteResultsQuery,
         // Timespan Selection
@@ -426,30 +426,32 @@ const ProcedureApi: Resolvers = {
         // Sorting last voted first
         .sort({ voteDate: -1 })
         // Pagination
-        .limit(pageSize)
-        .skip(offset)
+        .limit(pageSize as number)
+        .skip(offset as number)
         .then(procedures => {
           // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
           return procedures.map(p => {
             // MongoObject to JS Object
-            const procedure: ProcedureProps = p.toObject();
+            const procedure: IProcedure = p.toObject();
             // eslint-disable-next-line no-param-reassign
-            procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.filter(
-              ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
-            );
+            if (procedure.voteResults) {
+              procedure.voteResults.partyVotes = procedure.voteResults.partyVotes?.filter(
+                ({ party }) => !['Andere', 'fraktionslos'].includes(party.trim()),
+              );
 
-            // Rename Fractions
-            procedure.voteResults.partyVotes = procedure.voteResults.partyVotes.map(
-              ({ party, ...rest }) => {
-                switch (party.trim()) {
-                  case 'CDU':
-                    return { ...rest, party: 'Union' };
+              // Rename Fractions
+              procedure.voteResults.partyVotes = procedure.voteResults.partyVotes?.map(
+                ({ party, ...rest }) => {
+                  switch (party.trim()) {
+                    case 'CDU':
+                      return { ...rest, party: 'Union' };
 
-                  default:
-                    return { ...rest, party };
-                }
-              },
-            );
+                    default:
+                      return { ...rest, party };
+                  }
+                },
+              );
+            }
             return procedure;
           });
         });
@@ -765,7 +767,7 @@ const ProcedureApi: Resolvers = {
     },
     completed: procedure => {
       global.Log.graphql('Procedure.field.completed');
-      return PROCEDURE_STATES.COMPLETED.includes(procedure.currentStatus);
+      return PROCEDURE_STATES.COMPLETED.includes(procedure.currentStatus || '');
     },
     // DEPRECATED ListType 2019-01-29 use list instead
     listType: procedure => {
@@ -830,7 +832,18 @@ const ProcedureApi: Resolvers = {
       return cleanHistory;
     },
     // Propagate procedureId if present
-    voteResults: ({ voteResults, procedureId }) => ({ ...voteResults, procedureId }),
+    voteResults: ({ voteResults, procedureId }) => {
+      let partyVotes;
+      if (voteResults?.partyVotes) {
+        partyVotes = voteResults.partyVotes.map(pv => {
+          return {
+            ...pv,
+            main: pv.main as VoteSelection,
+          };
+        });
+      }
+      return { ...voteResults, partyVotes, procedureId };
+    },
   },
 };
 

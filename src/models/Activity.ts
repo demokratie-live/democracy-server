@@ -1,4 +1,4 @@
-import { typedModel } from 'ts-mongoose';
 import ActivitySchema from '../migrations/1-schemas/Activity';
+import { model } from 'mongoose';
 
-export default typedModel('Activity', ActivitySchema);
+export default model('Activity', ActivitySchema);

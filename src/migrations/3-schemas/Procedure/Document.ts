@@ -1,18 +1,18 @@
-import { createSchema, Type } from 'ts-mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IDocument extends Document {
+export interface ProcedureDocument extends mongoose.Document {
   editor?: string;
   number?: string;
   type?: string;
   url?: string;
 }
 
-const DocumentSchema = createSchema(
+const DocumentSchema = new Schema<ProcedureDocument>(
   {
-    editor: Type.string(),
-    number: Type.string({ index: true }),
-    type: Type.string(),
-    url: Type.string(),
+    editor: String,
+    number: { type: String, index: true },
+    type: String,
+    url: String,
   },
   { _id: false },
 );

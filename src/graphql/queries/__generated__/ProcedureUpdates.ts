@@ -34,29 +34,29 @@ export interface ProcedureUpdates_procedureUpdates_procedures_importantDocuments
 
 export interface ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes_deviants {
   __typename: "Deviants";
-  yes: number | null;
-  no: number | null;
-  abstination: number | null;
+  yes: number;
+  no: number;
+  abstination: number;
   notVoted: number | null;
 }
 
 export interface ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes {
   __typename: "PartyVote";
   party: string;
-  main: VoteDecision | null;
-  deviants: ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes_deviants | null;
+  main: VoteDecision;
+  deviants: ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes_deviants;
 }
 
 export interface ProcedureUpdates_procedureUpdates_procedures_customData_voteResults {
   __typename: "VoteResults";
-  yes: number | null;
-  no: number | null;
-  abstination: number | null;
+  yes: number;
+  no: number;
+  abstination: number;
   notVoted: number | null;
   decisionText: string | null;
   votingDocument: VotingDocument | null;
   votingRecommendation: boolean | null;
-  partyVotes: (ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes | null)[] | null;
+  partyVotes: ProcedureUpdates_procedureUpdates_procedures_customData_voteResults_partyVotes[];
 }
 
 export interface ProcedureUpdates_procedureUpdates_procedures_customData {

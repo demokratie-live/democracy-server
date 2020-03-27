@@ -1,29 +1,32 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { createSchema, Type, typedModel, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 import CONFIG from '../../config';
-import ProcedureSchema from '../11-schemas/Procedure';
-import PhoneSchema from '../3-schemas/Phone';
+import { Timestamps } from '../schemas/timestapms';
+import { IProcedure } from '../11-schemas/Procedure';
+import { User } from './User';
 
-const ActivitySchema = createSchema(
+export interface Activity extends Document, Timestamps {
+  kind: string;
+  actor: User | Types.ObjectId;
+  procedure: IProcedure | Types.ObjectId;
+}
+
+const ActivitySchema = new Schema<Activity>(
   {
-    kind: Type.string({ type: String, required: true }),
-    actor: Type.ref(Type.objectId()).to('Phone', PhoneSchema),
-    procedure: Type.ref(Type.objectId()).to('Procedure', ProcedureSchema),
+    kind: { type: String, required: true },
+    actor: { type: Schema.Types.ObjectId, refPath: 'kind', required: true },
+    procedure: { type: Schema.Types.ObjectId, ref: 'Procedure', required: true },
   },
   { timestamps: false },
 );
 
-export type ActivityDoc = ExtractDoc<typeof ActivitySchema>;
-export type ActivityProps = ExtractProps<typeof ActivitySchema>;
-
 ActivitySchema.index({ actor: 1, procedure: 1 }, { unique: true });
 
-ActivitySchema.post<ActivityDoc>('save', async doc => {
-  const procedureObjId = '_id' in doc.procedure ? doc.procedure._id : doc.procedure;
-  const activities = await typedModel('Activity', ActivitySchema)
-    .find({ procedure: procedureObjId, kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device' })
+ActivitySchema.post<Activity>('save', async doc => {
+  const activities = await mongoose
+    .model('Activity')
+    .find({ procedure: doc.procedure, kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device' })
     .count();
-  await typedModel('Procedure').findByIdAndUpdate(procedureObjId, { activities });
+  await mongoose.model('Procedure').findByIdAndUpdate(doc.procedure, { activities });
 });
 
 export default ActivitySchema;

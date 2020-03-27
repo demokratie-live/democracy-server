@@ -1,13 +1,16 @@
 // TODO replace this with a scraper for automatiation
 
 // convert german date to js Date
-function parseDate(input: string) {
+function parseDate(input: string): Date {
   const parts = input.match(/(\d+)/g);
-  const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+  if (parts) {
+    const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
 
-  // fix german time
-  date.setHours(date.getHours() + 2);
-  return date;
+    // fix german time
+    date.setHours(date.getHours() + 2);
+    return date;
+  }
+  throw new Error('Error in conference-weeks');
 }
 
 const getWeekNumber = (d: Date) => {
@@ -133,6 +136,6 @@ export const getCurrentConferenceWeek = () => {
   const nextConferenceWeek = conferenceWeeks.find(({ start }) => {
     return curDate < start;
   });
-
-  return { ...nextConferenceWeek, calendarWeek: getWeekNumber(nextConferenceWeek.start) };
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return { ...nextConferenceWeek, calendarWeek: getWeekNumber(nextConferenceWeek!.start) };
 };

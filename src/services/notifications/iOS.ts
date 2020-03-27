@@ -9,7 +9,7 @@ export const provider = (
   teamId = CONFIG.APPLE_TEAMID,
   production = process.env.NODE_ENV === 'production',
 ) => {
-  if (!fs.existsSync(key)) {
+  if (!key || !fs.existsSync(key)) {
     global.Log.error('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
     return null;
   }

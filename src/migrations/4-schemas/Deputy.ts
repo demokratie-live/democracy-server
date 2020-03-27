@@ -5,15 +5,15 @@ import DeputyVote from './Deputy/Vote';
 const DeputySchema = createSchema(
   {
     webId: Type.string({ required: true, unique: true, index: true }),
-    imgURL: Type.string(),
-    name: Type.string(),
-    party: Type.string(),
+    imgURL: Type.string({ required: true }),
+    name: Type.string({ required: true }),
+    party: Type.string({ required: true }),
     job: Type.string(),
     biography: Type.string(),
     constituency: Type.string(),
-    directCandidate: Type.boolean(),
+    directCandidate: Type.boolean({ required: true }),
     contact: Type.schema().of(DeputyContact),
-    votes: Type.array().of(DeputyVote),
+    votes: Type.array({ required: true }).of(DeputyVote),
   },
   { timestamps: true },
 );

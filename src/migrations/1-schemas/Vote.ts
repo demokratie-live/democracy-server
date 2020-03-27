@@ -1,32 +1,35 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-import { createSchema, Type, ExtractDoc, ExtractProps } from 'ts-mongoose';
-import ProcedureSchema from '../11-schemas/Procedure';
+import { Schema } from 'mongoose';
 
-const VoteSchema = createSchema({
-  procedure: Type.ref(Type.objectId({ required: true })).to('Procedure', ProcedureSchema),
-  state: Type.string({ enum: ['VOTING', 'COMPLETED'], required: true }),
-  voters: Type.array().of({
-    voter: Type.objectId(),
-    _id: Type.boolean({ default: false }),
-    kind: Type.string(),
-  }),
-  voteResults: Type.object().of({
-    device: Type.object().of({
-      yes: Type.number({ default: 0 }),
-      no: Type.number({ default: 0 }),
-      abstination: Type.number({ default: 0 }),
-    }),
-    phone: Type.object().of({
-      yes: Type.number({ default: 0 }),
-      no: Type.number({ default: 0 }),
-      abstination: Type.number({ default: 0 }),
-    }),
-  }),
+const VoteSchema = new Schema({
+  procedure: {
+    type: Schema.Types.ObjectId,
+    ref: 'Procedure',
+    required: true,
+  },
+  state: { type: String, enum: ['VOTING', 'COMPLETED'], required: true },
+  voters: [
+    {
+      kind: String,
+      voter: { type: Schema.Types.ObjectId, refPath: 'voters.kind' },
+      // Todo: This is not working
+      // Solution: create own schema - then it will work Schema({kind,voter},{_id:false})
+      _id: false,
+    },
+  ],
+  voteResults: {
+    device: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
+    phone: {
+      yes: { type: Number, default: 0 },
+      no: { type: Number, default: 0 },
+      abstination: { type: Number, default: 0 },
+    },
+  },
 });
 
 VoteSchema.index({ procedure: 1, state: 1 }, { unique: true });
-
-export type VoteDoc = ExtractDoc<typeof VoteSchema>;
-export type VoteProps = ExtractProps<typeof VoteSchema>;
 
 export default VoteSchema;

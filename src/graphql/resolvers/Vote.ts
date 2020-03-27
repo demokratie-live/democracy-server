@@ -8,13 +8,22 @@ import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import resolvers from './index';
 import { Resolvers, VoteSelection, DeputyVote, ResolversTypes } from '../../generated/graphql';
-import { VoteDoc } from '../../migrations/2-schemas/Vote';
 import { DeputyDoc } from '../../migrations/4-schemas/Deputy';
+import { GraphQlContext } from '../../types/graphqlContext';
+import { Vote } from '../../migrations/2-schemas/Vote';
 
-const queryVotes: Resolvers['Query']['votes'] = async (
-  parent,
-  { procedure, constituencies },
-  { VoteModel, device, phone },
+const queryVotes = async (
+  _parent: any,
+  { procedure, constituencies }: { procedure: string; constituencies: string[] | null | undefined },
+  {
+    VoteModel,
+    device,
+    phone,
+  }: {
+    VoteModel: GraphQlContext['VoteModel'];
+    device: GraphQlContext['device'];
+    phone: GraphQlContext['phone'];
+  },
 ) => {
   global.Log.graphql('Vote.query.votes');
   // Has user voted?
@@ -22,7 +31,7 @@ const queryVotes: Resolvers['Query']['votes'] = async (
     procedure,
     type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
-      voter: CONFIG.SMS_VERIFICATION ? (phone ? phone._id : null) : device._id, // eslint-disable-line no-nested-ternary
+      voter: CONFIG.SMS_VERIFICATION ? phone : device,
     },
   });
 
@@ -134,7 +143,9 @@ const queryVotes: Resolvers['Query']['votes'] = async (
 const VoteApi: Resolvers = {
   Query: {
     // Used by App
-    votes: queryVotes,
+    votes: async (_parent: any, { procedure, constituencies }, { VoteModel, device, phone }) => {
+      return queryVotes(_parent, { procedure, constituencies }, { VoteModel, device, phone });
+    },
     // Used by Browserverion -> TODO Remove
     communityVotes: async (
       parent,
@@ -297,17 +308,7 @@ const VoteApi: Resolvers = {
     vote: async (
       parent,
       { procedure: procedureId, selection, constituency },
-      {
-        VoteModel,
-        ProcedureModel,
-        ActivityModel,
-        DeviceModel,
-        user,
-        device,
-        phone,
-        ...restContext
-      },
-      info,
+      { VoteModel, ProcedureModel, ActivityModel, DeviceModel, device, phone, ...restContext },
     ) => {
       global.Log.graphql('Vote.mutation.vote');
       // Find procedure
@@ -358,7 +359,7 @@ const VoteApi: Resolvers = {
       }
 
       // Cast Vote
-      const voteUpdate: MongooseFilterQuery<VoteDoc> = {
+      const voteUpdate: MongooseFilterQuery<Vote> = {
         $push: {
           voters: {
             voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
@@ -455,26 +456,21 @@ const VoteApi: Resolvers = {
       // Return new User Vote Results
       return queryVotes(
         parent,
-        { procedure: procedure._id, constituencies: [constituency] },
+        { procedure: procedure._id, constituencies: constituency ? [constituency] : null },
         {
           VoteModel,
-          ProcedureModel,
-          ActivityModel,
-          DeviceModel,
-          user,
           device,
           phone,
           ...restContext,
         },
-        info,
       );
     },
   },
   VoteResult: {
-    governmentDecision: ({ yes, no }) => (yes > no ? VoteSelection.Yes : VoteSelection.No),
+    governmentDecision: ({ yes, no }) =>
+      yes && no ? (yes > no ? VoteSelection.Yes : VoteSelection.No) : null,
 
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
-      console.log({ voteResult });
       global.Log.graphql('VoteResult.deputyVotes');
       // Default is empty
       let deputyVotes: DeepPartial<
@@ -505,12 +501,16 @@ const VoteApi: Resolvers = {
 
         // Construct result
         deputies.forEach(deputy => {
-          const deputyVote = {
-            decision: deputy.votes.find(({ procedureId }) => procedureId === voteResult.procedureId)
-              .decision as VoteSelection,
-            deputy: deputy.toObject(),
-          };
-          deputyVotes = [...deputyVotes, deputyVote];
+          const pDeputyVote = deputy.votes.find(
+            ({ procedureId }) => procedureId === voteResult.procedureId,
+          );
+          if (pDeputyVote) {
+            const deputyVote = {
+              decision: pDeputyVote.decision as VoteSelection,
+              deputy: deputy.toObject(),
+            };
+            deputyVotes = [...deputyVotes, deputyVote];
+          }
         });
         return deputyVotes;
       }

@@ -3,7 +3,10 @@ import { CronTime } from 'cron';
 import CronJobModel from '../../models/CronJob';
 import { CronJobProps } from '../../migrations/10-schemas/CronJob';
 
-export const testCronTime = (time: string) => {
+export const testCronTime = (time?: string) => {
+  if (!time) {
+    return false;
+  }
   try {
     new CronTime(time);
   } catch (e) {
@@ -17,11 +20,11 @@ export const getCron = async ({ name }: { name: string }): Promise<Partial<CronJ
   if (!cronjob) {
     return {
       name,
-      lastStartDate: null,
-      lastErrorDate: null,
-      lastError: null,
-      lastSuccessDate: null,
-      lastSuccessStartDate: null,
+      lastStartDate: undefined,
+      lastErrorDate: undefined,
+      lastError: undefined,
+      lastSuccessDate: undefined,
+      lastSuccessStartDate: undefined,
       running: false,
     };
   }
@@ -68,7 +71,7 @@ export const setCronError = async ({
   name,
   errorDate = new Date(),
   running = false,
-  error = null,
+  error,
 }: {
   name: string;
   errorDate?: Date;

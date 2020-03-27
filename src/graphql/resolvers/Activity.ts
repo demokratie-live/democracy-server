@@ -8,15 +8,18 @@ const ActivityApi: Resolvers = {
     activityIndex: async (parent, { procedureId }, { ProcedureModel, ActivityModel, user }) => {
       global.Log.graphql('Activity.query.activityIndex');
       const procedure = await ProcedureModel.findOne({ procedureId });
-      const activityIndex = await ActivityModel.find({ procedure }).count();
-      const active = await ActivityModel.findOne({
-        user,
-        procedure,
-      });
-      return {
-        activityIndex,
-        active: !!active,
-      };
+      if (procedure) {
+        const activityIndex = await ActivityModel.find({ procedure }).count();
+        const active = await ActivityModel.findOne({
+          user,
+          procedure,
+        });
+        return {
+          activityIndex,
+          active: !!active,
+        };
+      }
+      return null;
     },
   },
 
