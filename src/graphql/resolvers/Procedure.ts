@@ -8,7 +8,7 @@ import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
 
-import { Resolvers, ListType, ProcedureType, VoteSelection } from '../../generated/graphql';
+import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
 import { IProcedure } from '../../migrations/11-schemas/Procedure';
 
 const ProcedureApi: Resolvers = {
@@ -34,7 +34,8 @@ const ProcedureApi: Resolvers = {
       },
       { ProcedureModel, user, VoteModel, device, phone },
     ) => {
-      global.Log.graphql('Procedure.query.procedures');
+      // global.Log.graphql('Procedure.query.procedures');
+      console.log(listTypeParam, filter);
       let listTypes = listTypeParam as ListType[];
       if (type) {
         switch (type) {
@@ -70,21 +71,26 @@ const ProcedureApi: Resolvers = {
             type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             voters: {
               $elemMatch: {
-                voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                voter: CONFIG.SMS_VERIFICATION ? phone : device,
               },
             },
           },
           { procedure: 1 },
-        ).populateTs('procedure');
+        ).populate('procedure');
+
         if (filter.activity.indexOf('notVoted') !== -1) {
           if (Array.isArray(votedProcedures)) {
-            filterQuery.procedureId = {
-              $nin: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+            filterQuery._id = {
+              $nin: votedProcedures.map(({ procedure }) =>
+                '_id' in procedure ? procedure._id : procedure,
+              ),
             };
           }
         } else if (filter.activity.indexOf('voted') !== -1) {
-          filterQuery.procedureId = {
-            $in: votedProcedures.map(({ procedure: { procedureId } }) => procedureId),
+          filterQuery._id = {
+            $in: votedProcedures.map(({ procedure }) =>
+              '_id' in procedure ? procedure._id : procedure,
+            ),
           };
         }
       }
@@ -265,7 +271,7 @@ const ProcedureApi: Resolvers = {
     },
 
     votedProcedures: async (parent, args, { VoteModel, phone, device, user }) => {
-      global.Log.graphql('Procedure.query.votedProcedures');
+      // global.Log.graphql('Procedure.query.votedProcedures');
       if (!user.isVerified()) {
         return null;
       }
@@ -328,7 +334,7 @@ const ProcedureApi: Resolvers = {
     },
 
     proceduresById: async (parent, { ids }, { ProcedureModel }) => {
-      global.Log.graphql('Procedure.query.proceduresById');
+      // global.Log.graphql('Procedure.query.proceduresById');
       return ProcedureModel.find({ _id: { $in: ids } });
     },
 
@@ -461,7 +467,7 @@ const ProcedureApi: Resolvers = {
     },
 
     procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
-      global.Log.graphql('Procedure.query.procedure');
+      // global.Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // TODO fail here of procedure is null
       if (!procedure) {
@@ -476,7 +482,7 @@ const ProcedureApi: Resolvers = {
     },
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
-      global.Log.graphql('Procedure.query.searchProceduresAutocomplete');
+      // global.Log.graphql('Procedure.query.searchProceduresAutocomplete');
       const autocomplete: string[] = [];
 
       // Search by procedureID or Document id
@@ -555,7 +561,7 @@ const ProcedureApi: Resolvers = {
 
     // DEPRECATED
     searchProcedures: async (parent, { term }, { ProcedureModel }) => {
-      global.Log.graphql('Procedure.query.searchProcedures');
+      // global.Log.graphql('Procedure.query.searchProcedures');
       const { hits } = await elasticsearch.search<{ procedureId: string }>({
         index: 'procedures',
         type: 'procedure',
@@ -595,7 +601,7 @@ const ProcedureApi: Resolvers = {
     },
 
     notifiedProcedures: async (parent, args, { device, ProcedureModel }) => {
-      global.Log.graphql('Procedure.query.notifiedProcedures');
+      // global.Log.graphql('Procedure.query.notifiedProcedures');
       const procedures = await ProcedureModel.find({
         _id: { $in: device.notificationSettings.procedures },
       });
@@ -609,7 +615,7 @@ const ProcedureApi: Resolvers = {
 
   Procedure: {
     communityVotes: async (procedure, { constituencies }, { VoteModel }) => {
-      global.Log.graphql('Procedure.query.communityVotes');
+      // global.Log.graphql('Procedure.query.communityVotes');
       // Find global result(cache), not including constituencies
       const votesGlobal = await VoteModel.aggregate([
         // Find Procedure
@@ -720,7 +726,7 @@ const ProcedureApi: Resolvers = {
       return null;
     },
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
-      global.Log.graphql('Procedure.field.activityIndex');
+      // global.Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
       let { active } = procedure;
       if (active === undefined) {
@@ -739,7 +745,7 @@ const ProcedureApi: Resolvers = {
       };
     },
     voted: async (procedure, args, { VoteModel, device, phone }) => {
-      global.Log.graphql('Procedure.field.voted');
+      // global.Log.graphql('Procedure.field.voted');
       let { voted } = procedure;
 
       if (voted === undefined) {
@@ -759,19 +765,19 @@ const ProcedureApi: Resolvers = {
       return !!voted;
     },
     votedGovernment: procedure => {
-      global.Log.graphql('Procedure.field.votedGovernment');
+      // global.Log.graphql('Procedure.field.votedGovernment');
       return !!(
         procedure.voteResults &&
         (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
       );
     },
     completed: procedure => {
-      global.Log.graphql('Procedure.field.completed');
+      // global.Log.graphql('Procedure.field.completed');
       return PROCEDURE_STATES.COMPLETED.includes(procedure.currentStatus || '');
     },
     // DEPRECATED ListType 2019-01-29 use list instead
     listType: procedure => {
-      global.Log.graphql('Procedure.field.listType');
+      // global.Log.graphql('Procedure.field.listType');
       if (
         procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG ||
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
@@ -784,7 +790,7 @@ const ProcedureApi: Resolvers = {
       return ProcedureType.Preparation;
     },
     list: procedure => {
-      global.Log.graphql('Procedure.field.list');
+      // global.Log.graphql('Procedure.field.list');
       if (procedure.voteDate && new Date(procedure.voteDate) < new Date()) {
         return ListType.Past;
       }
@@ -800,6 +806,7 @@ const ProcedureApi: Resolvers = {
       return ListType.Preparation;
     },
     currentStatusHistory: ({ currentStatusHistory }) => {
+      // global.Log.graphql('Procedure.field.currentStatusHistory');
       const cleanHistory = [...new Set(currentStatusHistory)];
       const referStatusIndex = cleanHistory.findIndex(
         status => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
@@ -833,16 +840,8 @@ const ProcedureApi: Resolvers = {
     },
     // Propagate procedureId if present
     voteResults: ({ voteResults, procedureId }) => {
-      let partyVotes;
-      if (voteResults?.partyVotes) {
-        partyVotes = voteResults.partyVotes.map(pv => {
-          return {
-            ...pv,
-            main: pv.main as VoteSelection,
-          };
-        });
-      }
-      return { ...voteResults, partyVotes, procedureId };
+      global.Log.graphql('Procedure.field.voteResults');
+      return { ...voteResults, procedureId };
     },
   },
 };

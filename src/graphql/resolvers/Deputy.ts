@@ -1,8 +1,11 @@
 import { MongooseFilterQuery } from 'mongoose';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import DeputyModel from '../../models/Deputy';
-import { Resolvers } from '../../generated/graphql';
+import { Resolvers, VoteSelection } from '../../generated/graphql';
 import { IDeputy } from '../../migrations/4-schemas/Deputy';
+import { IProcedure } from '../../migrations/11-schemas/Procedure';
+import { reduce } from 'p-iteration';
+import { IDeputyVote } from '../../migrations/4-schemas/Deputy/Vote';
 
 const DeputyApi: Resolvers = {
   Query: {
@@ -25,6 +28,7 @@ const DeputyApi: Resolvers = {
       { ProcedureModel },
       info,
     ) => {
+      global.Log.graphql('Deputy.field.procedures');
       const requestedFields = parseResolveInfo(info);
       let didRequestProcedureId = false;
       if (
@@ -44,21 +48,32 @@ const DeputyApi: Resolvers = {
 
       // flattern procedureId's
       const procedureIdsSelected = filteredVotes.map(({ procedureId }) => procedureId);
+      console.log(procedureIdsSelected);
 
       // get needed procedure Data only from votes object
       if (didRequestProcedureId) {
-        const returnValue = filteredVotes.reduce<any>((prev, { procedureId, decision }) => {
-          const procedure = ProcedureModel.findOne({ procedureId });
-          if (procedure) {
-            const deputyProcedure = {
-              procedure,
-              decision,
-            };
+        const returnValue = reduce<
+          IDeputyVote,
+          {
+            procedure: IProcedure;
+            decision: VoteSelection;
+          }[]
+        >(
+          filteredVotes,
+          async (prev, { procedureId, decision }) => {
+            const procedure = await ProcedureModel.findOne({ procedureId });
+            if (procedure) {
+              const deputyProcedure = {
+                procedure,
+                decision,
+              };
 
-            return [...prev, deputyProcedure];
-          }
-          return prev;
-        }, []);
+              return [...prev, deputyProcedure];
+            }
+            return prev;
+          },
+          [],
+        ).then(r => r.slice(offset as number, (offset as number) + (pageSize as number)));
         // .slice(offset, offset + pageSize);
         return returnValue;
       }
