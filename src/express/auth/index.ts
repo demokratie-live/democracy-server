@@ -110,9 +110,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       const jwtUser: any = jwt.verify(token, CONFIG.AUTH_JWT_SECRET);
       const userid = jwtUser.user;
       // Set request variables
-      req.user = await UserModel.findOne({ _id: userid }).then(user =>
-        user ? user.toObject() : null,
-      );
+      req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
         req.device = await DeviceModel.findOne({ _id: req.user.device }).then(d =>
           d ? d : undefined,

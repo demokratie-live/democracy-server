@@ -4,11 +4,11 @@ import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bunde
 import { MongooseFilterQuery } from 'mongoose';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
-import resolvers from './index';
 import { Resolvers, VoteSelection } from '../../generated/graphql';
 import { GraphQlContext } from '../../types/graphqlContext';
 import { Vote } from '../../migrations/2-schemas/Vote';
 import { IDeputy } from '../../migrations/4-schemas/Deputy';
+import ActivityApi from './Activity';
 
 const queryVotes = async (
   _parent: any,
@@ -307,6 +307,7 @@ const VoteApi: Resolvers = {
       parent,
       { procedure: procedureId, selection, constituency },
       { VoteModel, ProcedureModel, ActivityModel, DeviceModel, device, phone, ...restContext },
+      info,
     ) => {
       global.Log.graphql('Vote.mutation.vote');
       // Find procedure
@@ -432,16 +433,26 @@ const VoteApi: Resolvers = {
       }
 
       // Increate Activity
-      await resolvers.Activity.Mutation.increaseActivity(
-        parent,
-        { procedureId },
-        {
-          ProcedureModel,
-          ActivityModel,
-          phone,
-          device,
-        },
-      );
+      if (
+        ActivityApi.Mutation &&
+        ActivityApi.Mutation.increaseActivity &&
+        typeof ActivityApi.Mutation.increaseActivity === 'function'
+      ) {
+        await ActivityApi.Mutation.increaseActivity(
+          parent,
+          { procedureId },
+          {
+            ProcedureModel,
+            ActivityModel,
+            VoteModel,
+            DeviceModel,
+            phone,
+            device,
+            ...restContext,
+          },
+          info,
+        );
+      }
 
       // Autosubscribe to Pushs for this Procedure & User if the user has the outcomePushs-Setting enabled
       if (device.notificationSettings.outcomePushs) {
