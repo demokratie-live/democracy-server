@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import moment from 'moment';
+import { forEachSeries } from 'p-iteration';
 
 // Definitions
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
@@ -190,7 +191,7 @@ const importProcedures = async (
       upsert: true,
       new: true,
     },
-  ).then(() => {
+  ).then(async () => {
     if (push) {
       // We have a vote result in new Procedure
       if (
@@ -202,7 +203,7 @@ const importProcedures = async (
       ) {
         // We have no old Procedure or no VoteResult on old Procedure
         if (importProcedure.procedureId && (!oldProcedure || !oldProcedure.voteResults)) {
-          quePushsOutcome(importProcedure.procedureId);
+          await quePushsOutcome(importProcedure.procedureId);
           // We have different values for VoteResult
         } else if (
           importProcedure.procedureId &&
@@ -213,7 +214,7 @@ const importProcedures = async (
             importProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
             importProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted)
         ) {
-          quePushsOutcome(importProcedure.procedureId);
+          await quePushsOutcome(importProcedure.procedureId);
         }
       }
     }
@@ -230,7 +231,7 @@ export default async () => {
   }
   await setCronStart({ name: CRON_NAME, startDate });
   // Last SuccessStartDate
-  let since = new Date();
+  let since: Date = new Date('1900');
   if (cron.lastSuccessStartDate) {
     since = new Date(cron.lastSuccessStartDate);
   }
@@ -244,28 +245,27 @@ export default async () => {
     while (!done) {
       // fetch
       const {
+        errors,
         data: { procedureUpdates },
-      } =
-        // eslint-disable-next-line no-await-in-loop
-        await client.query<ProcedureUpdates, ProcedureUpdatesVariables>({
-          query: getProcedureUpdates,
-          variables: { since, limit, offset },
-        });
+      } = await client.query<ProcedureUpdates, ProcedureUpdatesVariables>({
+        query: getProcedureUpdates,
+        variables: { since, limit, offset },
+      });
+
 
       if (procedureUpdates) {
         const { procedures } = procedureUpdates;
         if (procedures) {
           // handle results
-          procedures.map(data => {
+          await forEachSeries(procedures, async data => {
             if (
               data &&
               data.period === 19 &&
               (data.type === PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG ||
                 data.type === PROCEDURE_DEFINITIONS.TYPE.ANTRAG)
             ) {
-              importProcedures(data, { push: true });
+              await importProcedures(data, { push: true });
             }
-            return null;
           });
 
           // continue?
@@ -274,10 +274,12 @@ export default async () => {
           }
           offset += limit;
         }
-        // Update Cron - Success
-        await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
+      } else {
+        await setCronError({ name: CRON_NAME, error: JSON.stringify(errors) });
       }
     }
+    // Update Cron - Success
+    await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
   } catch (error) {
     global.Log.error(error);
     // If address is not reachable the query will throw
