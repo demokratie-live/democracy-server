@@ -48,7 +48,6 @@ const DeputyApi: Resolvers = {
 
       // flattern procedureId's
       const procedureIdsSelected = filteredVotes.map(({ procedureId }) => procedureId);
-      console.log(procedureIdsSelected);
 
       // get needed procedure Data only from votes object
       if (didRequestProcedureId) {

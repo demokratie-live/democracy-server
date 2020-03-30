@@ -35,7 +35,6 @@ const ProcedureApi: Resolvers = {
       { ProcedureModel, user, VoteModel, device, phone },
     ) => {
       // global.Log.graphql('Procedure.query.procedures');
-      console.log(listTypeParam, filter);
       let listTypes = listTypeParam as ListType[];
       if (type) {
         switch (type) {
@@ -270,11 +269,8 @@ const ProcedureApi: Resolvers = {
       return [...activeVotings, ...pastVotings];
     },
 
-    votedProcedures: async (parent, args, { VoteModel, phone, device, user }) => {
+    votedProcedures: async (parent, args, { VoteModel, phone, device }) => {
       // global.Log.graphql('Procedure.query.votedProcedures');
-      if (!user.isVerified()) {
-        return null;
-      }
 
       const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
       const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
@@ -840,7 +836,10 @@ const ProcedureApi: Resolvers = {
     },
     // Propagate procedureId if present
     voteResults: ({ voteResults, procedureId }) => {
-      global.Log.graphql('Procedure.field.voteResults');
+      // global.Log.graphql('Procedure.field.voteResults');
+      if (voteResults.yes === null || voteResults.no === null) {
+        return null;
+      }
       return { ...voteResults, procedureId };
     },
   },

@@ -476,8 +476,14 @@ const VoteApi: Resolvers = {
     },
   },
   VoteResult: {
-    governmentDecision: ({ yes, no }) =>
-      yes && no ? (yes > no ? VoteSelection.Yes : VoteSelection.No) : null,
+    governmentDecision: parent => {
+      const { yes, no } = parent;
+      if (typeof yes === 'number' && typeof no === 'number') {
+        return yes > no ? VoteSelection.Yes : VoteSelection.No;
+      }
+
+      throw new Error('ERROR in governmentDecision');
+    },
 
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
       global.Log.graphql('VoteResult.deputyVotes');

@@ -39,10 +39,10 @@ export default `
   }
 
   type Mutation {
-    requestCode(newPhone: String!, oldPhoneHash: String): CodeResult
-    requestVerification(code: String!, newPhoneHash: String!, newUser: Boolean): VerificationResult
+    requestCode(newPhone: String!, oldPhoneHash: String): CodeResult!
+    requestVerification(code: String!, newPhoneHash: String!, newUser: Boolean): VerificationResult!
 
-    addToken(token: String!, os: String!): TokenResult
+    addToken(token: String!, os: String!): TokenResult!
     
     ${/* DEPRECATED newVote & newPreperation: <= 1.22 Notification Settings */ ''}
     updateNotificationSettings(

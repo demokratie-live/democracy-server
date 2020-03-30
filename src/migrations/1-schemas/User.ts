@@ -2,11 +2,14 @@ import CONFIG from '../../config';
 import { Schema, Document } from 'mongoose';
 import { Phone } from '../3-schemas/Phone';
 import { Device } from '../12-schemas/Device';
+import { Timestamps } from '../schemas/timestapms';
 
-export interface User extends Document {
-  device?: Device | string;
-  phone?: Phone | string;
+export interface User extends Document, Timestamps {
+  device?: Device | string | null;
+  phone?: Phone | string | null;
   verified: boolean;
+
+  // methods
   isVerified: () => boolean;
 }
 

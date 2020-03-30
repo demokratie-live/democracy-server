@@ -54,6 +54,7 @@ export const permissions = shield(
       notificationSettings: isLoggedin,
       notifiedProcedures: isLoggedin,
       votes: isLoggedin,
+      votedProcedures: isVerified,
     },
     Mutation: {
       increaseActivity: isVerified,

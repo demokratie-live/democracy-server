@@ -48,16 +48,16 @@ export type CommunityConstituencyVotes = {
   yes: Scalars['Int'];
   no: Scalars['Int'];
   abstination: Scalars['Int'];
-  total?: Maybe<Scalars['Int']>;
+  total: Scalars['Int'];
 };
 
 export type CommunityVotes = {
   __typename?: 'CommunityVotes';
-  yes?: Maybe<Scalars['Int']>;
-  no?: Maybe<Scalars['Int']>;
-  abstination?: Maybe<Scalars['Int']>;
-  total?: Maybe<Scalars['Int']>;
-  constituencies?: Maybe<Array<Maybe<CommunityConstituencyVotes>>>;
+  yes: Scalars['Int'];
+  no: Scalars['Int'];
+  abstination: Scalars['Int'];
+  total: Scalars['Int'];
+  constituencies: Array<CommunityConstituencyVotes>;
 };
 
 export type ConferenceWeek = {
@@ -80,7 +80,7 @@ export type Deputy = {
   directCandidate?: Maybe<Scalars['Boolean']>;
   contact?: Maybe<DeputyContact>;
   totalProcedures?: Maybe<Scalars['Int']>;
-  procedures?: Maybe<Array<Maybe<DeputyProcedure>>>;
+  procedures: Array<DeputyProcedure>;
 };
 
 export type DeputyProceduresArgs = {
@@ -93,7 +93,7 @@ export type DeputyContact = {
   __typename?: 'DeputyContact';
   address?: Maybe<Scalars['String']>;
   email?: Maybe<Scalars['String']>;
-  links?: Maybe<Array<Maybe<DeputyLink>>>;
+  links: Array<DeputyLink>;
 };
 
 export type DeputyLink = {
@@ -105,20 +105,20 @@ export type DeputyLink = {
 export type DeputyProcedure = {
   __typename?: 'DeputyProcedure';
   decision: VoteSelection;
-  procedure?: Maybe<Procedure>;
+  procedure: Procedure;
 };
 
 export type DeputyVote = {
   __typename?: 'DeputyVote';
-  deputy?: Maybe<Deputy>;
-  decision?: Maybe<VoteSelection>;
+  deputy: Deputy;
+  decision: VoteSelection;
 };
 
 export type Deviants = {
   __typename?: 'Deviants';
-  yes?: Maybe<Scalars['Int']>;
-  abstination?: Maybe<Scalars['Int']>;
-  no?: Maybe<Scalars['Int']>;
+  yes: Scalars['Int'];
+  abstination: Scalars['Int'];
+  no: Scalars['Int'];
   notVoted?: Maybe<Scalars['Int']>;
 };
 
@@ -129,10 +129,10 @@ export type Device = {
 
 export type Document = {
   __typename?: 'Document';
-  editor?: Maybe<Scalars['String']>;
-  number?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
-  url?: Maybe<Scalars['String']>;
+  editor: Scalars['String'];
+  number: Scalars['String'];
+  type: Scalars['String'];
+  url: Scalars['String'];
 };
 
 export enum ListType {
@@ -147,14 +147,14 @@ export enum ListType {
 export type Mutation = {
   __typename?: 'Mutation';
   increaseActivity?: Maybe<ActivityIndex>;
-  requestCode?: Maybe<CodeResult>;
-  requestVerification?: Maybe<VerificationResult>;
-  addToken?: Maybe<TokenResult>;
+  requestCode: CodeResult;
+  requestVerification: VerificationResult;
+  addToken: TokenResult;
   updateNotificationSettings?: Maybe<NotificationSettings>;
   toggleNotification?: Maybe<Procedure>;
-  finishSearch?: Maybe<SearchTerm>;
+  finishSearch: SearchTerm;
   signUp?: Maybe<Auth>;
-  vote?: Maybe<Vote>;
+  vote: Vote;
 };
 
 export type MutationIncreaseActivityArgs = {
@@ -228,8 +228,8 @@ export type NotificationSettings = {
 export type PartyVote = {
   __typename?: 'PartyVote';
   party: Scalars['String'];
-  main?: Maybe<VoteSelection>;
-  deviants?: Maybe<Deviants>;
+  main: VoteSelection;
+  deviants: Deviants;
 };
 
 export type Procedure = {
@@ -237,22 +237,22 @@ export type Procedure = {
   _id: Scalars['ID'];
   title: Scalars['String'];
   procedureId: Scalars['String'];
-  type?: Maybe<Scalars['String']>;
+  type: Scalars['String'];
   period?: Maybe<Scalars['Int']>;
   currentStatus?: Maybe<Scalars['String']>;
   currentStatusHistory: Array<Scalars['String']>;
   abstract?: Maybe<Scalars['String']>;
-  tags?: Maybe<Array<Maybe<Scalars['String']>>>;
+  tags: Array<Scalars['String']>;
   voteDate?: Maybe<Scalars['Date']>;
   voteEnd?: Maybe<Scalars['Date']>;
   voteWeek?: Maybe<Scalars['Int']>;
   voteYear?: Maybe<Scalars['Int']>;
   sessionTOPHeading?: Maybe<Scalars['String']>;
-  subjectGroups?: Maybe<Array<Scalars['String']>>;
+  subjectGroups: Array<Scalars['String']>;
   submissionDate?: Maybe<Scalars['Date']>;
   activityIndex: ActivityIndex;
   votes: Scalars['Int'];
-  importantDocuments?: Maybe<Array<Maybe<Document>>>;
+  importantDocuments: Array<Document>;
   voteResults?: Maybe<VoteResult>;
   communityVotes?: Maybe<CommunityVotes>;
   voted: Scalars['Boolean'];
@@ -270,16 +270,16 @@ export type ProcedureCommunityVotesArgs = {
 };
 
 export type ProcedureFilter = {
-  subjectGroups?: Maybe<Array<Maybe<Scalars['String']>>>;
-  status?: Maybe<Array<Maybe<Scalars['String']>>>;
-  type?: Maybe<Array<Maybe<Scalars['String']>>>;
-  activity?: Maybe<Array<Maybe<Scalars['String']>>>;
+  subjectGroups?: Maybe<Array<Scalars['String']>>;
+  status?: Maybe<Array<Scalars['String']>>;
+  type?: Maybe<Array<Scalars['String']>>;
+  activity?: Maybe<Array<Scalars['String']>>;
 };
 
 export type ProceduresHavingVoteResults = {
   __typename?: 'ProceduresHavingVoteResults';
-  total?: Maybe<Scalars['Int']>;
-  procedures?: Maybe<Array<Maybe<Procedure>>>;
+  total: Scalars['Int'];
+  procedures: Array<Procedure>;
 };
 
 export enum ProcedureType {
@@ -291,26 +291,26 @@ export enum ProcedureType {
 }
 
 export type ProcedureWomFilter = {
-  subjectGroups?: Maybe<Array<Maybe<Scalars['String']>>>;
+  subjectGroups: Array<Scalars['String']>;
 };
 
 export type Query = {
   __typename?: 'Query';
   activityIndex?: Maybe<ActivityIndex>;
   currentConferenceWeek: ConferenceWeek;
-  deputiesOfConstituency?: Maybe<Array<Maybe<Deputy>>>;
+  deputiesOfConstituency: Array<Deputy>;
   notificationSettings?: Maybe<NotificationSettings>;
-  procedure?: Maybe<Procedure>;
+  procedure: Procedure;
   procedures: Array<Procedure>;
-  proceduresById?: Maybe<Array<Maybe<Procedure>>>;
-  proceduresByIdHavingVoteResults?: Maybe<ProceduresHavingVoteResults>;
-  notifiedProcedures?: Maybe<Array<Maybe<Procedure>>>;
+  proceduresById: Array<Procedure>;
+  proceduresByIdHavingVoteResults: ProceduresHavingVoteResults;
+  notifiedProcedures: Array<Procedure>;
   /** @deprecated use searchProceduresAutocomplete */
-  searchProcedures?: Maybe<Array<Maybe<Procedure>>>;
-  searchProceduresAutocomplete?: Maybe<SearchProcedures>;
-  votedProcedures?: Maybe<Array<Maybe<Procedure>>>;
-  proceduresWithVoteResults?: Maybe<Array<Maybe<Procedure>>>;
-  mostSearched?: Maybe<Array<Maybe<SearchTerm>>>;
+  searchProcedures: Array<Procedure>;
+  searchProceduresAutocomplete: SearchProcedures;
+  votedProcedures: Array<Procedure>;
+  proceduresWithVoteResults: Array<Procedure>;
+  mostSearched: Array<SearchTerm>;
   me?: Maybe<User>;
   votes?: Maybe<Vote>;
   communityVotes?: Maybe<CommunityVotes>;
@@ -382,13 +382,13 @@ export type Schema = {
 
 export type SearchProcedures = {
   __typename?: 'SearchProcedures';
-  procedures?: Maybe<Array<Maybe<Procedure>>>;
-  autocomplete?: Maybe<Array<Maybe<Scalars['String']>>>;
+  procedures: Array<Procedure>;
+  autocomplete: Array<Scalars['String']>;
 };
 
 export type SearchTerm = {
   __typename?: 'SearchTerm';
-  term?: Maybe<Scalars['String']>;
+  term: Scalars['String'];
 };
 
 export type TokenResult = {
@@ -413,7 +413,7 @@ export type VerificationResult = {
 export type Vote = {
   __typename?: 'Vote';
   _id: Scalars['ID'];
-  voted?: Maybe<Scalars['Boolean']>;
+  voted: Scalars['Boolean'];
   voteResults?: Maybe<CommunityVotes>;
 };
 
@@ -429,18 +429,18 @@ export enum VotedTimeSpan {
 
 export type VoteResult = {
   __typename?: 'VoteResult';
-  procedureId?: Maybe<Scalars['String']>;
-  yes?: Maybe<Scalars['Int']>;
-  no?: Maybe<Scalars['Int']>;
-  abstination?: Maybe<Scalars['Int']>;
+  procedureId: Scalars['String'];
+  yes: Scalars['Int'];
+  no: Scalars['Int'];
+  abstination: Scalars['Int'];
   notVoted?: Maybe<Scalars['Int']>;
   /** @deprecated Field no longer supported */
   notVote?: Maybe<Scalars['Int']>;
-  governmentDecision?: Maybe<VoteSelection>;
+  governmentDecision: VoteSelection;
   decisionText?: Maybe<Scalars['String']>;
-  namedVote?: Maybe<Scalars['Boolean']>;
+  namedVote: Scalars['Boolean'];
   partyVotes: Array<PartyVote>;
-  deputyVotes?: Maybe<Array<Maybe<DeputyVote>>>;
+  deputyVotes: Array<DeputyVote>;
 };
 
 export type VoteResultDeputyVotesArgs = {
@@ -457,8 +457,8 @@ export enum VoteSelection {
 
 export type VoteStatistic = {
   __typename?: 'VoteStatistic';
-  proceduresCount?: Maybe<Scalars['Int']>;
-  votedProcedures?: Maybe<Scalars['Int']>;
+  proceduresCount: Scalars['Int'];
+  votedProcedures: Scalars['Int'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -558,24 +558,20 @@ export type ResolversTypes = {
   DeputyContact: ResolverTypeWrapper<DeepPartial<DeputyContact>>;
   DeputyLink: ResolverTypeWrapper<DeepPartial<DeputyLink>>;
   DeputyProcedure: ResolverTypeWrapper<
-    DeepPartial<
-      Omit<DeputyProcedure, 'procedure'> & { procedure?: Maybe<ResolversTypes['Procedure']> }
-    >
+    DeepPartial<Omit<DeputyProcedure, 'procedure'> & { procedure: ResolversTypes['Procedure'] }>
   >;
   VoteSelection: ResolverTypeWrapper<DeepPartial<VoteSelection>>;
   Procedure: ResolverTypeWrapper<IProcedure>;
   Document: ResolverTypeWrapper<DeepPartial<Document>>;
   VoteResult: ResolverTypeWrapper<
     DeepPartial<
-      Omit<VoteResult, 'deputyVotes'> & {
-        deputyVotes?: Maybe<Array<Maybe<ResolversTypes['DeputyVote']>>>;
-      }
+      Omit<VoteResult, 'deputyVotes'> & { deputyVotes: Array<ResolversTypes['DeputyVote']> }
     >
   >;
   PartyVote: ResolverTypeWrapper<DeepPartial<PartyVote>>;
   Deviants: ResolverTypeWrapper<DeepPartial<Deviants>>;
   DeputyVote: ResolverTypeWrapper<
-    DeepPartial<Omit<DeputyVote, 'deputy'> & { deputy?: Maybe<ResolversTypes['Deputy']> }>
+    DeepPartial<Omit<DeputyVote, 'deputy'> & { deputy: ResolversTypes['Deputy'] }>
   >;
   CommunityVotes: ResolverTypeWrapper<DeepPartial<CommunityVotes>>;
   CommunityConstituencyVotes: ResolverTypeWrapper<DeepPartial<CommunityConstituencyVotes>>;
@@ -588,15 +584,13 @@ export type ResolversTypes = {
   ProceduresHavingVoteResults: ResolverTypeWrapper<
     DeepPartial<
       Omit<ProceduresHavingVoteResults, 'procedures'> & {
-        procedures?: Maybe<Array<Maybe<ResolversTypes['Procedure']>>>;
+        procedures: Array<ResolversTypes['Procedure']>;
       }
     >
   >;
   SearchProcedures: ResolverTypeWrapper<
     DeepPartial<
-      Omit<SearchProcedures, 'procedures'> & {
-        procedures?: Maybe<Array<Maybe<ResolversTypes['Procedure']>>>;
-      }
+      Omit<SearchProcedures, 'procedures'> & { procedures: Array<ResolversTypes['Procedure']> }
     >
   >;
   SearchTerm: ResolverTypeWrapper<DeepPartial<SearchTerm>>;
@@ -629,21 +623,17 @@ export type ResolversParentTypes = {
   DeputyContact: DeepPartial<DeputyContact>;
   DeputyLink: DeepPartial<DeputyLink>;
   DeputyProcedure: DeepPartial<
-    Omit<DeputyProcedure, 'procedure'> & { procedure?: Maybe<ResolversParentTypes['Procedure']> }
+    Omit<DeputyProcedure, 'procedure'> & { procedure: ResolversParentTypes['Procedure'] }
   >;
   VoteSelection: DeepPartial<VoteSelection>;
   Procedure: IProcedure;
   Document: DeepPartial<Document>;
   VoteResult: DeepPartial<
-    Omit<VoteResult, 'deputyVotes'> & {
-      deputyVotes?: Maybe<Array<Maybe<ResolversParentTypes['DeputyVote']>>>;
-    }
+    Omit<VoteResult, 'deputyVotes'> & { deputyVotes: Array<ResolversParentTypes['DeputyVote']> }
   >;
   PartyVote: DeepPartial<PartyVote>;
   Deviants: DeepPartial<Deviants>;
-  DeputyVote: DeepPartial<
-    Omit<DeputyVote, 'deputy'> & { deputy?: Maybe<ResolversParentTypes['Deputy']> }
-  >;
+  DeputyVote: DeepPartial<Omit<DeputyVote, 'deputy'> & { deputy: ResolversParentTypes['Deputy'] }>;
   CommunityVotes: DeepPartial<CommunityVotes>;
   CommunityConstituencyVotes: DeepPartial<CommunityConstituencyVotes>;
   ProcedureType: DeepPartial<ProcedureType>;
@@ -654,13 +644,11 @@ export type ResolversParentTypes = {
   ProcedureWOMFilter: DeepPartial<ProcedureWomFilter>;
   ProceduresHavingVoteResults: DeepPartial<
     Omit<ProceduresHavingVoteResults, 'procedures'> & {
-      procedures?: Maybe<Array<Maybe<ResolversParentTypes['Procedure']>>>;
+      procedures: Array<ResolversParentTypes['Procedure']>;
     }
   >;
   SearchProcedures: DeepPartial<
-    Omit<SearchProcedures, 'procedures'> & {
-      procedures?: Maybe<Array<Maybe<ResolversParentTypes['Procedure']>>>;
-    }
+    Omit<SearchProcedures, 'procedures'> & { procedures: Array<ResolversParentTypes['Procedure']> }
   >;
   SearchTerm: DeepPartial<SearchTerm>;
   User: DeepPartial<User>;
@@ -794,7 +782,7 @@ export type CommunityConstituencyVotesResolvers<
   yes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   no?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   abstination?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -802,12 +790,12 @@ export type CommunityVotesResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['CommunityVotes'] = ResolversParentTypes['CommunityVotes']
 > = {
-  yes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  no?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  abstination?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  yes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  no?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  abstination?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   constituencies?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['CommunityConstituencyVotes']>>>,
+    Array<ResolversTypes['CommunityConstituencyVotes']>,
     ParentType,
     ContextType
   >;
@@ -844,7 +832,7 @@ export type DeputyResolvers<
   contact?: Resolver<Maybe<ResolversTypes['DeputyContact']>, ParentType, ContextType>;
   totalProcedures?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   procedures?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['DeputyProcedure']>>>,
+    Array<ResolversTypes['DeputyProcedure']>,
     ParentType,
     ContextType,
     RequireFields<DeputyProceduresArgs, never>
@@ -858,7 +846,7 @@ export type DeputyContactResolvers<
 > = {
   address?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  links?: Resolver<Maybe<Array<Maybe<ResolversTypes['DeputyLink']>>>, ParentType, ContextType>;
+  links?: Resolver<Array<ResolversTypes['DeputyLink']>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -876,7 +864,7 @@ export type DeputyProcedureResolvers<
   ParentType extends ResolversParentTypes['DeputyProcedure'] = ResolversParentTypes['DeputyProcedure']
 > = {
   decision?: Resolver<ResolversTypes['VoteSelection'], ParentType, ContextType>;
-  procedure?: Resolver<Maybe<ResolversTypes['Procedure']>, ParentType, ContextType>;
+  procedure?: Resolver<ResolversTypes['Procedure'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -884,8 +872,8 @@ export type DeputyVoteResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['DeputyVote'] = ResolversParentTypes['DeputyVote']
 > = {
-  deputy?: Resolver<Maybe<ResolversTypes['Deputy']>, ParentType, ContextType>;
-  decision?: Resolver<Maybe<ResolversTypes['VoteSelection']>, ParentType, ContextType>;
+  deputy?: Resolver<ResolversTypes['Deputy'], ParentType, ContextType>;
+  decision?: Resolver<ResolversTypes['VoteSelection'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -893,9 +881,9 @@ export type DeviantsResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['Deviants'] = ResolversParentTypes['Deviants']
 > = {
-  yes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  abstination?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  no?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  yes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  abstination?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  no?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   notVoted?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
@@ -916,10 +904,10 @@ export type DocumentResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['Document'] = ResolversParentTypes['Document']
 > = {
-  editor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  number?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  editor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  number?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -934,19 +922,19 @@ export type MutationResolvers<
     RequireFields<MutationIncreaseActivityArgs, 'procedureId'>
   >;
   requestCode?: Resolver<
-    Maybe<ResolversTypes['CodeResult']>,
+    ResolversTypes['CodeResult'],
     ParentType,
     ContextType,
     RequireFields<MutationRequestCodeArgs, 'newPhone'>
   >;
   requestVerification?: Resolver<
-    Maybe<ResolversTypes['VerificationResult']>,
+    ResolversTypes['VerificationResult'],
     ParentType,
     ContextType,
     RequireFields<MutationRequestVerificationArgs, 'code' | 'newPhoneHash'>
   >;
   addToken?: Resolver<
-    Maybe<ResolversTypes['TokenResult']>,
+    ResolversTypes['TokenResult'],
     ParentType,
     ContextType,
     RequireFields<MutationAddTokenArgs, 'token' | 'os'>
@@ -964,7 +952,7 @@ export type MutationResolvers<
     RequireFields<MutationToggleNotificationArgs, 'procedureId'>
   >;
   finishSearch?: Resolver<
-    Maybe<ResolversTypes['SearchTerm']>,
+    ResolversTypes['SearchTerm'],
     ParentType,
     ContextType,
     RequireFields<MutationFinishSearchArgs, 'term'>
@@ -976,7 +964,7 @@ export type MutationResolvers<
     RequireFields<MutationSignUpArgs, 'deviceHashEncrypted'>
   >;
   vote?: Resolver<
-    Maybe<ResolversTypes['Vote']>,
+    ResolversTypes['Vote'],
     ParentType,
     ContextType,
     RequireFields<MutationVoteArgs, 'procedure' | 'selection'>
@@ -1005,8 +993,8 @@ export type PartyVoteResolvers<
   ParentType extends ResolversParentTypes['PartyVote'] = ResolversParentTypes['PartyVote']
 > = {
   party?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  main?: Resolver<Maybe<ResolversTypes['VoteSelection']>, ParentType, ContextType>;
-  deviants?: Resolver<Maybe<ResolversTypes['Deviants']>, ParentType, ContextType>;
+  main?: Resolver<ResolversTypes['VoteSelection'], ParentType, ContextType>;
+  deviants?: Resolver<ResolversTypes['Deviants'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -1017,26 +1005,22 @@ export type ProcedureResolvers<
   _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   procedureId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   currentStatus?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   currentStatusHistory?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   abstract?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+  tags?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   voteDate?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   voteEnd?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   voteWeek?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   voteYear?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   sessionTOPHeading?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  subjectGroups?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  subjectGroups?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   submissionDate?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   activityIndex?: Resolver<ResolversTypes['ActivityIndex'], ParentType, ContextType>;
   votes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  importantDocuments?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Document']>>>,
-    ParentType,
-    ContextType
-  >;
+  importantDocuments?: Resolver<Array<ResolversTypes['Document']>, ParentType, ContextType>;
   voteResults?: Resolver<Maybe<ResolversTypes['VoteResult']>, ParentType, ContextType>;
   communityVotes?: Resolver<
     Maybe<ResolversTypes['CommunityVotes']>,
@@ -1058,8 +1042,8 @@ export type ProceduresHavingVoteResultsResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['ProceduresHavingVoteResults'] = ResolversParentTypes['ProceduresHavingVoteResults']
 > = {
-  total?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  procedures?: Resolver<Maybe<Array<Maybe<ResolversTypes['Procedure']>>>, ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  procedures?: Resolver<Array<ResolversTypes['Procedure']>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -1075,7 +1059,7 @@ export type QueryResolvers<
   >;
   currentConferenceWeek?: Resolver<ResolversTypes['ConferenceWeek'], ParentType, ContextType>;
   deputiesOfConstituency?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Deputy']>>>,
+    Array<ResolversTypes['Deputy']>,
     ParentType,
     ContextType,
     RequireFields<QueryDeputiesOfConstituencyArgs, 'constituency'>
@@ -1086,7 +1070,7 @@ export type QueryResolvers<
     ContextType
   >;
   procedure?: Resolver<
-    Maybe<ResolversTypes['Procedure']>,
+    ResolversTypes['Procedure'],
     ParentType,
     ContextType,
     RequireFields<QueryProcedureArgs, 'id'>
@@ -1098,50 +1082,38 @@ export type QueryResolvers<
     RequireFields<QueryProceduresArgs, never>
   >;
   proceduresById?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Procedure']>>>,
+    Array<ResolversTypes['Procedure']>,
     ParentType,
     ContextType,
     RequireFields<QueryProceduresByIdArgs, 'ids'>
   >;
   proceduresByIdHavingVoteResults?: Resolver<
-    Maybe<ResolversTypes['ProceduresHavingVoteResults']>,
+    ResolversTypes['ProceduresHavingVoteResults'],
     ParentType,
     ContextType,
     RequireFields<QueryProceduresByIdHavingVoteResultsArgs, never>
   >;
-  notifiedProcedures?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Procedure']>>>,
-    ParentType,
-    ContextType
-  >;
+  notifiedProcedures?: Resolver<Array<ResolversTypes['Procedure']>, ParentType, ContextType>;
   searchProcedures?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Procedure']>>>,
+    Array<ResolversTypes['Procedure']>,
     ParentType,
     ContextType,
     RequireFields<QuerySearchProceduresArgs, 'term'>
   >;
   searchProceduresAutocomplete?: Resolver<
-    Maybe<ResolversTypes['SearchProcedures']>,
+    ResolversTypes['SearchProcedures'],
     ParentType,
     ContextType,
     RequireFields<QuerySearchProceduresAutocompleteArgs, 'term'>
   >;
-  votedProcedures?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Procedure']>>>,
-    ParentType,
-    ContextType
-  >;
+  votedProcedures?: Resolver<Array<ResolversTypes['Procedure']>, ParentType, ContextType>;
   proceduresWithVoteResults?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['Procedure']>>>,
+    Array<ResolversTypes['Procedure']>,
     ParentType,
     ContextType,
     RequireFields<QueryProceduresWithVoteResultsArgs, 'procedureIds'>
   >;
-  mostSearched?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['SearchTerm']>>>,
-    ParentType,
-    ContextType
-  >;
+  mostSearched?: Resolver<Array<ResolversTypes['SearchTerm']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   votes?: Resolver<
     Maybe<ResolversTypes['Vote']>,
@@ -1170,8 +1142,8 @@ export type SearchProceduresResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['SearchProcedures'] = ResolversParentTypes['SearchProcedures']
 > = {
-  procedures?: Resolver<Maybe<Array<Maybe<ResolversTypes['Procedure']>>>, ParentType, ContextType>;
-  autocomplete?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+  procedures?: Resolver<Array<ResolversTypes['Procedure']>, ParentType, ContextType>;
+  autocomplete?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -1179,7 +1151,7 @@ export type SearchTermResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['SearchTerm'] = ResolversParentTypes['SearchTerm']
 > = {
-  term?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  term?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 
@@ -1215,7 +1187,7 @@ export type VoteResolvers<
   ParentType extends ResolversParentTypes['Vote'] = ResolversParentTypes['Vote']
 > = {
   _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  voted?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  voted?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   voteResults?: Resolver<Maybe<ResolversTypes['CommunityVotes']>, ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
@@ -1224,18 +1196,18 @@ export type VoteResultResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['VoteResult'] = ResolversParentTypes['VoteResult']
 > = {
-  procedureId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  yes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  no?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  abstination?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  procedureId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  yes?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  no?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  abstination?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   notVoted?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   notVote?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  governmentDecision?: Resolver<Maybe<ResolversTypes['VoteSelection']>, ParentType, ContextType>;
+  governmentDecision?: Resolver<ResolversTypes['VoteSelection'], ParentType, ContextType>;
   decisionText?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  namedVote?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  namedVote?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   partyVotes?: Resolver<Array<ResolversTypes['PartyVote']>, ParentType, ContextType>;
   deputyVotes?: Resolver<
-    Maybe<Array<Maybe<ResolversTypes['DeputyVote']>>>,
+    Array<ResolversTypes['DeputyVote']>,
     ParentType,
     ContextType,
     RequireFields<VoteResultDeputyVotesArgs, never>
@@ -1247,8 +1219,8 @@ export type VoteStatisticResolvers<
   ContextType = GraphQlContext,
   ParentType extends ResolversParentTypes['VoteStatistic'] = ResolversParentTypes['VoteStatistic']
 > = {
-  proceduresCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  votedProcedures?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  proceduresCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  votedProcedures?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: isTypeOfResolverFn<ParentType>;
 };
 

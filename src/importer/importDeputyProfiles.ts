@@ -86,6 +86,7 @@ export default async () => {
     // Update Cron - Success
     await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
   } catch (error) {
+    global.Log.error(error);
     // If address is not reachable the query will throw
     await setCronError({ name: CRON_NAME, error: JSON.stringify(error) });
   }

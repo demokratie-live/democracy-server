@@ -7,7 +7,7 @@ import { migrate } from '../../migrations/scripts';
 export default async () => {
   await migrate().catch(err => {
     // global.Log the original error
-    global.Log.error(err.stack);
+    global.Log.error(err);
     // throw own error
     throw new Error('Migration not successful - I die now!');
   });

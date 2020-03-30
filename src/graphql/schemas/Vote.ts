@@ -12,62 +12,62 @@ export default `
     yes: Int!
     no: Int!
     abstination: Int!
-    total: Int
+    total: Int!
   }
 
   type CommunityVotes {
-    yes: Int
-    no: Int
-    abstination: Int
-    total: Int
-    constituencies: [CommunityConstituencyVotes]
+    yes: Int!
+    no: Int!
+    abstination: Int!
+    total: Int!
+    constituencies: [CommunityConstituencyVotes!]!
   }
 
   type DeputyVote {
-    deputy: Deputy
-    decision: VoteSelection
+    deputy: Deputy!
+    decision: VoteSelection!
   }
 
   type VoteResult {
-    procedureId: String
-    yes: Int
-    no: Int
-    abstination: Int
+    procedureId: String!
+    yes: Int!
+    no: Int!
+    abstination: Int!
     notVoted: Int
     notVote: Int @deprecated
-    governmentDecision: VoteSelection
+    governmentDecision: VoteSelection!
     decisionText: String
-    namedVote: Boolean
+    namedVote: Boolean!
     partyVotes: [PartyVote!]!
-    deputyVotes(constituencies: [String!], directCandidate: Boolean): [DeputyVote]
+    deputyVotes(constituencies: [String!], directCandidate: Boolean): [DeputyVote!]!
   }
 
   type PartyVote {
     party: String!
-    main: VoteSelection
-    deviants: Deviants
+    main: VoteSelection!
+    deviants: Deviants!
   }
 
   type Deviants {
-    yes: Int
-    abstination: Int
-    no: Int
+    yes: Int!
+    abstination: Int!
+    no: Int!
     notVoted: Int
   }
 
   type Vote {
     _id: ID!
-    voted: Boolean
+    voted: Boolean!
     voteResults: CommunityVotes
   }
 
   type VoteStatistic {
-    proceduresCount: Int
-    votedProcedures: Int
+    proceduresCount: Int!
+    votedProcedures: Int!
   }
   
   type Mutation {
-    vote(procedure: ID!, selection: VoteSelection!, constituency: String): Vote
+    vote(procedure: ID!, selection: VoteSelection!, constituency: String): Vote!
   }
   
 

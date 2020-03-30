@@ -10,6 +10,7 @@ export const testCronTime = (time?: string) => {
   try {
     new CronTime(time);
   } catch (e) {
+    global.Log.error(e);
     return false;
   }
   return true;

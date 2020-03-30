@@ -40,6 +40,7 @@ const refreshTokens = async (refreshToken: string) => {
   try {
     jwt.verify(refreshToken, CONFIG.AUTH_JWT_SECRET);
   } catch (err) {
+    global.Log.error(err);
     return {};
   }
   // Decode Token
@@ -56,7 +57,7 @@ const refreshTokens = async (refreshToken: string) => {
   if (!user) {
     return {};
   }
-  global.Log.jwt(`JWT: Token Refresh for User: ${user._id}`);
+  // global.Log.jwt(`JWT: Token Refresh for User: ${user._id}`);
   // Generate new Tokens
   const [newToken, newRefreshToken] = await createTokens(user._id);
   return {
@@ -98,26 +99,26 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
   const phoneHash: string | null =
     req.headers['x-phone-hash'] || (CONFIG.DEBUG ? req.query.phoneHash || null : null);
   if (deviceHash || phoneHash) {
-    global.Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
+    // global.Log.jwt(`JWT: Credentials with DeviceHash(${deviceHash}) PhoneHash(${phoneHash})`);
   }
 
   let success = false;
   // Check existing JWT Session
   // If Credentials are also present use them instead
   if (token && !deviceHash) {
-    global.Log.jwt(`JWT: Token: ${token}`);
+    // global.Log.jwt(`JWT: Token: ${token}`);
     try {
       const jwtUser: any = jwt.verify(token, CONFIG.AUTH_JWT_SECRET);
       const userid = jwtUser.user;
       // Set request variables
       req.user = await UserModel.findOne({ _id: userid });
       if (req.user) {
-        req.device = await DeviceModel.findOne({ _id: req.user.device }).then(d =>
-          d ? d : undefined,
-        );
-        req.phone = await PhoneModel.findOne({ _id: req.user.phone }).then(p =>
-          p ? p : undefined,
-        );
+        if (req.user.device) {
+          req.device = await DeviceModel.findOne({ _id: req.user.device });
+        }
+        if (req.user.phone) {
+          req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+        }
         // Set new timestamps
         req.user.markModified('updatedAt');
         await req.user.save();
@@ -131,8 +132,9 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         }
       }
       success = true;
-      global.Log.jwt(`JWT: Token valid: ${token}`);
+      // global.Log.jwt(`JWT: Token valid: ${token}`);
     } catch (err) {
+      global.Log.error(err);
       // Check for JWT Refresh Ability
       global.Log.jwt(`JWT: Token Error: ${err}`);
       const refreshToken =
@@ -143,12 +145,12 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         // Set request variables
         req.user = newTokens.user;
         if (req.user) {
-          req.device = await DeviceModel.findOne({ _id: req.user.device }).then(d =>
-            d ? d : undefined,
-          );
-          req.phone = await PhoneModel.findOne({ _id: req.user.phone }).then(p =>
-            p ? p : undefined,
-          );
+          if (req.user.device) {
+            req.device = await DeviceModel.findOne({ _id: req.user.device });
+          }
+          if (req.user.phone) {
+            req.phone = await PhoneModel.findOne({ _id: req.user.phone });
+          }
           // Set new timestamps
           req.user.markModified('updatedAt');
           await req.user.save();
@@ -162,8 +164,8 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
           }
         }
         success = true;
-        global.Log.jwt(`JWT: Token Refresh (t): ${newTokens.token}`);
-        global.Log.jwt(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
+        // global.Log.jwt(`JWT: Token Refresh (t): ${newTokens.token}`);
+        // global.Log.jwt(`JWT: Token Refresh (r): ${newTokens.refreshToken}`);
       }
     }
   }
@@ -173,7 +175,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
     let device: Device | null = null;
     let phone: Phone | null = null;
     if (deviceHash) {
-      global.Log.jwt('JWT: Credentials present');
+      // global.Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
         deviceHash: crypto
@@ -189,9 +191,9 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
               .digest('hex'),
           })
         : null;
-      user = await UserModel.findOne({ device: device?._id, phone: phone?._id });
+      user = await UserModel.findOne({ device: device, phone: phone });
       if (!user) {
-        global.Log.jwt('JWT: Create new User');
+        // global.Log.jwt('JWT: Create new User');
         // Device
         if (!device) {
           device = new DeviceModel({
@@ -207,7 +209,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         user = new UserModel({ device, phone });
         await user.save();
       }
-      global.Log.jwt(`JWT: Token New for User: ${user._id}`);
+      // global.Log.jwt(`JWT: Token New for User: ${user._id}`);
       const [createToken, createRefreshToken] = await createTokens(user._id);
       headerToken({ res, token: createToken, refreshToken: createRefreshToken });
       // Set new timestamps
@@ -221,8 +223,8 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         phone.markModified('updatedAt');
         await phone.save();
       }
-      global.Log.jwt(`JWT: Token New (t): ${createToken}`);
-      global.Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
+      // global.Log.jwt(`JWT: Token New (t): ${createToken}`);
+      // global.Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
     }
     // Set request variables
     req.user = user;
