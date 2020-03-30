@@ -1,4 +1,5 @@
 import { unionBy } from 'lodash';
+import { forEachSeries } from 'p-iteration';
 
 // GraphQL
 import createClient from '../graphql/client';
@@ -53,11 +54,11 @@ export default async () => {
         const { namedPolls } = namedPollUpdates;
         if (namedPolls) {
           // handle results
-          namedPolls.map(data => {
+          await forEachSeries(namedPolls, data => {
             // procedureId is not necessarily present
             if (data?.procedureId && data.votes && data.votes.deputies) {
               // parse every deputies vote
-              data.votes.deputies.map(async voteData => {
+              data.votes.deputies.forEach(async voteData => {
                 if (voteData && data.votes) {
                   let decision;
                   switch (voteData.vote) {
@@ -98,7 +99,7 @@ export default async () => {
         }
 
         // Insert Data
-        Object.keys(updates).map(async deputyWebId => {
+        forEachSeries(Object.keys(updates), async deputyWebId => {
           // TODO try to update deputy without fetching. z.B. with aggregation setUnion
           const deputy = await DeputyModel.findOne({ webId: deputyWebId });
           if (deputy) {

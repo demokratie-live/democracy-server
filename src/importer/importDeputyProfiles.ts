@@ -8,6 +8,7 @@ import {
   DeputyUpdatesVariables,
 } from '../graphql/queries/__generated__/DeputyUpdates';
 import { nullToUndefined } from './importProcedures';
+import { forEachSeries } from 'p-iteration';
 
 export const CRON_NAME = 'DeputyProfiles';
 
@@ -46,7 +47,7 @@ export default async () => {
         const { deputies } = deputyUpdates;
         if (deputies) {
           // handle results
-          deputies.map(async data => {
+          await forEachSeries(deputies, async data => {
             if (data) {
               const deputy = {
                 webId: data.webId,
@@ -72,7 +73,6 @@ export default async () => {
                 { upsert: true },
               );
             }
-            return null;
           });
 
           // continue?

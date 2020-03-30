@@ -88,10 +88,7 @@ const DeputyApi: Resolvers = {
           title: 1,
         })
         .limit(pageSize || 9999999)
-        .skip(offset)
-        .map(p => {
-          return p;
-        });
+        .skip(offset);
 
       const result = await Promise.all(
         procedures.map(async procedure => {
