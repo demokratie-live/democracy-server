@@ -180,15 +180,21 @@ export default async () => {
       // fetch
       const {
         data: {
-          procedureUpdates: { procedures },
+          procedureUpdates: { procedures, beforeCount, afterCount },
         },
       } =
         // eslint-disable-next-line no-await-in-loop
         await client.query({
           query: getProcedureUpdates,
-          variables: { since, limit, offset, associated },
+          variables: {
+            since,
+            limit,
+            offset,
+            associated,
+            periods: [19],
+            types: [PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG, PROCEDURE_DEFINITIONS.TYPE.ANTRAG],
+          },
         });
-
       // handle results
       procedures.map(data => {
         if (
