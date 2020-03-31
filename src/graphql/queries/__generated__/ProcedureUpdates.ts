@@ -125,4 +125,6 @@ export interface ProcedureUpdatesVariables {
   since: any;
   limit?: number | null;
   offset?: number | null;
+  periods?: number[] | null;
+  types?: string[] | null;
 }

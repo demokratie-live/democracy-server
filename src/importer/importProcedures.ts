@@ -249,12 +249,18 @@ export default async () => {
         data: { procedureUpdates },
       } = await client.query<ProcedureUpdates, ProcedureUpdatesVariables>({
         query: getProcedureUpdates,
-        variables: { since, limit, offset },
+        variables: {
+          since,
+          limit,
+          offset,
+          periods: [19],
+          types: [PROCEDURE_DEFINITIONS.TYPE.GESETZGEBUNG, PROCEDURE_DEFINITIONS.TYPE.ANTRAG],
+        },
       });
-
 
       if (procedureUpdates) {
         const { procedures } = procedureUpdates;
+
         if (procedures) {
           // handle results
           await forEachSeries(procedures, async data => {

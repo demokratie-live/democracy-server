@@ -1,8 +1,20 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query ProcedureUpdates($since: Date!, $limit: Int, $offset: Int) {
-    procedureUpdates(since: $since, limit: $limit, offset: $offset) {
+  query ProcedureUpdates(
+    $since: Date!
+    $limit: Int
+    $offset: Int
+    $periods: [Int!]
+    $types: [String!]
+  ) {
+    procedureUpdates(
+      since: $since
+      limit: $limit
+      offset: $offset
+      periods: $periods
+      types: $types
+    ) {
       beforeCount
       afterCount
       newCount
