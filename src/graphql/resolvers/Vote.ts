@@ -481,8 +481,6 @@ const VoteApi: Resolvers = {
       if (typeof yes === 'number' && typeof no === 'number') {
         return yes > no ? VoteSelection.Yes : VoteSelection.No;
       }
-
-      throw new Error('ERROR in governmentDecision');
     },
 
     deputyVotes: async (voteResult, { constituencies, directCandidate }, { DeputyModel }) => {
