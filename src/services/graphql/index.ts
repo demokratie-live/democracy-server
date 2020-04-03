@@ -35,7 +35,7 @@ const graphql = new ApolloServer({
   schema: applyMiddleware(schema, permissions),
   resolvers,
   introspection: true,
-  playground: false,
+  playground: CONFIG.GRAPHIQL,
   context: ({ req, res }: { req: ExpressReqContext; res: Express.Response }) => ({
     // Connection
     res,
