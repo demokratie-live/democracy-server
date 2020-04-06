@@ -33,11 +33,11 @@ const DeviceSchema = new Schema<Device>(
     notificationSettings: {
       enabled: { type: Boolean, default: true },
       disableUntil: Date,
-      newVote: { type: Boolean, default: true }, // TODO remove
+      newVote: { type: Boolean, default: false }, // TODO remove
       newPreperation: { type: Boolean, default: false }, // TODO remove
       conferenceWeekPushs: { type: Boolean, default: true },
-      voteConferenceWeekPushs: { type: Boolean, default: true },
-      voteTOP100Pushs: { type: Boolean, default: true },
+      voteConferenceWeekPushs: { type: Boolean, default: false },
+      voteTOP100Pushs: { type: Boolean, default: false },
       outcomePushs: { type: Boolean, default: true },
       procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
       tags: [],
