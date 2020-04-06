@@ -440,7 +440,7 @@ export const quePushsOutcome = async (procedureId: string) => {
       ? 'Offizielles Ergebnis zu Deiner Abstimmung'
       : 'Offizielles Ergebnis zur Abstimmung';
     const message = procedure.title;
-    quePushs({
+    await quePushs({
       type: PUSH_TYPE.PROCEDURE,
       category: PUSH_CATEGORY.OUTCOME,
       title,
