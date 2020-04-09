@@ -148,7 +148,8 @@ const importProcedures = async (bIoProcedure, { push = false }) => {
           bIoProcedure.voteResults.yes !== oldProcedure.voteResults.yes ||
           bIoProcedure.voteResults.no !== oldProcedure.voteResults.no ||
           bIoProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
-          bIoProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted
+          (bIoProcedure.voteResults.notVoted &&
+            bIoProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted)
         ) {
           quePushsOutcome(bIoProcedure.procedureId);
         }
