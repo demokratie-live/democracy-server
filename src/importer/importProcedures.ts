@@ -212,7 +212,8 @@ const importProcedures = async (
           (importProcedure.voteResults.yes !== oldProcedure.voteResults.yes ||
             importProcedure.voteResults.no !== oldProcedure.voteResults.no ||
             importProcedure.voteResults.abstination !== oldProcedure.voteResults.abstination ||
-            importProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted)
+            (importProcedure.voteResults.notVoted &&
+              importProcedure.voteResults.notVoted !== oldProcedure.voteResults.notVoted))
         ) {
           await quePushsOutcome(importProcedure.procedureId);
         }
