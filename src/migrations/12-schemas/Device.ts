@@ -38,7 +38,7 @@ const DeviceSchema = new Schema<Device>(
       conferenceWeekPushs: { type: Boolean, default: true },
       voteConferenceWeekPushs: { type: Boolean, default: false },
       voteTOP100Pushs: { type: Boolean, default: false },
-      outcomePushs: { type: Boolean, default: true },
+      outcomePushs: { type: Boolean, default: false },
       procedures: [{ type: Schema.Types.ObjectId, ref: 'Procedure' }],
       tags: [],
     },
