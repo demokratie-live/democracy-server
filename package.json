@@ -19,7 +19,7 @@
     "migrations:create": "node -r dotenv/config -r babel-register src/migrations/scripts/create.js"
   },
   "dependencies": {
-    "@democracy-deutschland/bundestag.io-definitions": "^1.0.0",
+    "@democracy-deutschland/bundestag.io-definitions": "1.0.2",
     "apn": "^2.2.0",
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",

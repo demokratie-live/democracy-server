@@ -4,6 +4,10 @@
 
 - [Changed] Convert js to typescript
 
+### 0.1.25
+
+- [FIX] Upgrade definitions repo to fix toggle named polls
+
 ### 0.1.24
 
 - [FIX] Push for vote results
