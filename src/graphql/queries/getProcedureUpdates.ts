@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query ProcedureUpdates(
+  query procedureUpdates(
     $since: Date!
     $limit: Int
     $offset: Int
