@@ -497,6 +497,14 @@ const ProcedureApi: Resolvers = {
         };
       }
 
+      const mongoSearchProcedures = await ProcedureModel.find({ $text: { $search: term } });
+      if (mongoSearchProcedures.length > 0) {
+        return {
+          procedures: mongoSearchProcedures,
+          autocomplete,
+        };
+      }
+
       const { hits } = await elasticsearch.search<{ procedureId: string }>({
         index: 'procedures',
         type: 'procedure',
