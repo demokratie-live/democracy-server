@@ -4,6 +4,10 @@
 
 - [Changed] Convert js to typescript
 
+### 0.1.24
+
+- [FIX] Push for vote results
+
 ### 0.1.23
 
 - [FIX] Push queue memory issue
