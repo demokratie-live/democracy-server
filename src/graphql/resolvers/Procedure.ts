@@ -845,7 +845,11 @@ const ProcedureApi: Resolvers = {
     // Propagate procedureId if present
     voteResults: ({ voteResults, procedureId }) => {
       // global.Log.graphql('Procedure.field.voteResults');
-      if (typeof voteResults.yes === 'number' && typeof voteResults.no === 'number') {
+      if (
+        voteResults &&
+        typeof voteResults.yes === 'number' &&
+        typeof voteResults.no === 'number'
+      ) {
         return { ...voteResults, procedureId };
       }
       return null;
