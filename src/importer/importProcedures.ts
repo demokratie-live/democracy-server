@@ -24,6 +24,7 @@ import {
 } from '../graphql/queries/__generated__/ProcedureUpdates';
 import { IProcedure, PartyVotes } from '../migrations/11-schemas/Procedure';
 import { VoteDecision } from '../../__generated__/globalTypes';
+import { ProcedureDocument } from '../migrations/3-schemas/Procedure/Document';
 
 export const CRON_NAME = 'Procedures';
 
@@ -68,7 +69,15 @@ const importProcedures = async (
     subjectGroups: bIoProcedure.subjectGroups
       ? bIoProcedure.subjectGroups.filter(notEmpty)
       : undefined,
-    importantDocuments: undefined,
+    importantDocuments: bIoProcedure.importantDocuments?.reduce<ProcedureDocument[]>(
+      (prev, doc) => {
+        if (doc) {
+          return [...prev, doc] as ProcedureDocument[];
+        }
+        return prev;
+      },
+      [],
+    ),
   };
   if (bIoProcedure && bIoProcedure.history) {
     const [lastHistory] = bIoProcedure.history.slice(-1);
