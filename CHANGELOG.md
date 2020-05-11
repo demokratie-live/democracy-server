@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.0
+
+- [Changed] Convert js to typescript
+
 ### 0.1.24
 
 - [FIX] Push for vote results
