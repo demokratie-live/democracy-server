@@ -70,7 +70,9 @@ const queryVotes = async (
 
   // Find constituency results if constituencies are given
   const votesConstituencies =
-    (constituencies && constituencies.length > 0) || constituencies === undefined
+    (constituencies && constituencies.length > 0) ||
+    constituencies === undefined ||
+    constituencies === null
       ? await VoteModel.aggregate([
           // Find Procedure, including type; results in up to two objects for state
           {
