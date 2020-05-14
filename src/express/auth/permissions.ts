@@ -3,16 +3,16 @@ import { rule, shield } from 'graphql-shield';
 import CONFIG from '../../config';
 
 // User & Device is existent in Database
-export const isLoggedin = rule({ cache: 'no_cache' })(async (parent, args, { user, device }) => {
-  if (!user || !device) {
+export const isLoggedin = rule({ cache: 'no_cache' })(async (parent, args, { user, deviceId }) => {
+  if (!user || !deviceId) {
     global.Log.warn('Permission denied: You need to login with your Device');
     return false;
   }
   return true;
 });
 
-export const isVerified = rule({ cache: 'no_cache' })(async (parent, args, { user, phone }) => {
-  if (!user || (CONFIG.SMS_VERIFICATION && (!user.isVerified() || !phone))) {
+export const isVerified = rule({ cache: 'no_cache' })(async (parent, args, { user, phoneId }) => {
+  if (!user || (CONFIG.SMS_VERIFICATION && (!user.isVerified() || !phoneId))) {
     global.Log.warn('Permission denied: isVerified = false');
     return false;
   }
