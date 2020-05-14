@@ -56,7 +56,7 @@ const UserApi: Resolvers = {
         user = await UserModel.create({ device });
       }
 
-      const [token, refreshToken] = await createTokens(user._id);
+      const [token, refreshToken] = await createTokens(user);
       headerToken({ res, token, refreshToken });
       return { token };
     },

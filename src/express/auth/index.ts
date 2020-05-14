@@ -11,10 +11,28 @@ import { User } from '../../migrations/1-schemas/User';
 import { Device } from '../../migrations/12-schemas/Device';
 import { Phone } from '../../migrations/3-schemas/Phone';
 
-export const createTokens = async (user: string) => {
+interface JwtObj {
+  user: string | null;
+  d: string | null;
+  p: string | null;
+}
+
+export const createTokens = async (user: User) => {
+  let deviceId: string = user.device
+    ? typeof user.device === 'string'
+      ? user.device
+      : user.device._id
+    : null;
+  let phoneId: string = user.phone
+    ? typeof user.phone === 'string'
+      ? user.phone
+      : user.phone._id
+    : null;
   const token = jwt.sign(
     {
-      user,
+      user: user._id,
+      d: deviceId,
+      p: phoneId,
     },
     CONFIG.AUTH_JWT_SECRET,
     {
@@ -24,7 +42,9 @@ export const createTokens = async (user: string) => {
 
   const refreshToken = jwt.sign(
     {
-      user,
+      user: user._id,
+      d: deviceId,
+      p: phoneId,
     },
     CONFIG.AUTH_JWT_SECRET,
     {
@@ -59,7 +79,7 @@ const refreshTokens = async (refreshToken: string) => {
   }
   // global.Log.jwt(`JWT: Token Refresh for User: ${user._id}`);
   // Generate new Tokens
-  const [newToken, newRefreshToken] = await createTokens(user._id);
+  const [newToken, newRefreshToken] = await createTokens(user);
   return {
     token: newToken,
     refreshToken: newRefreshToken,
@@ -108,27 +128,17 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
   if (token && !deviceHash) {
     // global.Log.jwt(`JWT: Token: ${token}`);
     try {
-      const jwtUser: any = jwt.verify(token, CONFIG.AUTH_JWT_SECRET);
+      const jwtUser = jwt.verify(token, CONFIG.AUTH_JWT_SECRET) as JwtObj;
+      console.log(jwtUser);
       const userid = jwtUser.user;
       // Set request variables
-      req.user = await UserModel.findOne({ _id: userid });
-      if (req.user) {
-        if (req.user.device) {
-          req.device = await DeviceModel.findOne({ _id: req.user.device });
+      req.userId = userid;
+      if (jwtUser.user) {
+        if (jwtUser.d) {
+          req.deviceId = jwtUser.d;
         }
-        if (req.user.phone) {
-          req.phone = await PhoneModel.findOne({ _id: req.user.phone });
-        }
-        // Set new timestamps
-        req.user.markModified('updatedAt');
-        await req.user.save();
-        if (req.device) {
-          req.device.markModified('updatedAt');
-          await req.device.save();
-        }
-        if (req.phone) {
-          req.phone.markModified('updatedAt');
-          await req.phone.save();
+        if (jwtUser.p) {
+          req.phoneId = jwtUser.p;
         }
       }
       success = true;
@@ -143,24 +153,19 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         // Set request variables
-        req.user = newTokens.user;
-        if (req.user) {
-          if (req.user.device) {
-            req.device = await DeviceModel.findOne({ _id: req.user.device });
+        req.userId = newTokens.user._id;
+        if (newTokens.user) {
+          if (newTokens.user.device) {
+            req.deviceId =
+              typeof newTokens.user.device === 'string'
+                ? newTokens.user.device
+                : newTokens.user.device._id;
           }
-          if (req.user.phone) {
-            req.phone = await PhoneModel.findOne({ _id: req.user.phone });
-          }
-          // Set new timestamps
-          req.user.markModified('updatedAt');
-          await req.user.save();
-          if (req.device) {
-            req.device.markModified('updatedAt');
-            await req.device.save();
-          }
-          if (req.phone) {
-            req.phone.markModified('updatedAt');
-            await req.phone.save();
+          if (newTokens.user.phone) {
+            req.phoneId =
+              typeof newTokens.user.phone === 'string'
+                ? newTokens.user.phone
+                : newTokens.user.phone._id;
           }
         }
         success = true;
@@ -210,7 +215,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
         await user.save();
       }
       // global.Log.jwt(`JWT: Token New for User: ${user._id}`);
-      const [createToken, createRefreshToken] = await createTokens(user._id);
+      const [createToken, createRefreshToken] = await createTokens(user);
       headerToken({ res, token: createToken, refreshToken: createRefreshToken });
       // Set new timestamps
       user.markModified('updatedAt');
@@ -227,9 +232,9 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       // global.Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
     }
     // Set request variables
-    req.user = user;
-    req.device = device;
-    req.phone = phone;
+    req.userId = user ? user._id : null;
+    req.deviceId = device ? device._id : null;
+    req.phoneId = phone ? phone._id : null;
   }
   next();
 };

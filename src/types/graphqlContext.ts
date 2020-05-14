@@ -29,7 +29,7 @@ export interface GraphQlContext {
 }
 
 export interface ExpressReqContext extends Request {
-  user?: User | null;
-  phone?: Phone | null;
-  device?: Device | null;
+  userId?: string | null;
+  phoneId?: string | null;
+  deviceId?: string | null;
 }

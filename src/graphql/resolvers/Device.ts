@@ -385,7 +385,7 @@ const DeviceApi: Resolvers = {
       // phone = newPhone;
 
       // Send new tokens since user id has been changed
-      const [token, refreshToken] = await createTokens(saveUser._id);
+      const [token, refreshToken] = await createTokens(saveUser);
       await headerToken({ res, token, refreshToken });
 
       return {
