@@ -27,7 +27,7 @@ const ActivityApi: Resolvers = {
     increaseActivity: async (
       parent,
       { procedureId },
-      { ProcedureModel, ActivityModel, device, phone },
+      { ProcedureModel, ActivityModel, deviceId, phoneId },
     ) => {
       global.Log.graphql('Activity.mutation.increaseActivity');
       let searchQuery;
@@ -41,13 +41,13 @@ const ActivityApi: Resolvers = {
         throw new Error('Procedure not found');
       }
       let active = await ActivityModel.findOne({
-        actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+        actor: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
         kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
         procedure,
       });
       if (!active) {
         active = await ActivityModel.create({
-          actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+          actor: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
           kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           procedure,
         });

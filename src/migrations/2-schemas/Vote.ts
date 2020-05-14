@@ -7,7 +7,7 @@ export interface Vote extends Document {
   procedure: IProcedure | Types.ObjectId;
   state: 'VOTING' | 'COMPLETED';
   type: 'Phone' | 'Device';
-  voters: { voter: Types.ObjectId | Phone | Device }[];
+  voters: { voter: Types.ObjectId | string | Phone | Device }[];
   votes: {
     general: {
       yes: number;

@@ -8,17 +8,16 @@ import { Resolvers } from '../../generated/graphql';
 
 const UserApi: Resolvers = {
   Query: {
-    me: async (parent, args, { UserModel, user, device }) => {
+    me: async (parent, args, { UserModel, user }) => {
       global.Log.graphql('User.query.me');
       if (!user) {
         return null;
       }
       // Normal Code - remove stuff above and enable isLoggedin resolver
       // Maybe return user; ?
-      const dbUser = await UserModel.findById(user._id);
-      const { deviceHash } = device;
+      const dbUser = await UserModel.findById(user.id);
       if (dbUser) {
-        return { ...dbUser.toObject(), deviceHash };
+        return { ...dbUser.toObject() };
       }
     } /* ) */,
   },

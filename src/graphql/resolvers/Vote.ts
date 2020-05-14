@@ -15,12 +15,12 @@ const queryVotes = async (
   { procedure, constituencies }: { procedure: string; constituencies: string[] | null | undefined },
   {
     VoteModel,
-    device,
-    phone,
+    deviceId,
+    phoneId,
   }: {
     VoteModel: GraphQlContext['VoteModel'];
-    device: GraphQlContext['device'];
-    phone: GraphQlContext['phone'];
+    deviceId: GraphQlContext['deviceId'];
+    phoneId: GraphQlContext['phoneId'];
   },
 ) => {
   global.Log.graphql('Vote.query.votes');
@@ -29,7 +29,7 @@ const queryVotes = async (
     procedure,
     type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
     voters: {
-      voter: CONFIG.SMS_VERIFICATION ? phone : device,
+      voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
     },
   });
 
@@ -143,8 +143,12 @@ const queryVotes = async (
 const VoteApi: Resolvers = {
   Query: {
     // Used by App
-    votes: async (_parent: any, { procedure, constituencies }, { VoteModel, device, phone }) => {
-      return queryVotes(_parent, { procedure, constituencies }, { VoteModel, device, phone });
+    votes: async (
+      _parent: any,
+      { procedure, constituencies },
+      { VoteModel, deviceId, phoneId },
+    ) => {
+      return queryVotes(_parent, { procedure, constituencies }, { VoteModel, deviceId, phoneId });
     },
     // Used by Browserverion -> TODO Remove
     communityVotes: async (
@@ -254,7 +258,7 @@ const VoteApi: Resolvers = {
       }
       return null;
     },
-    voteStatistic: async (parent, args, { user, ProcedureModel, VoteModel, phone, device }) => {
+    voteStatistic: async (parent, args, { user, ProcedureModel, VoteModel, phoneId, deviceId }) => {
       global.Log.graphql('Vote.query.voteStatistic', user.isVerified());
       if (!user.isVerified()) {
         return null;
@@ -290,7 +294,7 @@ const VoteApi: Resolvers = {
           type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
           voters: {
             $elemMatch: {
-              voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+              voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
             },
           },
         },
@@ -308,7 +312,7 @@ const VoteApi: Resolvers = {
     vote: async (
       parent,
       { procedure: procedureId, selection, constituency },
-      { VoteModel, ProcedureModel, ActivityModel, DeviceModel, device, phone, ...restContext },
+      { VoteModel, ProcedureModel, ActivityModel, DeviceModel, deviceId, phoneId, ...restContext },
       info,
     ) => {
       global.Log.graphql('Vote.mutation.vote');
@@ -324,7 +328,7 @@ const VoteApi: Resolvers = {
         type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
         voters: {
           $elemMatch: {
-            voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+            voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
           },
         },
       });
@@ -363,7 +367,7 @@ const VoteApi: Resolvers = {
       const voteUpdate: MongooseFilterQuery<Vote> = {
         $push: {
           voters: {
-            voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+            voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
           },
         },
       };
@@ -448,8 +452,8 @@ const VoteApi: Resolvers = {
             ActivityModel,
             VoteModel,
             DeviceModel,
-            phone,
-            device,
+            phoneId,
+            deviceId,
             ...restContext,
           },
           info,
@@ -457,9 +461,10 @@ const VoteApi: Resolvers = {
       }
 
       // Autosubscribe to Pushs for this Procedure & User if the user has the outcomePushs-Setting enabled
-      if (device.notificationSettings.outcomePushs) {
+      const device = await DeviceModel.findById(deviceId);
+      if (device && device.notificationSettings.outcomePushs) {
         await DeviceModel.updateOne(
-          { _id: device._id },
+          { _id: deviceId },
           { $addToSet: { 'notificationSettings.procedures': procedureId } },
         );
       }
@@ -470,8 +475,8 @@ const VoteApi: Resolvers = {
         { procedure: procedure._id, constituencies: constituency ? [constituency] : null },
         {
           VoteModel,
-          device,
-          phone,
+          deviceId,
+          phoneId,
           ...restContext,
         },
       );

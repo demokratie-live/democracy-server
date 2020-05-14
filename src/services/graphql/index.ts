@@ -40,7 +40,7 @@ const graphql = new ApolloServer({
     // Connection
     res,
     // user
-    userId: req.userId,
+    user: req.user,
     deviceId: req.deviceId,
     phoneId: req.phoneId,
     // Models

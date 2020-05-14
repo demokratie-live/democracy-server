@@ -32,7 +32,7 @@ const ProcedureApi: Resolvers = {
         sort = 'lastUpdateDate',
         filter = {},
       },
-      { ProcedureModel, user, VoteModel, device, phone },
+      { ProcedureModel, user, VoteModel, deviceId, phoneId },
     ) => {
       // global.Log.graphql('Procedure.query.procedures');
       let listTypes = listTypeParam as ListType[];
@@ -70,7 +70,7 @@ const ProcedureApi: Resolvers = {
             type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
             voters: {
               $elemMatch: {
-                voter: CONFIG.SMS_VERIFICATION ? phone : device,
+                voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
               },
             },
           },
@@ -269,10 +269,10 @@ const ProcedureApi: Resolvers = {
       return [...activeVotings, ...pastVotings];
     },
 
-    votedProcedures: async (parent, args, { VoteModel, phone, device }) => {
+    votedProcedures: async (parent, args, { VoteModel, phoneId, deviceId }) => {
       // global.Log.graphql('Procedure.query.votedProcedures');
 
-      const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+      const actor = CONFIG.SMS_VERIFICATION ? phoneId : deviceId;
       const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
       const votedProcedures = await VoteModel.aggregate<{
         procedure: IProcedure & { active: boolean; voted: boolean };
@@ -462,13 +462,15 @@ const ProcedureApi: Resolvers = {
       return { total, procedures };
     },
 
-    procedure: async (parent, { id }, { user, device, ProcedureModel }) => {
+    procedure: async (parent, { id }, { user, deviceId, ProcedureModel, DeviceModel }) => {
       // global.Log.graphql('Procedure.query.procedure');
       const procedure = await ProcedureModel.findOne({ procedureId: id });
       // TODO fail here of procedure is null
       if (!procedure) {
         return null;
       }
+
+      const device = await DeviceModel.findById(deviceId);
 
       return {
         ...procedure.toObject(),
@@ -604,8 +606,12 @@ const ProcedureApi: Resolvers = {
       return ProcedureModel.find({ procedureId: { $in: procedureIds } });
     },
 
-    notifiedProcedures: async (parent, args, { device, ProcedureModel }) => {
+    notifiedProcedures: async (parent, args, { deviceId, ProcedureModel, DeviceModel }) => {
       // global.Log.graphql('Procedure.query.notifiedProcedures');
+      const device = await DeviceModel.findById(deviceId);
+      if (!device) {
+        return [];
+      }
       const procedures = await ProcedureModel.find({
         _id: { $in: device.notificationSettings.procedures },
       });
@@ -729,16 +735,16 @@ const ProcedureApi: Resolvers = {
       }
       return null;
     },
-    activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
+    activityIndex: async (procedure, args, { ActivityModel, phoneId, deviceId }) => {
       // global.Log.graphql('Procedure.field.activityIndex');
       const activityIndex = procedure.activities || 0;
       let { active } = procedure;
       if (active === undefined) {
         active =
-          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+          (CONFIG.SMS_VERIFICATION && !phoneId) || (!CONFIG.SMS_VERIFICATION && !deviceId)
             ? false
             : !!(await ActivityModel.findOne({
-                actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                actor: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
                 kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
                 procedure: procedure._id,
               }));
@@ -748,20 +754,20 @@ const ProcedureApi: Resolvers = {
         active,
       };
     },
-    voted: async (procedure, args, { VoteModel, device, phone }) => {
+    voted: async (procedure, args, { VoteModel, deviceId, phoneId }) => {
       // global.Log.graphql('Procedure.field.voted');
       let { voted } = procedure;
 
       if (voted === undefined) {
         voted =
-          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+          (CONFIG.SMS_VERIFICATION && !phoneId) || (!CONFIG.SMS_VERIFICATION && !deviceId)
             ? false
             : !!(await VoteModel.findOne({
                 procedure: procedure._id,
                 type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
                 voters: {
                   $elemMatch: {
-                    voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+                    voter: CONFIG.SMS_VERIFICATION ? phoneId : deviceId,
                   },
                 },
               }));

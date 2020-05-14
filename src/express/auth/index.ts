@@ -12,10 +12,66 @@ import { Device } from '../../migrations/12-schemas/Device';
 import { Phone } from '../../migrations/3-schemas/Phone';
 
 interface JwtObj {
-  user: string | null;
+  user: {
+    id: string;
+    verified: boolean;
+  } | null;
   d: string | null;
   p: string | null;
 }
+
+export interface RequestUser {
+  id: string;
+  isVerified: () => boolean;
+}
+
+const createRequestUser = (jwtUser?: JwtObj['user'] | User): RequestUser | null => {
+  if (jwtUser) {
+    if ('_id' in jwtUser) {
+      return {
+        id: jwtUser._id,
+        isVerified: () => jwtUser?.verified || false,
+      };
+    } else {
+      return {
+        id: jwtUser.id,
+        isVerified: () => jwtUser?.verified || false,
+      };
+    }
+  }
+  return null;
+};
+
+const prepareJwtObj = ({ user }: { user: User }): JwtObj => {
+  const userJwt: JwtObj['user'] = user
+    ? {
+        id: user.id,
+        verified: user.verified,
+      }
+    : null;
+  let d = null;
+  if (user.device) {
+    if (typeof user.device === 'string') {
+      d = user.device;
+    } else {
+      d = user.device._id;
+    }
+  }
+  let p = null;
+  if (user.phone) {
+    if (typeof user.phone === 'string') {
+      p = user.phone;
+    } else {
+      p = user.phone._id;
+    }
+  }
+
+  return {
+    user: userJwt,
+    d,
+    p,
+  };
+};
 
 export const createTokens = async (user: User) => {
   let deviceId: string = user.device
@@ -28,17 +84,9 @@ export const createTokens = async (user: User) => {
       ? user.phone
       : user.phone._id
     : null;
-  const token = jwt.sign(
-    {
-      user: user._id,
-      d: deviceId,
-      p: phoneId,
-    },
-    CONFIG.AUTH_JWT_SECRET,
-    {
-      expiresIn: CONFIG.AUTH_JWT_TTL,
-    },
-  );
+  const token = jwt.sign(prepareJwtObj({ user }), CONFIG.AUTH_JWT_SECRET, {
+    expiresIn: CONFIG.AUTH_JWT_TTL,
+  });
 
   const refreshToken = jwt.sign(
     {
@@ -130,9 +178,8 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
     try {
       const jwtUser = jwt.verify(token, CONFIG.AUTH_JWT_SECRET) as JwtObj;
       console.log(jwtUser);
-      const userid = jwtUser.user;
       // Set request variables
-      req.userId = userid;
+      req.user = createRequestUser(jwtUser.user) || null;
       if (jwtUser.user) {
         if (jwtUser.d) {
           req.deviceId = jwtUser.d;
@@ -153,7 +200,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       if (newTokens.token && newTokens.refreshToken) {
         headerToken({ res, token: newTokens.token, refreshToken: newTokens.refreshToken });
         // Set request variables
-        req.userId = newTokens.user._id;
+        req.user = createRequestUser(newTokens.user);
         if (newTokens.user) {
           if (newTokens.user.device) {
             req.deviceId =
@@ -232,7 +279,7 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       // global.Log.jwt(`JWT: Token New (r): ${createRefreshToken}`);
     }
     // Set request variables
-    req.userId = user ? user._id : null;
+    req.user = createRequestUser(user);
     req.deviceId = device ? device._id : null;
     req.phoneId = phone ? phone._id : null;
   }

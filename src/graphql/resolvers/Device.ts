@@ -9,6 +9,7 @@ import CONFIG from '../../config';
 import { createTokens, headerToken } from '../../express/auth';
 import { sendSMS, statusSMS } from '../../services/sms';
 import { Resolvers, NotificationSettings } from '../../generated/graphql';
+import { Device } from '../../migrations/12-schemas/Device';
 
 const calculateResendTime = ({
   latestCodeTime,
@@ -29,8 +30,12 @@ const calculateResendTime = ({
 
 const DeviceApi: Resolvers = {
   Query: {
-    notificationSettings: async (_parent, _args, { device }) => {
+    notificationSettings: async (_parent, _args, { deviceId, DeviceModel }) => {
       global.Log.graphql('Device.query.notificationSettings');
+      const device = await DeviceModel.findById(deviceId);
+      if (!device) {
+        throw new Error('Access issue');
+      }
       const result: NotificationSettings = {
         ...device.notificationSettings,
         procedures: device.notificationSettings.procedures.map(procedure => {
@@ -51,7 +56,7 @@ const DeviceApi: Resolvers = {
     requestCode: async (
       parent,
       { newPhone, oldPhoneHash },
-      { user, device, phone, PhoneModel, VerificationModel },
+      { user, deviceId, phoneId, PhoneModel, VerificationModel, DeviceModel },
     ) => {
       global.Log.graphql('Device.mutation.requestCode');
       // Check for SMS Verification
@@ -101,7 +106,7 @@ const DeviceApi: Resolvers = {
       }
 
       // Check for valid oldPhoneHash
-      if ((oldPhoneHash && !user.isVerified()) || (oldPhoneHash && !phone)) {
+      if ((oldPhoneHash && !user.isVerified()) || (oldPhoneHash && !phoneId)) {
         return {
           reason: 'Provided oldPhoneHash is invalid',
           succeeded: false,
@@ -217,6 +222,11 @@ const DeviceApi: Resolvers = {
         allowNewUser = true;
       }
 
+      const device = await DeviceModel.findById(deviceId);
+      if (!device) {
+        throw new Error('auth issue #2');
+      }
+
       // Code expiretime
       const expires = new Date(now.getTime() + ms(CONFIG.SMS_VERIFICATION_CODE_TTL));
       verification.verifications?.push({
@@ -253,7 +263,7 @@ const DeviceApi: Resolvers = {
     requestVerification: async (
       parent,
       { code, newPhoneHash, newUser },
-      { res, user, device, phone, UserModel, PhoneModel, VerificationModel },
+      { res, user, deviceId, phoneId, UserModel, PhoneModel, DeviceModel, VerificationModel },
     ) => {
       global.Log.graphql('Device.mutation.requestVerification');
       // Check for SMS Verification
@@ -293,13 +303,17 @@ const DeviceApi: Resolvers = {
         };
       }
 
+      const device = await DeviceModel.findById(deviceId);
+
       // Check device
-      if (device.deviceHash !== verification.deviceHash) {
+      if (!device || device.deviceHash !== verification.deviceHash) {
         return {
           reason: 'Code requested from another Device',
           succeeded: false,
         };
       }
+
+      const phone = await PhoneModel.findById(phoneId);
 
       // User has phoneHash, but no oldPhoneHash?
       if (
@@ -393,8 +407,14 @@ const DeviceApi: Resolvers = {
       };
     },
 
-    addToken: async (parent, { token, os }, { device }) => {
+    addToken: async (parent, { token, os }, { deviceId, DeviceModel }) => {
       global.Log.graphql('Device.mutation.addToken');
+      const device = await DeviceModel.findById(deviceId);
+      if (!device) {
+        return {
+          succeeded: false,
+        };
+      }
       if (!device.pushTokens.some(t => t.token === token)) {
         device.pushTokens.push({ token, os });
         await device.save();
@@ -419,10 +439,13 @@ const DeviceApi: Resolvers = {
         outcomePushs,
         outcomePushsEnableOld,
       },
-      { phone, device, DeviceModel, VoteModel },
+      { phoneId, deviceId, DeviceModel, VoteModel },
     ) => {
       global.Log.graphql('Device.mutation.updateNotificationSettings');
-
+      let device = await DeviceModel.findById(deviceId);
+      if (!device) {
+        throw new Error('auth device issue #1');
+      }
       device.notificationSettings = {
         ...device.notificationSettings,
         ..._.omitBy(
@@ -452,7 +475,7 @@ const DeviceApi: Resolvers = {
       // to ensure uniqueness of items - this can be done serverside aswell
       // reducing write operations - but required ObjectId comparison
       if (outcomePushs && outcomePushsEnableOld) {
-        const actor = CONFIG.SMS_VERIFICATION ? phone._id : device._id;
+        const actor = CONFIG.SMS_VERIFICATION ? phoneId : device._id;
         const kind = CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device';
         const votedProcedures = await VoteModel.find(
           { type: kind, 'voters.voter': actor },
@@ -467,9 +490,12 @@ const DeviceApi: Resolvers = {
         );
         // TODO this additional read operation is also not nessecarily required
         // if the calculation is done serverside
-        device = await DeviceModel.findOne({ _id: device._id }).then(d =>
-          d ? d.toObject() : null,
+        const tmpDevice = await DeviceModel.findOne({ _id: device._id }).then(d =>
+          d ? (d.toObject() as Device) : null,
         );
+        if (tmpDevice) {
+          device = tmpDevice;
+        }
       }
 
       const result: NotificationSettings = {
@@ -484,10 +510,15 @@ const DeviceApi: Resolvers = {
       return result;
     },
 
-    toggleNotification: async (parent, { procedureId }, { device, ProcedureModel }) => {
+    toggleNotification: async (
+      parent,
+      { procedureId },
+      { deviceId, ProcedureModel, DeviceModel },
+    ) => {
       global.Log.graphql('Device.mutation.toggleNotification');
+      const device = await DeviceModel.findById(deviceId);
       const procedure = await ProcedureModel.findOne({ procedureId });
-      if (procedure) {
+      if (device && procedure) {
         const index = device.notificationSettings.procedures.indexOf(procedure?._id);
         let notify;
         if (index > -1) {
