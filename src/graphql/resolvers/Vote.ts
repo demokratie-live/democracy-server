@@ -431,7 +431,14 @@ const VoteApi: Resolvers = {
         },
       ]);
       if (votes.length) {
-        await ProcedureModel.findByIdAndUpdate(procedure._id, { votes: votes[0].total });
+        await ProcedureModel.findByIdAndUpdate(procedure._id, {
+          votes: votes[0].total,
+          'voteResults.communityVotes': {
+            yes: votes[0].yes,
+            no: votes[0].no,
+            abstination: votes[0].abstination,
+          },
+        });
       }
 
       // Increate Activity
