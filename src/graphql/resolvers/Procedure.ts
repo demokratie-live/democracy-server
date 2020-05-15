@@ -619,7 +619,7 @@ const ProcedureApi: Resolvers = {
   },
 
   Procedure: {
-    communityVotes: async (procedure, { constituencies }, { VoteModel }, info) => {
+    communityVotes: async (procedure, { constituencies }, { VoteModel, ProcedureModel }, info) => {
       // global.Log.graphql('Procedure.query.communityVotes');
       // Find global result(cache), not including constituencies
 
@@ -628,6 +628,26 @@ const ProcedureApi: Resolvers = {
       if (requestedFields && requestedFields.fieldsByTypeName) {
         getConstituencyResults =
           'constituencies' in requestedFields.fieldsByTypeName.CommunityVotes;
+      }
+
+      // Use cached community results
+      if (
+        procedure.voteResults.communityVotes &&
+        procedure.voteResults.communityVotes.yes &&
+        procedure.voteResults.communityVotes.no &&
+        procedure.voteResults.communityVotes.abstination &&
+        Number.isInteger(procedure.voteResults.communityVotes.yes) &&
+        Number.isInteger(procedure.voteResults.communityVotes.no) &&
+        Number.isInteger(procedure.voteResults.communityVotes.abstination) &&
+        !getConstituencyResults
+      ) {
+        return {
+          ...procedure.voteResults.communityVotes,
+          total:
+            procedure.voteResults.communityVotes.yes +
+            procedure.voteResults.communityVotes.no +
+            procedure.voteResults.communityVotes.abstination,
+        };
       }
 
       const votesGlobal = await VoteModel.aggregate([
@@ -662,7 +682,7 @@ const ProcedureApi: Resolvers = {
 
       // Find constituency results if constituencies are given
       let votesConstituencies = undefined;
-      if (getConstituencyResults || true) {
+      if (getConstituencyResults) {
         votesConstituencies =
           (constituencies && constituencies.length > 0) || constituencies === undefined
             ? await VoteModel.aggregate<{
@@ -733,6 +753,22 @@ const ProcedureApi: Resolvers = {
                 // Remove elements with property constituency: null (of no votes on it)
                 .then(data => data.filter(({ constituency }) => constituency))
             : [];
+      } else {
+        // do cache community results for next requests
+        if (votesGlobal.length > 0) {
+          await ProcedureModel.update(
+            { _id: procedure._id },
+            {
+              $set: {
+                'voteResults.communityVotes': {
+                  yes: votesGlobal[0].yes,
+                  no: votesGlobal[0].no,
+                  abstination: votesGlobal[0].abstination,
+                },
+              },
+            },
+          );
+        }
       }
       if (votesGlobal.length > 0) {
         votesGlobal[0].constituencies = votesConstituencies;
