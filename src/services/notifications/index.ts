@@ -34,7 +34,7 @@ export const sendQuedPushs = async () => {
   const pushs = await PushNotificationModel.find({
     sent: false,
     time: { $lte: new Date() },
-  });
+  }).limit(CONFIG.CRON_SEND_QUED_PUSHS_LIMIT);
   // send all pushs in there
   const sentPushs = await mapSeries(
     pushs,
