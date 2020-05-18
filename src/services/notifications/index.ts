@@ -34,25 +34,39 @@ export const sendQuedPushs = async () => {
   let pushs = [];
 
   // TODO handle date fix timezone by server
-  var sendTime = new Date();
-  sendTime.setHours(sendTime.getHours() - 2);
 
   // outcome push's first
   pushs = await PushNotificationModel.find({
     sent: false,
-    time: { $lte: sendTime },
+    time: { $lte: new Date() },
     category: PUSH_CATEGORY.OUTCOME,
   }).limit(CONFIG.CRON_SEND_QUED_PUSHS_LIMIT);
+  console.log({
+    sent: false,
+    time: { $lte: new Date() },
+    category: PUSH_CATEGORY.OUTCOME,
+  });
 
-  if (pushs.length !== CONFIG.CRON_SEND_QUED_PUSHS_LIMIT)
+  console.log(`${pushs.length} !== ${CONFIG.CRON_SEND_QUED_PUSHS_LIMIT}`);
+  if (pushs.length !== CONFIG.CRON_SEND_QUED_PUSHS_LIMIT) {
     pushs = [
       ...pushs,
       ...(await PushNotificationModel.find({
         sent: false,
-        time: { $lte: sendTime },
+        time: { $lte: new Date() },
         category: { $ne: PUSH_CATEGORY.OUTCOME },
       }).limit(CONFIG.CRON_SEND_QUED_PUSHS_LIMIT - pushs.length)),
     ];
+
+    console.log({
+      sent: false,
+      time: { $lte: new Date() },
+      category: { $ne: PUSH_CATEGORY.OUTCOME },
+    });
+  }
+
+  console.log('push length', pushs.length);
+
   // send all pushs in there
   const sentPushs = await mapSeries(
     pushs,
