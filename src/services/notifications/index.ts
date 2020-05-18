@@ -31,10 +31,28 @@ export const sendQuedPushs = async () => {
   await setCronStart({ name: CRON_NAME, startDate });
 
   // Query Database
-  const pushs = await PushNotificationModel.find({
+  let pushs = [];
+
+  // TODO handle date fix timezone by server
+  var sendTime = new Date();
+  sendTime.setHours(sendTime.getHours() - 2);
+
+  // outcome push's first
+  pushs = await PushNotificationModel.find({
     sent: false,
-    time: { $lte: new Date() },
+    time: { $lte: sendTime },
+    category: PUSH_CATEGORY.OUTCOME,
   }).limit(CONFIG.CRON_SEND_QUED_PUSHS_LIMIT);
+
+  if (pushs.length !== CONFIG.CRON_SEND_QUED_PUSHS_LIMIT)
+    pushs = [
+      ...pushs,
+      ...(await PushNotificationModel.find({
+        sent: false,
+        time: { $lte: sendTime },
+        category: { $ne: PUSH_CATEGORY.OUTCOME },
+      }).limit(CONFIG.CRON_SEND_QUED_PUSHS_LIMIT - pushs.length)),
+    ];
   // send all pushs in there
   const sentPushs = await mapSeries(
     pushs,
