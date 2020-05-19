@@ -1,5 +1,16 @@
 import gcm, { IResponseBody } from 'node-gcm';
-import gcmProvider from './AndroidProvicer';
+import CONFIG from '../../config';
+
+export const provider = (key = CONFIG.NOTIFICATION_ANDROID_SERVER_KEY) => {
+  if (!key) {
+    global.Log.error(
+      'ERROR: NOTIFICATION_ANDROID_SERVER_KEY not specified in .env - Android Notifications not possible',
+    );
+    return null;
+  }
+
+  return new gcm.Sender(key);
+};
 
 export const push = async ({
   title,
@@ -14,6 +25,8 @@ export const push = async ({
   token: string;
   callback: (err: any, resJson: IResponseBody) => void;
 }) => {
+  const gcmProvider = provider();
+
   // Check if Sending Interface is present
   if (!gcmProvider) {
     global.Log.error('ERROR: gcmProvider not present');
@@ -44,6 +57,8 @@ export const pushBulk = ({
   payload: string;
   tokens: string[];
 }) => {
+  const gcmProvider = provider();
+
   // Check if Sending Interface is present
   if (!gcmProvider) {
     global.Log.error('ERROR: gcmProvider not present');
