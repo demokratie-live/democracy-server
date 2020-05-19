@@ -70,7 +70,9 @@ const queryVotes = async (
 
   // Find constituency results if constituencies are given
   const votesConstituencies =
-    (constituencies && constituencies.length > 0) || constituencies === undefined
+    (constituencies && constituencies.length > 0) ||
+    constituencies === undefined ||
+    constituencies === null
       ? await VoteModel.aggregate([
           // Find Procedure, including type; results in up to two objects for state
           {
@@ -429,7 +431,14 @@ const VoteApi: Resolvers = {
         },
       ]);
       if (votes.length) {
-        await ProcedureModel.findByIdAndUpdate(procedure._id, { votes: votes[0].total });
+        await ProcedureModel.findByIdAndUpdate(procedure._id, {
+          votes: votes[0].total,
+          'voteResults.communityVotes': {
+            yes: votes[0].yes,
+            no: votes[0].no,
+            abstination: votes[0].abstination,
+          },
+        });
       }
 
       // Increate Activity

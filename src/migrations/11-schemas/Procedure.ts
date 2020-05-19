@@ -46,6 +46,11 @@ export interface IProcedure extends Document, Timestamps {
     decisionText?: string;
     namedVote?: boolean;
     partyVotes: PartyVotes[];
+    communityVotes?: {
+      yes?: number;
+      no?: number;
+      abstination?: number;
+    };
   };
   // Resolver added
   active?: boolean;
@@ -97,6 +102,11 @@ const ProcedureSchema = new Schema<IProcedure>(
           },
         },
       ],
+      communityVotes: {
+        yes: Number,
+        no: Number,
+        abstination: Number,
+      },
     },
   },
   { timestamps: true },

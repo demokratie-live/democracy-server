@@ -3,6 +3,7 @@ import _ from 'lodash';
 
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import { MongooseFilterQuery } from 'mongoose';
+import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import CONFIG from '../../config';
 
@@ -618,9 +619,37 @@ const ProcedureApi: Resolvers = {
   },
 
   Procedure: {
-    communityVotes: async (procedure, { constituencies }, { VoteModel }) => {
+    communityVotes: async (procedure, { constituencies }, { VoteModel, ProcedureModel }, info) => {
       // global.Log.graphql('Procedure.query.communityVotes');
       // Find global result(cache), not including constituencies
+
+      const requestedFields = parseResolveInfo(info);
+      let getConstituencyResults = true;
+      if (requestedFields && requestedFields.fieldsByTypeName) {
+        getConstituencyResults =
+          'constituencies' in requestedFields.fieldsByTypeName.CommunityVotes;
+      }
+
+      // Use cached community results
+      if (
+        procedure.voteResults.communityVotes &&
+        procedure.voteResults.communityVotes.yes &&
+        procedure.voteResults.communityVotes.no &&
+        procedure.voteResults.communityVotes.abstination &&
+        Number.isInteger(procedure.voteResults.communityVotes.yes) &&
+        Number.isInteger(procedure.voteResults.communityVotes.no) &&
+        Number.isInteger(procedure.voteResults.communityVotes.abstination) &&
+        !getConstituencyResults
+      ) {
+        return {
+          ...procedure.voteResults.communityVotes,
+          total:
+            procedure.voteResults.communityVotes.yes +
+            procedure.voteResults.communityVotes.no +
+            procedure.voteResults.communityVotes.abstination,
+        };
+      }
+
       const votesGlobal = await VoteModel.aggregate([
         // Find Procedure
         {
@@ -652,77 +681,95 @@ const ProcedureApi: Resolvers = {
       ]);
 
       // Find constituency results if constituencies are given
-      const votesConstituencies =
-        (constituencies && constituencies.length > 0) || constituencies === undefined
-          ? await VoteModel.aggregate<{
-              _id: false;
-              constituency: string;
-              yes: number;
-              no: number;
-              abstination: number;
-              total: number;
-            }>([
-              // Find Procedure, including type; results in up to two objects for state
-              {
-                $match: {
-                  procedure: procedure._id,
-                  type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+      let votesConstituencies = undefined;
+      if (getConstituencyResults) {
+        votesConstituencies =
+          (constituencies && constituencies.length > 0) || constituencies === undefined
+            ? await VoteModel.aggregate<{
+                _id: false;
+                constituency: string;
+                yes: number;
+                no: number;
+                abstination: number;
+                total: number;
+              }>([
+                // Find Procedure, including type; results in up to two objects for state
+                {
+                  $match: {
+                    procedure: procedure._id,
+                    type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+                  },
                 },
-              },
-              // Filter correct constituency
-              {
-                $project: {
-                  votes: {
-                    constituencies: {
-                      $filter: {
-                        input: '$votes.constituencies',
-                        as: 'constituency',
-                        cond: !constituencies
-                          ? true // Return all Constituencies if constituencies param is not given
-                          : { $in: ['$$constituency.constituency', constituencies] }, // Filter Constituencies if an array is given
+                // Filter correct constituency
+                {
+                  $project: {
+                    votes: {
+                      constituencies: {
+                        $filter: {
+                          input: '$votes.constituencies',
+                          as: 'constituency',
+                          cond: !constituencies
+                            ? true // Return all Constituencies if constituencies param is not given
+                            : { $in: ['$$constituency.constituency', constituencies] }, // Filter Constituencies if an array is given
+                        },
                       },
                     },
                   },
                 },
-              },
-              // Unwind constituencies for sum, but preserve null
-              {
-                $unwind: {
-                  path: '$votes.constituencies',
-                  preserveNullAndEmptyArrays: true,
+                // Unwind constituencies for sum, but preserve null
+                {
+                  $unwind: {
+                    path: '$votes.constituencies',
+                    preserveNullAndEmptyArrays: true,
+                  },
+                },
+                // Sum both objects (state)
+                {
+                  $group: {
+                    _id: '$votes.constituencies.constituency',
+                    yes: { $sum: '$votes.constituencies.yes' },
+                    no: { $sum: '$votes.constituencies.no' },
+                    abstain: { $sum: '$votes.constituencies.abstain' },
+                  },
+                },
+                {
+                  $addFields: {
+                    total: { $add: ['$yes', '$no', '$abstain'] },
+                  },
+                },
+                // Build correct result
+                {
+                  $project: {
+                    _id: false,
+                    constituency: '$_id',
+                    yes: '$yes',
+                    no: '$no',
+                    abstination: '$abstain',
+                    total: '$total',
+                  },
+                },
+              ])
+                // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
+                // Remove elements with property constituency: null (of no votes on it)
+                .then(data => data.filter(({ constituency }) => constituency))
+            : [];
+      } else {
+        // do cache community results for next requests
+        if (votesGlobal.length > 0) {
+          await ProcedureModel.update(
+            { _id: procedure._id },
+            {
+              $set: {
+                'voteResults.communityVotes': {
+                  yes: votesGlobal[0].yes,
+                  no: votesGlobal[0].no,
+                  abstination: votesGlobal[0].abstination,
                 },
               },
-              // Sum both objects (state)
-              {
-                $group: {
-                  _id: '$votes.constituencies.constituency',
-                  yes: { $sum: '$votes.constituencies.yes' },
-                  no: { $sum: '$votes.constituencies.no' },
-                  abstain: { $sum: '$votes.constituencies.abstain' },
-                },
-              },
-              {
-                $addFields: {
-                  total: { $add: ['$yes', '$no', '$abstain'] },
-                },
-              },
-              // Build correct result
-              {
-                $project: {
-                  _id: false,
-                  constituency: '$_id',
-                  yes: '$yes',
-                  no: '$no',
-                  abstination: '$abstain',
-                  total: '$total',
-                },
-              },
-            ])
-              // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
-              // Remove elements with property constituency: null (of no votes on it)
-              .then(data => data.filter(({ constituency }) => constituency))
-          : [];
-
+            },
+          );
+        }
+      }
       if (votesGlobal.length > 0) {
         votesGlobal[0].constituencies = votesConstituencies;
         return votesGlobal[0];
