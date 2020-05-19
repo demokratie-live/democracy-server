@@ -17,6 +17,9 @@ export default {
   CRON_SEND_QUED_PUSHS: testCronTime(process.env.CRON_SEND_QUED_PUSHS)
     ? process.env.CRON_SEND_QUED_PUSHS
     : undefined,
+  CRON_SEND_QUED_PUSHS_LIMIT: process.env.CRON_SEND_QUED_PUSHS_LIMIT
+    ? parseInt(process.env.CRON_SEND_QUED_PUSHS_LIMIT)
+    : 0,
   CRON_QUE_PUSHS_CONFERENCE_WEEK: testCronTime(process.env.CRON_QUE_PUSHS_CONFERENCE_WEEK)
     ? process.env.CRON_QUE_PUSHS_CONFERENCE_WEEK
     : undefined,
