@@ -30,15 +30,18 @@ const DeputyApi: Resolvers = {
     ) => {
       global.Log.graphql('Deputy.field.procedures');
       const requestedFields = parseResolveInfo(info);
-      let didRequestProcedureId = false;
+      let didRequestOnlyProcedureId = false;
       if (
         requestedFields &&
         requestedFields.name === 'procedures' &&
         'procedure' in requestedFields.fieldsByTypeName.DeputyProcedure &&
         'procedureId' in
-          requestedFields.fieldsByTypeName.DeputyProcedure.procedure.fieldsByTypeName.Procedure
+          requestedFields.fieldsByTypeName.DeputyProcedure.procedure.fieldsByTypeName.Procedure &&
+        Object.keys(
+          requestedFields.fieldsByTypeName.DeputyProcedure.procedure.fieldsByTypeName.Procedure,
+        ).length === 1
       ) {
-        didRequestProcedureId = true;
+        didRequestOnlyProcedureId = true;
       }
 
       // if procedureIds is given filter procedures to given procedureIds
@@ -50,17 +53,17 @@ const DeputyApi: Resolvers = {
       const procedureIdsSelected = filteredVotes.map(({ procedureId }) => procedureId);
 
       // get needed procedure Data only from votes object
-      if (didRequestProcedureId) {
+      if (didRequestOnlyProcedureId) {
         const returnValue = reduce<
           IDeputyVote,
           {
-            procedure: IProcedure;
+            procedure: Pick<IProcedure, 'procedureId'>;
             decision: VoteSelection;
           }[]
         >(
           filteredVotes,
           async (prev, { procedureId, decision }) => {
-            const procedure = await ProcedureModel.findOne({ procedureId });
+            const procedure = { procedureId };
             if (procedure) {
               const deputyProcedure = {
                 procedure,
@@ -74,6 +77,7 @@ const DeputyApi: Resolvers = {
           [],
         ).then(r => r.slice(offset as number, (offset as number) + (pageSize as number)));
         // .slice(offset, offset + pageSize);
+
         return returnValue;
       }
 
@@ -101,6 +105,7 @@ const DeputyApi: Resolvers = {
           };
         }),
       );
+
       return result;
     },
   },
