@@ -632,6 +632,7 @@ const ProcedureApi: Resolvers = {
 
       // Use cached community results
       if (
+        procedure.voteResults &&
         procedure.voteResults.communityVotes &&
         procedure.voteResults.communityVotes.yes &&
         procedure.voteResults.communityVotes.no &&
