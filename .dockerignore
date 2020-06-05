@@ -1,2 +1,5 @@
 node_modules
-dist
+*.env
+*.log
+dist/*
+AuthKey_*.p8
