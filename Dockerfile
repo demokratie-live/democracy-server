@@ -30,4 +30,4 @@ COPY . .
 COPY --from=BUILD_IMAGE /app/dist ./dist
 COPY --from=BUILD_IMAGE /app/node_modules ./node_modules
 
-ENTRYPOINT [ "yarn", "start" ]
+ENTRYPOINT [ "yarn", "serve" ]
