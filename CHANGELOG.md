@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.2
+
+- [Changed] allow file path AND string for APN key
+
 ### 0.2.1
 
 - [FIX] Auto reconnect mongo
