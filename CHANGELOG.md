@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.3
+
+- [Changed] remove unnecessary console logs
+
 ### 0.2.2
 
 - [Changed] allow file path AND string for APN key

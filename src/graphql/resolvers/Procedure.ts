@@ -903,7 +903,6 @@ const ProcedureApi: Resolvers = {
       return null;
     },
     votes: ({ votes }) => {
-      console.log(votes);
       return votes || 0;
     },
   },
