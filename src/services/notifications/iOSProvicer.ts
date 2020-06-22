@@ -1,4 +1,3 @@
-import fs from 'fs';
 import apn from 'apn';
 import CONFIG from '../../config';
 
@@ -8,7 +7,7 @@ const teamId = CONFIG.APPLE_TEAMID;
 const production = process.env.NODE_ENV === 'production';
 
 const apnProvider = () => {
-  if (!key || !fs.existsSync(key)) {
+  if (!key) {
     global.Log.error('ERROR: APPLE_APN_KEY Path was not found - Apple Notifications not possible');
     return;
   }
