@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.1
+
+- [FIX] Auto reconnect mongo
+
 ### 0.2.0
 
 - [Changed] Convert js to typescript
