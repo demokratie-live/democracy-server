@@ -149,7 +149,7 @@ const ProcedureApi: Resolvers = {
           period,
           ...filterQuery,
         })
-          .sort({ votes: -1, lastUpdateDate: -1, title: 1 })
+          .sort({ votes: -1 })
           .skip(offset as number)
           .limit(pageSize as number);
 

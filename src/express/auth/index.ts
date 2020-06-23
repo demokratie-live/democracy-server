@@ -202,7 +202,10 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
               .update(deviceHash)
               .digest('hex'),
           });
-          await device.save();
+          await device.save().catch(e => {
+            console.log(e);
+            throw new Error('Error: Save new Device');
+          });
         }
 
         // Create user

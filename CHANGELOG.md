@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.4
+
+- [Changed] Throw more clear errors on create new device error
+
 ### 0.2.3
 
 - [Changed] remove unnecessary console logs
