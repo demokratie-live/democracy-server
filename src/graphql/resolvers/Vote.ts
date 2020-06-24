@@ -136,7 +136,7 @@ const queryVotes = async (
   }
   return {
     voted: false,
-    voteResults: { yes: null, no: null, abstination: null, constituencies: [] },
+    voteResults: null,
   };
 };
 
