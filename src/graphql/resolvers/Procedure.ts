@@ -900,7 +900,7 @@ const ProcedureApi: Resolvers = {
       ) {
         return { ...voteResults, procedureId };
       }
-      return {};
+      return null;
     },
     votes: ({ votes }) => {
       return votes || 0;

@@ -1,8 +1,8 @@
 # Changelog
 
-### 0.2.5 & 0.2.6
+### 0.2.5 & 0.2.6 & 0.2.7
 
-- [Fix] Return value for query votes
+- [NoChange] Tried successless to fix 1.2.2 crash
 
 ### 0.2.4
 
