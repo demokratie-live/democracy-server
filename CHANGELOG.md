@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.2.5
+### 0.2.5 & 0.2.6
 
 - [Fix] Return value for query votes
 
