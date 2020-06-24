@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.5
+
+- [Fix] Return value for query votes
+
 ### 0.2.4
 
 - [Changed] Throw more clear errors on create new device error
