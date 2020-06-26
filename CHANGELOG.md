@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.8
+
+- [Changed] start to decouple cronjobs
+
 ### 0.2.5 & 0.2.6 & 0.2.7
 
 - [NoChange] Tried successless to fix 1.2.2 crash
