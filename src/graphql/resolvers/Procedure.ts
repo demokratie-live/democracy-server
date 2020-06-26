@@ -2,6 +2,7 @@
 import _ from 'lodash';
 
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
+import { IProcedure } from '@democracy-deutschland/democracy-common';
 import { MongooseFilterQuery } from 'mongoose';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import PROCEDURE_STATES from '../../config/procedureStates';
@@ -10,7 +11,6 @@ import CONFIG from '../../config';
 import elasticsearch from '../../services/search';
 
 import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
-import { IProcedure } from '../../migrations/11-schemas/Procedure';
 
 const ProcedureApi: Resolvers = {
   Query: {

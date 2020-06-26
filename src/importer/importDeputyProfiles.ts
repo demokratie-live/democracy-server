@@ -7,7 +7,6 @@ import {
   DeputyUpdates,
   DeputyUpdatesVariables,
 } from '../graphql/queries/__generated__/DeputyUpdates';
-import { nullToUndefined } from './importProcedures';
 import { forEachSeries } from 'p-iteration';
 
 export const CRON_NAME = 'DeputyProfiles';
@@ -68,7 +67,7 @@ export default async () => {
               };
               // Update/Insert
               await DeputyModel.findOneAndUpdate(
-                { webId: nullToUndefined(deputy.webId) },
+                { webId: deputy.webId ? deputy.webId : undefined },
                 { $set: deputy },
                 { upsert: true },
               );

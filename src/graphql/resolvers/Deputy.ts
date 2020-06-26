@@ -3,7 +3,7 @@ import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import DeputyModel from '../../models/Deputy';
 import { Resolvers, VoteSelection } from '../../generated/graphql';
 import { IDeputy } from '../../migrations/4-schemas/Deputy';
-import { IProcedure } from '../../migrations/11-schemas/Procedure';
+import { IProcedure } from '@democracy-deutschland/democracy-common';
 import { reduce } from 'p-iteration';
 import { IDeputyVote } from '../../migrations/4-schemas/Deputy/Vote';
 

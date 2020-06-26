@@ -1,6 +1,6 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { IDeputy } from '../migrations/4-schemas/Deputy';
-import { IProcedure } from '../migrations/11-schemas/Procedure';
+import { IProcedure } from '@democracy-deutschland/democracy-common';
 import { GraphQlContext } from '../types/graphqlContext';
 import { DeepPartial } from 'utility-types';
 export type Maybe<T> = T | null;

@@ -3,6 +3,7 @@ import {
   ProcedureModel,
   VoteModel,
   DeviceModel,
+  Device,
   UserModel,
   User,
 } from '@democracy-deutschland/democracy-common';
@@ -11,7 +12,6 @@ import ActivityModel from '../models/Activity';
 import SearchTermModel from '../models/SearchTerm';
 import VerificationModel from '../models/Verification';
 import PhoneModel from '../models/Phone';
-import { Device } from '../migrations/12-schemas/Device';
 import { Phone } from '../migrations/3-schemas/Phone';
 
 export interface GraphQlContext {

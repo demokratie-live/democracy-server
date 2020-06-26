@@ -8,9 +8,6 @@ import importDeputyProfiles, {
 import importNamedPolls, {
   CRON_NAME as CRON_NAME_NAMED_POLLS,
 } from '../../importer/importNamedPolls';
-import importProcedures, {
-  CRON_NAME as CRON_NAME_PROCEDURES,
-} from '../../importer/importProcedures';
 import { resetCronSuccessStartDate, resetCronRunningState } from './tools';
 import {
   quePushsConferenceWeek,
@@ -45,13 +42,6 @@ const cronJobs = async () => {
   // Server freshly started -> Reset all cron states
   // This assumes that only one instance is running on the same database
   await resetCronRunningState();
-  // Procedures
-  registerCronJob({
-    name: CRON_NAME_PROCEDURES,
-    cronTime: CONFIG.CRON_PROCEDURES, // */15 * * * *
-    cronTask: importProcedures,
-    startOnInit: CONFIG.CRON_START_ON_INIT,
-  });
   // NamedPolls
   registerCronJob({
     name: CRON_NAME_NAMED_POLLS,

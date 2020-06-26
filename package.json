@@ -15,6 +15,7 @@
     "dev:serve": "node -r dotenv/config dist/src/index.js",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
     "lint:ts": "tsc --noEmit",
+    "lint:exports": "ts-unused-exports ./tsconfig.json --excludePathsFromReport=generated --excludePathsFromReport=resolvers --excludePathsFromReport=/schemas",
     "migrations:migrate": "node -r dotenv/config -r babel-register src/migrations/scripts/migrate.js",
     "migrations:create": "node -r dotenv/config -r babel-register src/migrations/scripts/create.js"
   },
@@ -107,6 +108,7 @@
     "nodemon": "^2.0.1",
     "prettier": "^1.19.1",
     "ts-node-dev": "^1.0.0-pre.44",
+    "ts-unused-exports": "^6.2.1",
     "typescript": "^3.9.5",
     "utility-types": "^3.10.0"
   }

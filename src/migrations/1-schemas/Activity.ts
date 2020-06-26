@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import CONFIG from '../../config';
 import { Timestamps } from '../schemas/timestapms';
-import { IProcedure } from '../11-schemas/Procedure';
+import { IProcedure } from '@democracy-deutschland/democracy-common';
 import { User } from '@democracy-deutschland/democracy-common';
 
 export interface Activity extends Document, Timestamps {

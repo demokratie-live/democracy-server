@@ -7,6 +7,7 @@ import CONFIG from '../../config';
 import {
   ProcedureModel,
   DeviceModel,
+  Device,
   UserModel,
   VoteModel,
   PushNotificationModel,
@@ -19,7 +20,6 @@ import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
-import { Device } from '../../migrations/12-schemas/Device';
 
 export const sendQuedPushs = async () => {
   const CRON_NAME = 'sendQuedPushs';
@@ -153,7 +153,7 @@ export const sendQuedPushs = async () => {
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
-export const quePushs = async ({
+const quePushs = async ({
   type,
   category,
   title,
@@ -390,84 +390,6 @@ export const quePushsVoteTop100 = async () => {
     topId += 1;
   }
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
-};
-
-export const quePushsOutcome = async (procedureId: string) => {
-  /*
-  Offizielles Ergebnis zu Deiner Abstimmung
-  Lorem Ipsum Titel
-  (Glocke, nicht limitiert, abgestimmt, alle)
-  */
-
-  /*
-  Offizielles Ergebnis zur Abstimmung
-  Lorem Ipsum Titel
-  (Glocke, nicht limitiert, nicht abgestimmt, alle)
-  */
-
-  // find procedure
-  const procedure = await ProcedureModel.findOne({ procedureId });
-
-  // Check if we found the procedure
-  if (!procedure) {
-    global.Log.error(`[PUSH] Unknown Procedure ${procedureId}`);
-    return;
-  }
-  // Find Devices
-  const devices = await DeviceModel.find({
-    'notificationSettings.enabled': true,
-    'notificationSettings.outcomePushs': true,
-    'notificationSettings.procedures': procedure._id,
-    pushTokens: { $gt: [] },
-  });
-
-  // loop through the devices and send Pushs
-  for (let i = 0; i < devices.length; i += 1) {
-    const device = devices[i];
-    // Dont continue if we have no push tokens
-    let voted = null;
-    // Check if device is associcated with a vote on the procedure
-    if (CONFIG.SMS_VERIFICATION) {
-      // eslint-disable-next-line no-await-in-loop
-      const user = await UserModel.findOne({ device: device._id, verified: true });
-      if (user) {
-        // eslint-disable-next-line no-await-in-loop
-        voted = await VoteModel.findOne({
-          procedure: procedure._id,
-          type: 'Phone',
-          voters: {
-            $elemMatch: {
-              voter: user.phone,
-            },
-          },
-        });
-      }
-    } else {
-      // eslint-disable-next-line no-await-in-loop
-      voted = await VoteModel.findOne({
-        procedure: procedure._id,
-        type: 'Device',
-        voters: {
-          $elemMatch: {
-            voter: device._id,
-          },
-        },
-      });
-    }
-
-    const title = voted
-      ? 'Offizielles Ergebnis zu Deiner Abstimmung'
-      : 'Offizielles Ergebnis zur Abstimmung';
-    const message = procedure.title;
-    await quePushs({
-      type: PUSH_TYPE.PROCEDURE,
-      category: PUSH_CATEGORY.OUTCOME,
-      title,
-      message,
-      procedureIds: [procedureId],
-      tokens: device.pushTokens,
-    });
-  }
 };
 
 export const quePushsVoteConferenceWeek = async () => {
