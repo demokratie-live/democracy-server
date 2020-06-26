@@ -6,13 +6,13 @@ import {
   Device,
   UserModel,
   User,
+  DeputyModel,
+  ActivityModel,
+  SearchTermModel,
+  VerificationModel,
+  PhoneModel,
+  Phone,
 } from '@democracy-deutschland/democracy-common';
-import DeputyModel from '../models/Deputy';
-import ActivityModel from '../models/Activity';
-import SearchTermModel from '../models/SearchTerm';
-import VerificationModel from '../models/Verification';
-import PhoneModel from '../models/Phone';
-import { Phone } from '../migrations/3-schemas/Phone';
 
 export interface GraphQlContext {
   ProcedureModel: typeof ProcedureModel;

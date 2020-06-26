@@ -14,12 +14,12 @@ import {
   DeviceModel,
   PushNotificationModel,
   VoteModel,
+  PhoneModel,
+  VerificationModel,
+  ActivityModel,
+  SearchTermModel,
+  DeputyModel,
 } from '@democracy-deutschland/democracy-common';
-import PhoneModel from '../../models/Phone';
-import VerificationModel from '../../models/Verification';
-import ActivityModel from '../../models/Activity';
-import SearchTermModel from '../../models/SearchTerm';
-import DeputyModel from '../../models/Deputy';
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 

@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@democracy-deutschland/bundestag.io-definitions": "^1.0.0",
-    "@democracy-deutschland/democracy-common": "^0.1.0",
+    "@democracy-deutschland/democracy-common": "^0.2.0",
     "apn": "^2.2.0",
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",

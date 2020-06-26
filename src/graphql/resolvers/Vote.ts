@@ -1,13 +1,12 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
 
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
-import { Vote } from '@democracy-deutschland/democracy-common';
+import { Vote, IDeputy } from '@democracy-deutschland/democracy-common';
 import { MongooseFilterQuery } from 'mongoose';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import { Resolvers, VoteSelection } from '../../generated/graphql';
 import { GraphQlContext } from '../../types/graphqlContext';
-import { IDeputy } from '../../migrations/4-schemas/Deputy';
 import ActivityApi from './Activity';
 
 const queryVotes = async (

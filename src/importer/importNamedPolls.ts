@@ -4,7 +4,7 @@ import { forEachSeries } from 'p-iteration';
 // GraphQL
 import createClient from '../graphql/client';
 import getNamedPollUpdates from '../graphql/queries/getNamedPollUpdates';
-import DeputyModel from '../models/Deputy';
+import { DeputyModel } from '@democracy-deutschland/democracy-common';
 import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 import {
   NamedPollUpdates,

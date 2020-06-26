@@ -1,7 +1,6 @@
 import { CronTime } from 'cron';
 
-import CronJobModel from '../../models/CronJob';
-import { ICronJob } from '../../migrations/10-schemas/CronJob';
+import { CronJobModel, ICronJob } from '@democracy-deutschland/democracy-common';
 
 export const testCronTime = (time?: string) => {
   if (!time) {

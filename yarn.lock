@@ -548,10 +548,10 @@
   dependencies:
     typescript "^3.7.2"
 
-"@democracy-deutschland/democracy-common@^0.1.0":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.1.1.tgz#6ad1ccb73c192044f408014c2d7004f878a1fc26"
-  integrity sha512-6AZLKU6NC0paIBNUbIjUD3YbqDhBDHZR8khZhSOkzpyQz3OAU3q0vsen9nE4XrWEuhZZg2/rLV0f6foZdmxCGg==
+"@democracy-deutschland/democracy-common@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.2.0.tgz#26050c6fa1f2e282d12a980f418acfcde7c57092"
+  integrity sha512-/3NUCZsHDOFTQY6mDkcTBDKIz3TUgMO/JlEns8HW2+KXi5L0m73YkvDTyLcKUE9LCNrW0NTaidiT1419SVeKJQ==
   dependencies:
     "@democracy-deutschland/bundestag.io-definitions" "^1.0.2"
     mongoose "^5.9.20"
