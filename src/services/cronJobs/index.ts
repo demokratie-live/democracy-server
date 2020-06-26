@@ -5,10 +5,10 @@ import CONFIG from '../../config';
 import importDeputyProfiles, {
   CRON_NAME as CRON_NAME_DEPUTY_PROFILES,
 } from '../../importer/importDeputyProfiles';
-import importNamedPolls, {
-  CRON_NAME as CRON_NAME_NAMED_POLLS,
-} from '../../importer/importNamedPolls';
-import { resetCronSuccessStartDate, resetCronRunningState } from './tools';
+import {
+  resetCronSuccessStartDate,
+  resetCronRunningState,
+} from '@democracy-deutschland/democracy-common';
 import {
   quePushsConferenceWeek,
   sendQuedPushs,
@@ -42,13 +42,6 @@ const cronJobs = async () => {
   // Server freshly started -> Reset all cron states
   // This assumes that only one instance is running on the same database
   await resetCronRunningState();
-  // NamedPolls
-  registerCronJob({
-    name: CRON_NAME_NAMED_POLLS,
-    cronTime: CONFIG.CRON_NAMED_POLLS, // */15 * * * *
-    cronTask: importNamedPolls,
-    startOnInit: CONFIG.CRON_START_ON_INIT,
-  });
   // DeputyProfiles
   registerCronJob({
     name: CRON_NAME_DEPUTY_PROFILES,

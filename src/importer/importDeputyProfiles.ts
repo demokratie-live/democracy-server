@@ -1,8 +1,13 @@
 import createClient from '../graphql/client';
 import getDeputyUpdates from '../graphql/queries/getDeputyUpdates';
-import { DeputyModel } from '@democracy-deutschland/democracy-common';
+import {
+  DeputyModel,
+  getCron,
+  setCronStart,
+  setCronSuccess,
+  setCronError,
+} from '@democracy-deutschland/democracy-common';
 import { convertPartyName } from './tools';
-import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 import {
   DeputyUpdates,
   DeputyUpdatesVariables,

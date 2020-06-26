@@ -14,9 +14,10 @@ import {
   PUSH_TYPE,
   PUSH_CATEGORY,
   PUSH_OS,
+  getCron,
+  setCronStart,
+  setCronSuccess,
 } from '@democracy-deutschland/democracy-common';
-
-import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';

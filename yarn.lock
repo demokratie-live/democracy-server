@@ -548,12 +548,14 @@
   dependencies:
     typescript "^3.7.2"
 
-"@democracy-deutschland/democracy-common@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.2.0.tgz#26050c6fa1f2e282d12a980f418acfcde7c57092"
-  integrity sha512-/3NUCZsHDOFTQY6mDkcTBDKIz3TUgMO/JlEns8HW2+KXi5L0m73YkvDTyLcKUE9LCNrW0NTaidiT1419SVeKJQ==
+"@democracy-deutschland/democracy-common@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.2.1.tgz#0e2ac20cf46e47a38c6b32c621812bcd796a30a6"
+  integrity sha512-erGVXDOtBz3b0a2yDYVg83ha6uGIyjYRZU0nGRBpkcsY7AErmbwOPHoRoMjuFOXcSHkcwmoDgH5954SWHyxPpw==
   dependencies:
     "@democracy-deutschland/bundestag.io-definitions" "^1.0.2"
+    "@types/cron" "^1.7.2"
+    cron "^1.8.2"
     mongoose "^5.9.20"
     ts-mongoose "^0.0.21"
 
@@ -3695,7 +3697,7 @@ create-error-class@^3.0.0:
   dependencies:
     capture-stack-trace "^1.0.0"
 
-cron@^1.7.2:
+cron@^1.7.2, cron@^1.8.2:
   version "1.8.2"
   resolved "https://registry.yarnpkg.com/cron/-/cron-1.8.2.tgz#4ac5e3c55ba8c163d84f3407bde94632da8370ce"
   integrity sha512-Gk2c4y6xKEO8FSAUTklqtfSr7oTq0CiPQeLBG5Fl0qoXpZyMcj1SG59YL+hqq04bu6/IuEA7lMkYDAplQNKkyg==
