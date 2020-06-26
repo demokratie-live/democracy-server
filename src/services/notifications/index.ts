@@ -4,15 +4,16 @@ import { reduce, mapSeries, filterSeries } from 'p-iteration';
 
 import CONFIG from '../../config';
 
-import DeviceModel from '../../models/Device';
-import UserModel from '../../models/User';
-import ProcedureModel from '../../models/Procedure';
-import VoteModel from '../../models/Vote';
-import PushNotificationModel, {
+import {
+  ProcedureModel,
+  DeviceModel,
+  UserModel,
+  VoteModel,
+  PushNotificationModel,
   PUSH_TYPE,
   PUSH_CATEGORY,
   PUSH_OS,
-} from '../../models/PushNotification';
+} from '@democracy-deutschland/democracy-common';
 
 import { getCron, setCronStart, setCronSuccess } from '../cronJobs/tools';
 

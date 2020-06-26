@@ -8,14 +8,16 @@ import resolvers from '../../graphql/resolvers';
 import { permissions } from '../../express/auth/permissions';
 
 // Models
-import ProcedureModel from '../../models/Procedure';
-import UserModel from '../../models/User';
-import DeviceModel from '../../models/Device';
+import {
+  ProcedureModel,
+  UserModel,
+  DeviceModel,
+  PushNotificationModel,
+  VoteModel,
+} from '@democracy-deutschland/democracy-common';
 import PhoneModel from '../../models/Phone';
 import VerificationModel from '../../models/Verification';
 import ActivityModel from '../../models/Activity';
-import VoteModel from '../../models/Vote';
-import PushNotificationModel from '../../models/PushNotification';
 import SearchTermModel from '../../models/SearchTerm';
 import DeputyModel from '../../models/Deputy';
 

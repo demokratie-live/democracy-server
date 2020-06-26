@@ -3,11 +3,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Response, NextFunction } from 'express';
 import CONFIG from '../../config';
-import UserModel from '../../models/User';
-import DeviceModel from '../../models/Device';
+import { UserModel, DeviceModel, User } from '@democracy-deutschland/democracy-common';
 import PhoneModel from '../../models/Phone';
 import { ExpressReqContext } from '../../types/graphqlContext';
-import { User } from '../../migrations/1-schemas/User';
 import { Device } from '../../migrations/12-schemas/Device';
 import { Phone } from '../../migrations/3-schemas/Phone';
 

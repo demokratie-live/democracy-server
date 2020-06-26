@@ -11,7 +11,7 @@ import getProcedureUpdates from '../graphql/queries/getProcedureUpdates';
 import { getCron, setCronStart, setCronSuccess, setCronError } from '../services/cronJobs/tools';
 
 // Models
-import Procedure from '../models/Procedure';
+import { ProcedureModel } from '@democracy-deutschland/democracy-common';
 
 // Queries
 import { quePushsOutcome } from '../services/notifications';
@@ -187,11 +187,11 @@ const importProcedures = async (
     importProcedure.voteYear = moment(bIoProcedure.voteDate).year(); // eslint-disable-line no-param-reassign
   }
 
-  const oldProcedure = await Procedure.findOne({
+  const oldProcedure = await ProcedureModel.findOne({
     procedureId: nullToUndefined(bIoProcedure.procedureId),
   });
 
-  return Procedure.findOneAndUpdate(
+  return ProcedureModel.findOneAndUpdate(
     { procedureId: importProcedure.procedureId },
     _(importProcedure)
       .omitBy(x => _.isUndefined(x))

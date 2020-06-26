@@ -1,14 +1,16 @@
 import { Response, Request } from 'express';
-import ProcedureModel from '../models/Procedure';
-import VoteModel from '../models/Vote';
+import {
+  ProcedureModel,
+  VoteModel,
+  DeviceModel,
+  UserModel,
+  User,
+} from '@democracy-deutschland/democracy-common';
 import DeputyModel from '../models/Deputy';
 import ActivityModel from '../models/Activity';
 import SearchTermModel from '../models/SearchTerm';
 import VerificationModel from '../models/Verification';
 import PhoneModel from '../models/Phone';
-import DeviceModel from '../models/Device';
-import UserModel from '../models/User';
-import { User } from '../migrations/1-schemas/User';
 import { Device } from '../migrations/12-schemas/Device';
 import { Phone } from '../migrations/3-schemas/Phone';
 
