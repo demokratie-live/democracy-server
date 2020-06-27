@@ -2,9 +2,6 @@ import { CronJob } from 'cron';
 
 import CONFIG from '../../config';
 
-import importDeputyProfiles, {
-  CRON_NAME as CRON_NAME_DEPUTY_PROFILES,
-} from '../../importer/importDeputyProfiles';
 import {
   resetCronSuccessStartDate,
   resetCronRunningState,
@@ -42,13 +39,6 @@ const cronJobs = async () => {
   // Server freshly started -> Reset all cron states
   // This assumes that only one instance is running on the same database
   await resetCronRunningState();
-  // DeputyProfiles
-  registerCronJob({
-    name: CRON_NAME_DEPUTY_PROFILES,
-    cronTime: CONFIG.CRON_DEPUTY_PROFILES, // */15 * * * *
-    cronTask: importDeputyProfiles,
-    startOnInit: CONFIG.CRON_START_ON_INIT,
-  });
   // SheduleBIOResync - Shedule complete Resync with Bundestag.io
   registerCronJob({
     name: 'SheduleBIOResync',
