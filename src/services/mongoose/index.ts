@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { mongoose } from '@democracy-deutschland/democracy-common';
 
 /*
   THIS FILE AND ALL IMPORTS ARE NOT ALLOWED TO INCLUDE ANY MONGOOSE MODELS

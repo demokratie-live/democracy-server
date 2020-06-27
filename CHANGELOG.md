@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.9
+
+- [Fix] use mongoose instance from democracy-common
+
 ### 0.2.8
 
 - [Changed] start to decouple cronjobs
