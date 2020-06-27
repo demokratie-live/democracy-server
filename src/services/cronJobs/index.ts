@@ -7,10 +7,9 @@ import {
   resetCronRunningState,
 } from '@democracy-deutschland/democracy-common';
 import {
-  quePushsConferenceWeek,
-  sendQuedPushs,
-  quePushsVoteTop100,
-  quePushsVoteConferenceWeek,
+  sendQueuedPushs,
+  queuePushsVoteTop100,
+  queuePushsVoteConferenceWeek,
 } from '../notifications';
 
 // global variable to store cronjobs
@@ -46,32 +45,25 @@ const cronJobs = async () => {
     cronTask: resetCronSuccessStartDate,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
-  // sendQuedPushs
+  // sendQueuedPushs
   registerCronJob({
-    name: 'sendQuedPushs',
+    name: 'sendQueuedPushs',
     cronTime: CONFIG.CRON_SEND_QUED_PUSHS, // */15 7-22 * * *
-    cronTask: sendQuedPushs,
+    cronTask: sendQueuedPushs,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
-  // quePushsConferenceWeek
+  // queuePushsVoteTop100
   registerCronJob({
-    name: 'quePushsConferenceWeek',
-    cronTime: CONFIG.CRON_QUE_PUSHS_CONFERENCE_WEEK, // 0 14 * * SUN
-    cronTask: quePushsConferenceWeek,
-    startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
-  });
-  // quePushsVoteTop100
-  registerCronJob({
-    name: 'quePushsVoteTop100',
+    name: 'queuePushsVoteTop100',
     cronTime: CONFIG.CRON_QUE_PUSHS_VOTE_TOP100, // 0 4 * * MON-FRI
-    cronTask: quePushsVoteTop100,
+    cronTask: queuePushsVoteTop100,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
-  // quePushsVoteConferenceWeek
+  // queuePushsVoteConferenceWeek
   registerCronJob({
-    name: 'quePushsVoteConferenceWeek',
+    name: 'queuePushsVoteConferenceWeek',
     cronTime: CONFIG.CRON_QUE_PUSHS_VOTE_CONFERENCE_WEEK, // 0 4 * * MON-FRI
-    cronTask: quePushsVoteConferenceWeek,
+    cronTask: queuePushsVoteConferenceWeek,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
   // Return

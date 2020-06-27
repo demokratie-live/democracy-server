@@ -7,7 +7,6 @@ import CONFIG from '../../config';
 import {
   ProcedureModel,
   DeviceModel,
-  Device,
   UserModel,
   VoteModel,
   PushNotificationModel,
@@ -17,13 +16,14 @@ import {
   getCron,
   setCronStart,
   setCronSuccess,
+  queuePushs,
 } from '@democracy-deutschland/democracy-common';
 
 import { push as pushIOS } from './iOS';
 import { push as pushAndroid } from './Android';
 
-export const sendQuedPushs = async () => {
-  const CRON_NAME = 'sendQuedPushs';
+export const sendQueuedPushs = async () => {
+  const CRON_NAME = 'sendQueuedPushs';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -154,111 +154,15 @@ export const sendQuedPushs = async () => {
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
-const quePushs = async ({
-  type,
-  category,
-  title,
-  message,
-  procedureIds,
-  tokens,
-  time = new Date(),
-}: {
-  type: string;
-  category: string;
-  title: string;
-  message: string;
-  procedureIds: string[];
-  tokens: Device['pushTokens'];
-  time?: Date;
-}) => {
-  // Generate one push for each token
-  const docs = tokens.map(({ token, os }) => {
-    return {
-      type,
-      category,
-      title,
-      message,
-      procedureIds,
-      token,
-      os,
-      time,
-    };
-  });
-
-  await PushNotificationModel.insertMany(docs);
-
-  return true;
-};
-
-// This is called every Sunday by a Cronjob
-export const quePushsConferenceWeek = async () => {
-  /*
-  Kommende Woche ist Sitzungswoche!
-  Es warten 13 spannende Themen auf Dich. Viel Spaß beim Abstimmen.
-  (Sonntag vor Sitzungswoche, alle)
-  */
-
-  const CRON_NAME = 'quePushsConferenceWeek';
-  const startDate = new Date();
-  const cron = await getCron({ name: CRON_NAME });
-  if (cron.running) {
-    global.Log.error(`[Cronjob][${CRON_NAME}] running still - skipping`);
-    return;
-  }
-  await setCronStart({ name: CRON_NAME, startDate });
-  // Find coresponding Procedures
-  const startOfWeek = moment()
-    .startOf('week')
-    .toDate(); // Should be So
-  const endOfWeek = moment()
-    .endOf('week')
-    .toDate(); // Should be Sa
-  const procedures = await ProcedureModel.find(
-    { $and: [{ voteDate: { $gte: startOfWeek } }, { voteDate: { $lte: endOfWeek } }] },
-    { procedureId: 1 },
-  );
-  const procedureIds = procedures.map(p => p.procedureId);
-
-  // Find Devices & Tokens
-  const devices = await DeviceModel.find({
-    'notificationSettings.enabled': true,
-    'notificationSettings.conferenceWeekPushs': true,
-  });
-
-  const tokens = devices.reduce<Device['pushTokens']>(
-    (array, { pushTokens }) => [...array, ...pushTokens],
-    [],
-  );
-
-  // Only send Message if at least one vote & one token is found
-  if (tokens.length > 0 && procedureIds.length > 0) {
-    const title = 'Kommende Woche ist Sitzungswoche!';
-    const message =
-      procedureIds.length === 1
-        ? `Es wartet 1 spannendes Thema auf Dich. Viel Spaß beim Abstimmen.`
-        : `Es warten ${procedureIds.length} spannende Themen auf Dich. Viel Spaß beim Abstimmen.`;
-    quePushs({
-      type: PUSH_TYPE.PROCEDURE_BULK,
-      category: PUSH_CATEGORY.CONFERENCE_WEEK,
-      title,
-      message,
-      procedureIds,
-      tokens,
-    });
-  }
-
-  await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
-};
-
-export const quePushsVoteTop100 = async () => {
-  global.Log.info('quePushsVoteTop100');
+export const queuePushsVoteTop100 = async () => {
+  global.Log.info('queuePushsVoteTop100');
   /*
   TOP 100 - #1: Jetzt Abstimmen!
   Lorem Ipsum Titel
   (Top 100, Außerhalb der Sitzungwoche, 1x pro Tag, individuell)
   */
 
-  const CRON_NAME = 'quePushsVoteTop100';
+  const CRON_NAME = 'queuePushsVoteTop100';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -373,7 +277,7 @@ export const quePushsVoteTop100 = async () => {
         const time = new Date();
         time.setHours(9 + Math.round(Math.random() * 9));
         // Send Pushs
-        quePushs({
+        queuePushs({
           type: PUSH_TYPE.PROCEDURE,
           category: PUSH_CATEGORY.TOP100,
           title: `TOP 100 - #${topId}: Jetzt Abstimmen!`,
@@ -382,7 +286,7 @@ export const quePushsVoteTop100 = async () => {
           tokens,
           time,
         });
-        // We have qued a Push, remove device from list.
+        // We have queued a Push, remove device from list.
         return false;
       },
       [],
@@ -393,14 +297,14 @@ export const quePushsVoteTop100 = async () => {
   await setCronSuccess({ name: CRON_NAME, successStartDate: startDate });
 };
 
-export const quePushsVoteConferenceWeek = async () => {
+export const queuePushsVoteConferenceWeek = async () => {
   /*
   Diese Woche im Bundestag: Jetzt Abstimmen!
   Lorem Ipsum Titel
   (Innerhalb der Sitzungswoche, nicht abgestimmt, nicht vergangen, 1x pro Tag, individuell)
   */
 
-  const CRON_NAME = 'quePushsVoteConferenceWeek';
+  const CRON_NAME = 'queuePushsVoteConferenceWeek';
   const startDate = new Date();
   const cron = await getCron({ name: CRON_NAME });
   if (cron.running) {
@@ -520,7 +424,7 @@ export const quePushsVoteConferenceWeek = async () => {
       const time = new Date();
       time.setHours(9 + Math.round(Math.random() * 9));
       // Save Pushs
-      await quePushs({
+      await queuePushs({
         type: PUSH_TYPE.PROCEDURE,
         category: PUSH_CATEGORY.CONFERENCE_WEEK_VOTE,
         title: 'Diese Woche im Bundestag: Jetzt Abstimmen!',
@@ -529,7 +433,7 @@ export const quePushsVoteConferenceWeek = async () => {
         tokens,
         time,
       });
-      // We have qued a Push, remove device from list.
+      // We have queued a Push, remove device from list.
       return false;
     });
   }
