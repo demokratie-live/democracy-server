@@ -1,6 +1,6 @@
 {
   "name": "democracy-server",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "main": "src/index.js",
   "author": "Manuel Ruck",
   "license": "Apache2",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@democracy-deutschland/bundestag.io-definitions": "^1.0.0",
-    "@democracy-deutschland/democracy-common": "^0.2.3",
+    "@democracy-deutschland/democracy-common": "^0.2.7",
     "apn": "^2.2.0",
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",

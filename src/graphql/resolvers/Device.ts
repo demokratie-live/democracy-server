@@ -1,6 +1,3 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
-/* eslint no-param-reassign: 0 */
-
 import ms from 'ms';
 import _ from 'lodash';
 import crypto from 'crypto';
@@ -253,7 +250,7 @@ const DeviceApi: Resolvers = {
     requestVerification: async (
       parent,
       { code, newPhoneHash, newUser },
-      { res, user, device, phone, UserModel, PhoneModel, VerificationModel },
+      { res, device, phone, UserModel, PhoneModel, VerificationModel },
     ) => {
       global.Log.graphql('Device.mutation.requestVerification');
       // Check for SMS Verification

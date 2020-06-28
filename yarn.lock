@@ -548,16 +548,18 @@
   dependencies:
     typescript "^3.7.2"
 
-"@democracy-deutschland/democracy-common@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.2.3.tgz#5b907977b2477aab7bfb3dfcaa5fe0f1ad932938"
-  integrity sha512-OpSMraA9zxHOdnNS2yUWbt7Fvyopv3Yy7fIkxsklAaGtBIf9OVYM5DAUA3R9LeE0zynXgqNzFZf3lHRmDKpi5w==
+"@democracy-deutschland/democracy-common@^0.2.7":
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/@democracy-deutschland/democracy-common/-/democracy-common-0.2.7.tgz#eb69a3847b0c412c03cb1f9c1e4450b21ac4953b"
+  integrity sha512-88FUeE3OOKM2MB4CyQtNlBJkhLd4qzWYihHhV6Y2tHpLiEmot/ITadK8YAyNTRF1S9Bb/D4NKkTvMN57MazCSw==
   dependencies:
     "@democracy-deutschland/bundestag.io-definitions" "^1.0.2"
     "@types/cron" "^1.7.2"
+    "@types/mongoose" "^5.7.28"
     cron "^1.8.2"
     mongoose "^5.9.20"
     ts-mongoose "^0.0.21"
+    ts-unused-exports "^6.2.1"
 
 "@endemolshinegroup/cosmiconfig-typescript-loader@^1.0.0":
   version "1.0.1"
@@ -1401,6 +1403,14 @@
   integrity sha512-1Q781+rC+hYB34Ped9dRLOWsw1yTNwqphqkRyJR/yFuoWoZ3664s6RxilVSkqEm3lwFmpTYCXtGudxSpHHGDIQ==
   dependencies:
     "@types/bson" "*"
+    "@types/node" "*"
+
+"@types/mongoose@^5.7.28":
+  version "5.7.28"
+  resolved "https://registry.yarnpkg.com/@types/mongoose/-/mongoose-5.7.28.tgz#99385892962e51649d3a40912f2a6f2629558d89"
+  integrity sha512-ll74S2QhC34MSSSk30NHlU8ILESIA2l4mDfAfDse/VM20tT9MRV9WGKWK3HglKRmdL77iMUYMcgHdKJebabtzA==
+  dependencies:
+    "@types/mongodb" "*"
     "@types/node" "*"
 
 "@types/mongoose@^5.7.6":
@@ -6940,13 +6950,18 @@ mkdirp@^0.5.1:
     minimist "^1.2.5"
 
 moment-timezone@^0.5.x:
-  version "0.5.28"
-  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.28.tgz#f093d789d091ed7b055d82aa81a82467f72e4338"
-  integrity sha512-TDJkZvAyKIVWg5EtVqRzU97w0Rb0YVbfpqyjgu6GwXCAohVRqwZjf4fOzDE6p1Ch98Sro/8hQQi65WDXW5STPw==
+  version "0.5.31"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.31.tgz#9c40d8c5026f0c7ab46eda3d63e49c155148de05"
+  integrity sha512-+GgHNg8xRhMXfEbv81iDtrVeTcWt0kWmTEY1XQK14dICTXnWJnT0dxdlPspwqF3keKMVPXwayEsk1DI0AA/jdA==
   dependencies:
     moment ">= 2.9.0"
 
-"moment@>= 2.9.0", moment@>=2.14.0, moment@^2.22.2, moment@^2.24.0:
+"moment@>= 2.9.0":
+  version "2.27.0"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.27.0.tgz#8bff4e3e26a236220dfe3e36de756b6ebaa0105d"
+  integrity sha512-al0MUK7cpIcglMv3YF13qSgdAIqxHTO7brRtaz3DlSULbqfazqkc5kEjNrLDOM7fsjshoFIihnU8snrP7zUvhQ==
+
+moment@>=2.14.0, moment@^2.22.2, moment@^2.24.0:
   version "2.24.0"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
   integrity sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg==
