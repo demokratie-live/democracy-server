@@ -6,11 +6,7 @@ import {
   resetCronSuccessStartDate,
   resetCronRunningState,
 } from '@democracy-deutschland/democracy-common';
-import {
-  sendQueuedPushs,
-  queuePushsVoteTop100,
-  queuePushsVoteConferenceWeek,
-} from '../notifications';
+import { sendQueuedPushs, queuePushsVoteTop100 } from '../notifications';
 
 // global variable to store cronjobs
 const jobs: CronJob[] = [];
@@ -57,13 +53,6 @@ const cronJobs = async () => {
     name: 'queuePushsVoteTop100',
     cronTime: CONFIG.CRON_QUE_PUSHS_VOTE_TOP100, // 0 4 * * MON-FRI
     cronTask: queuePushsVoteTop100,
-    startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
-  });
-  // queuePushsVoteConferenceWeek
-  registerCronJob({
-    name: 'queuePushsVoteConferenceWeek',
-    cronTime: CONFIG.CRON_QUE_PUSHS_VOTE_CONFERENCE_WEEK, // 0 4 * * MON-FRI
-    cronTask: queuePushsVoteConferenceWeek,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
   // Return

@@ -12,7 +12,8 @@
     "generate": "graphql-codegen --config codegen.self.yml",
     "apollo:codegen": "apollo client:codegen --endpoint=http://localhost:3100 --excludes=node_modules/* --target typescript --globalTypesFile=./__generated__/globalTypes.ts",
     "dev:serve": "node -r dotenv/config dist/index.js",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "lint": "yarn lint:es && yarn lint:ts && yarn lint:exports",
+    "lint:es": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
     "lint:ts": "tsc --noEmit",
     "lint:exports": "ts-unused-exports ./tsconfig.json --excludePathsFromReport=generated --excludePathsFromReport=resolvers --excludePathsFromReport=/schemas"
   },
