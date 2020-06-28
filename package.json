@@ -1,17 +1,17 @@
 {
   "name": "democracy-server",
-  "version": "0.2.10",
-  "main": "src/index.js",
+  "version": "0.2.11",
+  "main": "dist/index.js",
   "author": "Manuel Ruck",
   "license": "Apache2",
   "private": true,
   "scripts": {
     "build": "tsc",
-    "serve": "node dist/src/index.js",
+    "serve": "node dist/index.js",
     "dev": "ts-node-dev -r dotenv/config src/index.ts",
     "generate": "graphql-codegen --config codegen.self.yml",
     "apollo:codegen": "apollo client:codegen --endpoint=http://localhost:3100 --excludes=node_modules/* --target typescript --globalTypesFile=./__generated__/globalTypes.ts",
-    "dev:serve": "node -r dotenv/config dist/src/index.js",
+    "dev:serve": "node -r dotenv/config dist/index.js",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
     "lint:ts": "tsc --noEmit",
     "lint:exports": "ts-unused-exports ./tsconfig.json --excludePathsFromReport=generated --excludePathsFromReport=resolvers --excludePathsFromReport=/schemas"
