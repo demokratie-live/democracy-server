@@ -6,7 +6,6 @@ import {
   resetCronSuccessStartDate,
   resetCronRunningState,
 } from '@democracy-deutschland/democracy-common';
-import { sendQueuedPushs } from '../notifications';
 
 // global variable to store cronjobs
 const jobs: CronJob[] = [];
@@ -39,13 +38,6 @@ const cronJobs = async () => {
     name: 'SheduleBIOResync',
     cronTime: CONFIG.CRON_SHEDULE_BIO_RESYNC, // 55 3 * */1 *
     cronTask: resetCronSuccessStartDate,
-    startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
-  });
-  // sendQueuedPushs
-  registerCronJob({
-    name: 'sendQueuedPushs',
-    cronTime: CONFIG.CRON_SEND_QUED_PUSHS, // */15 7-22 * * *
-    cronTask: sendQueuedPushs,
     startOnInit: /* CONFIG.CRON_START_ON_INIT */ false, // dangerous
   });
   // Return

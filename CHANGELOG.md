@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.13
+
+- [Changed] decouple cronjob push-send-queued
+
 ### 0.2.10 - 0.2.12
 
 - [Changed] decouple cronjobs
