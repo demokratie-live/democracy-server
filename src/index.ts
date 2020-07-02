@@ -5,7 +5,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
 import { authMiddleware } from './express/auth';
 
 // *****************************************************************
@@ -52,11 +51,6 @@ const main = async () => {
   // Here several Models are included
 
   server.use(authMiddleware);
-
-  // VOYAGER
-  if (CONFIG.VOYAGER) {
-    server.use('/voyager', voyagerMiddleware({ endpointUrl: CONFIG.GRAPHQL_PATH }));
-  }
 
   // Graphiql Playground
   // Here several Models are included for graphql
