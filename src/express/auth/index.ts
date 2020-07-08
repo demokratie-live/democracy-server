@@ -180,31 +180,26 @@ export const authMiddleware = async (req: ExpressReqContext, res: Response, next
       // global.Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
-        deviceHash: crypto
-          .createHash('sha256')
-          .update(deviceHash)
-          .digest('hex'),
+        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
       });
       phone = phoneHash
         ? await PhoneModel.findOne({
-            phoneHash: crypto
-              .createHash('sha256')
-              .update(phoneHash)
-              .digest('hex'),
+            phoneHash: crypto.createHash('sha256').update(phoneHash).digest('hex'),
           })
         : null;
       user = await UserModel.findOne({ device: device, phone: phone });
       if (!user) {
         // global.Log.jwt('JWT: Create new User');
+
+        device = await DeviceModel.findOne({
+          deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+        });
         // Device
         if (!device) {
           device = new DeviceModel({
-            deviceHash: crypto
-              .createHash('sha256')
-              .update(deviceHash)
-              .digest('hex'),
+            deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
           });
-          await device.save().catch(e => {
+          await device.save().catch((e) => {
             console.log(e);
             throw new Error('Error: Save new Device');
           });
