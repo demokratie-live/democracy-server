@@ -30,7 +30,7 @@ const DeviceApi: Resolvers = {
       global.Log.graphql('Device.query.notificationSettings');
       const result: NotificationSettings = {
         ...device.notificationSettings,
-        procedures: device.notificationSettings.procedures.map(procedure => {
+        procedures: device.notificationSettings.procedures.map((procedure) => {
           if ('_id' in procedure) {
             return procedure._id;
           }
@@ -76,19 +76,10 @@ const DeviceApi: Resolvers = {
       }
 
       // Check for invalid transfere
-      const newPhoneHash = crypto
-        .createHash('sha256')
-        .update(newPhone)
-        .digest('hex');
-      const newPhoneDBHash = crypto
-        .createHash('sha256')
-        .update(newPhoneHash)
-        .digest('hex');
+      const newPhoneHash = crypto.createHash('sha256').update(newPhone).digest('hex');
+      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
       const oldPhoneDBHash = oldPhoneHash
-        ? crypto
-            .createHash('sha256')
-            .update(oldPhoneHash)
-            .digest('hex')
+        ? crypto.createHash('sha256').update(oldPhoneHash).digest('hex')
         : null;
       if (newPhoneHash === oldPhoneHash) {
         return {
@@ -159,6 +150,7 @@ const DeviceApi: Resolvers = {
         // Validate that the Number has recieved the Code
         const smsstatus = await statusSMS(latestCode?.SMSID || '');
         if (!smsstatus) {
+          console.log('DEBUG latestCode', { latestCode, activeCode });
           return {
             reason: 'Your number seems incorrect, please correct it!',
             succeeded: false,
@@ -261,10 +253,7 @@ const DeviceApi: Resolvers = {
         };
       }
 
-      const newPhoneDBHash = crypto
-        .createHash('sha256')
-        .update(newPhoneHash)
-        .digest('hex');
+      const newPhoneDBHash = crypto.createHash('sha256').update(newPhoneHash).digest('hex');
       // Find Verification
       const verifications = await VerificationModel.findOne({
         phoneHash: newPhoneDBHash,
@@ -311,7 +300,7 @@ const DeviceApi: Resolvers = {
       }
 
       // Invalidate Code
-      verifications.verifications = verifications.verifications?.map(obj => {
+      verifications.verifications = verifications.verifications?.map((obj) => {
         if (obj._id === verification._id) {
           obj.expires = now;
         }
@@ -392,7 +381,7 @@ const DeviceApi: Resolvers = {
 
     addToken: async (parent, { token, os }, { device }) => {
       global.Log.graphql('Device.mutation.addToken');
-      if (!device.pushTokens.some(t => t.token === token)) {
+      if (!device.pushTokens.some((t) => t.token === token)) {
         device.pushTokens.push({ token, os });
         await device.save();
       }
@@ -464,14 +453,14 @@ const DeviceApi: Resolvers = {
         );
         // TODO this additional read operation is also not nessecarily required
         // if the calculation is done serverside
-        device = await DeviceModel.findOne({ _id: device._id }).then(d =>
+        device = await DeviceModel.findOne({ _id: device._id }).then((d) =>
           d ? d.toObject() : null,
         );
       }
 
       const result: NotificationSettings = {
         ...device.notificationSettings,
-        procedures: device.notificationSettings.procedures.map(procedure => {
+        procedures: device.notificationSettings.procedures.map((procedure) => {
           if ('_id' in procedure) {
             return procedure._id;
           }
