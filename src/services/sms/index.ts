@@ -272,6 +272,9 @@ export const sendSMS = async (
         default:
           status = false;
       }
+      if (!status) {
+        console.error('SMS Error', bodyResult);
+      }
       resolve({ status, statusCode, SMSID });
     });
   });
