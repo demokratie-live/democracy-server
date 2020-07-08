@@ -149,7 +149,15 @@ const DeviceApi: Resolvers = {
 
         // Validate that the Number has recieved the Code
         const smsstatus = await statusSMS(latestCode?.SMSID || '');
-        if (!smsstatus) {
+        if (
+          !smsstatus &&
+          latestCode &&
+          !(
+            latestCode.time.getTime() +
+              ms(CONFIG.SMS_VERIFICATION_CODE_RESEND_BASETIME) ** codesCount >=
+            now.getTime()
+          )
+        ) {
           console.log('DEBUG latestCode', { latestCode, activeCode });
           return {
             reason: 'Your number seems incorrect, please correct it!',
