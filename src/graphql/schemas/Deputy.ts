@@ -2,6 +2,7 @@ export default `
 type DeputyLink {
   name: String!
   URL: String!
+  username: String
 }
 
 type DeputyContact {
