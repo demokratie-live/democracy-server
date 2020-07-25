@@ -3,13 +3,15 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { Response, NextFunction } from 'express';
 import CONFIG from '../../config';
-import UserModel from '../../models/User';
-import DeviceModel from '../../models/Device';
-import PhoneModel from '../../models/Phone';
+import {
+  UserModel,
+  DeviceModel,
+  PhoneModel,
+  User,
+  Device,
+  Phone,
+} from '@democracy-deutschland/democracy-common';
 import { ExpressReqContext } from '../../types/graphqlContext';
-import { User } from '../../migrations/1-schemas/User';
-import { Device } from '../../migrations/12-schemas/Device';
-import { Phone } from '../../migrations/3-schemas/Phone';
 
 export const createTokens = async (user: string) => {
   const token = jwt.sign(
@@ -86,7 +88,7 @@ export const headerToken = async ({
   }
 };
 
-export const auth = async (req: ExpressReqContext, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: ExpressReqContext, res: Response, next: NextFunction) => {
   global.Log.debug(`Server: Connection from: ${req.connection.remoteAddress}`);
   let token: string | null =
     req.headers['x-token'] || (CONFIG.DEBUG ? req.cookies.debugToken : null);
@@ -178,31 +180,29 @@ export const auth = async (req: ExpressReqContext, res: Response, next: NextFunc
       // global.Log.jwt('JWT: Credentials present');
       // User
       device = await DeviceModel.findOne({
-        deviceHash: crypto
-          .createHash('sha256')
-          .update(deviceHash)
-          .digest('hex'),
+        deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
       });
       phone = phoneHash
         ? await PhoneModel.findOne({
-            phoneHash: crypto
-              .createHash('sha256')
-              .update(phoneHash)
-              .digest('hex'),
+            phoneHash: crypto.createHash('sha256').update(phoneHash).digest('hex'),
           })
         : null;
       user = await UserModel.findOne({ device: device, phone: phone });
       if (!user) {
         // global.Log.jwt('JWT: Create new User');
+
+        device = await DeviceModel.findOne({
+          deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
+        });
         // Device
         if (!device) {
           device = new DeviceModel({
-            deviceHash: crypto
-              .createHash('sha256')
-              .update(deviceHash)
-              .digest('hex'),
+            deviceHash: crypto.createHash('sha256').update(deviceHash).digest('hex'),
           });
-          await device.save();
+          await device.save().catch((e) => {
+            console.log(e);
+            throw new Error('Error: Save new Device');
+          });
         }
 
         // Create user

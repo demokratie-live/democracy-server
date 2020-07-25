@@ -48,6 +48,9 @@ const UserApi: Resolvers = {
             .createHash('sha256')
             .update(deviceHash)
             .digest('hex'),
+        }).catch(e => {
+          console.log(e);
+          throw new Error('Error on save device');
         });
       }
 

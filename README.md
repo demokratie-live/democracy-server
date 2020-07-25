@@ -1,6 +1,6 @@
 ![Screenshot](https://github.com/demokratie-live/democracy-assets/blob/master/images/forfb2.png)
 
-# DEMOCRACY Server for the DEMOCRACY App &nbsp; <a href="https://github.com/kriasoft/nodejs-api-starter/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/demokratie-live/democracy-server.svg?style=social&label=Star&maxAge=3600" height="20"/></a>  <a href="https://twitter.com/democracy_de" target="_blank"><img src="https://img.shields.io/twitter/follow/democracy_de.svg?style=social&label=Follow&maxAge=3600" height="20"/></a>  <a href="https://www.facebook.com/democracygermany/" target="_blank"><img src="https://github.com/demokratie-live/democracy-assets/blob/master/docu/facebook.png" height="20"/></a>  <a href="https://discord.gg/Pdu3ZEV" target="_blank"><img src="https://github.com/demokratie-live/democracy-assets/blob/master/docu/discord.png" height="20"/></a>
+# DEMOCRACY Server for the DEMOCRACY App &nbsp; <a href="https://github.com/kriasoft/nodejs-api-starter/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/demokratie-live/democracy-server.svg?style=social&label=Star&maxAge=3600" height="20"/></a> <a href="https://twitter.com/democracy_de" target="_blank"><img src="https://img.shields.io/twitter/follow/democracy_de.svg?style=social&label=Follow&maxAge=3600" height="20"/></a> <a href="https://www.facebook.com/democracygermany/" target="_blank"><img src="https://github.com/demokratie-live/democracy-assets/blob/master/docu/facebook.png" height="20"/></a> <a href="https://discord.gg/Pdu3ZEV" target="_blank"><img src="https://github.com/demokratie-live/democracy-assets/blob/master/docu/discord.png" height="20"/></a>
 
 [![Build Status](https://travis-ci.org/demokratie-live/democracy-server.svg?branch=master)](https://travis-ci.org/demokratie-live/democracy-server)
 
@@ -8,7 +8,7 @@ The Serversoftware for the DEMOCRACY APP. This is an API Defintion and Server fo
 
 ## Tech Stack
 
-* [Node.js][node], [Yarn][yarn], [JavaScript][js], [Babel][babel]
+- [Node.js][node], [Yarn][yarn], [JavaScript][js]
 
 [More Dependecies](https://github.com/demokratie-live/democracy-server/network/dependencies)
 
@@ -16,26 +16,29 @@ The Serversoftware for the DEMOCRACY APP. This is an API Defintion and Server fo
 
 ## Prerequisites
 
-* [Node.js][node]
-* [MongoDB][mongo]
+- [Node.js][node]
+- [MongoDB][mongo]
 
 ## Getting started
 
 Clone the git repo & run the project
+
 ```
 git clone git@github.com:demokratie-live/democracy-server.git
 cd democracy-server
 yarn install
 ```
 
-Rename the ```.env.example``` file to ```.env``` (Windows: ```.env.```)
+Rename the `.env.example` file to `.env` (Windows: `.env.`)
 
 ### Compile and start
+
 ```
 yarn dev
 ```
 
 ### Import Data from local Bundestag.io Server
+
 A local bundestag.io server will automagically scrape the latest procedures and
 update the democracy-server database.
 Run a local bundestag.io server according to its
@@ -43,6 +46,7 @@ Run a local bundestag.io server according to its
 job to finish.
 
 ### Test Project
+
 ```
 yarn lint
 ```
@@ -85,5 +89,3 @@ Made with ♥ by Team DEMOCRACY ([democracy-deutschland.de](https://www.democrac
 [node]: https://nodejs.org
 [yarn]: https://yarnpkg.com
 [js]: https://developer.mozilla.org/docs/Web/JavaScript
-[babel]: http://babeljs.io/
-[mongo]: https://www.mongodb.com/

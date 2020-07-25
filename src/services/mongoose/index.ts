@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { mongoose } from '@democracy-deutschland/democracy-common';
 
 /*
   THIS FILE AND ALL IMPORTS ARE NOT ALLOWED TO INCLUDE ANY MONGOOSE MODELS
@@ -16,7 +16,7 @@ export default async () => {
 
   // Connect
   try {
-    await mongoose.connect(CONFIG.DB_URL, { useNewUrlParser: true });
+    await mongoose.connect(CONFIG.DB_URL, { useNewUrlParser: true, reconnectTries: 86400 });
   } catch (err) {
     global.Log.error(err);
     await mongoose.createConnection(CONFIG.DB_URL, {});

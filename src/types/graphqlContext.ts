@@ -1,16 +1,18 @@
 import { Response, Request } from 'express';
-import ProcedureModel from '../models/Procedure';
-import VoteModel from '../models/Vote';
-import DeputyModel from '../models/Deputy';
-import ActivityModel from '../models/Activity';
-import SearchTermModel from '../models/SearchTerm';
-import VerificationModel from '../models/Verification';
-import PhoneModel from '../models/Phone';
-import DeviceModel from '../models/Device';
-import UserModel from '../models/User';
-import { User } from '../migrations/1-schemas/User';
-import { Device } from '../migrations/12-schemas/Device';
-import { Phone } from '../migrations/3-schemas/Phone';
+import {
+  ProcedureModel,
+  VoteModel,
+  DeviceModel,
+  Device,
+  UserModel,
+  User,
+  DeputyModel,
+  ActivityModel,
+  SearchTermModel,
+  VerificationModel,
+  PhoneModel,
+  Phone,
+} from '@democracy-deutschland/democracy-common';
 
 export interface GraphQlContext {
   ProcedureModel: typeof ProcedureModel;

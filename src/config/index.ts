@@ -44,9 +44,6 @@ const recommendedConfigs = {
   APPLE_APN_KEY: process.env.APPLE_APN_KEY || null,
   APPLE_APN_KEY_ID: process.env.APPLE_APN_KEY_ID || null,
   APPLE_TEAMID: process.env.APPLE_TEAMID || null,
-  WHITELIST_DATA_SOURCES: process.env.WHITELIST_DATA_SOURCES
-    ? process.env.WHITELIST_DATA_SOURCES.split(',')
-    : ['::ffff:127.0.0.1', '::1'],
   // ...humanconnection,
   ...cronjobConfig,
 };

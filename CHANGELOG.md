@@ -1,5 +1,41 @@
 # Changelog
 
+### 0.2.13
+
+- [Changed] decouple cronjob push-send-queued
+
+### 0.2.10 - 0.2.12
+
+- [Changed] decouple cronjobs
+
+### 0.2.9
+
+- [Fix] use mongoose instance from democracy-common
+
+### 0.2.8
+
+- [Changed] start to decouple cronjobs
+
+### 0.2.5 & 0.2.6 & 0.2.7
+
+- [NoChange] Tried successless to fix 1.2.2 crash
+
+### 0.2.4
+
+- [Changed] Throw more clear errors on create new device error
+
+### 0.2.3
+
+- [Changed] remove unnecessary console logs
+
+### 0.2.2
+
+- [Changed] allow file path AND string for APN key
+
+### 0.2.1
+
+- [FIX] Auto reconnect mongo
+
 ### 0.2.0
 
 - [Changed] Convert js to typescript

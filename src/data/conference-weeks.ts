@@ -28,7 +28,7 @@ const getWeekNumber = (d: Date) => {
   return weekNo;
 };
 
-export const conferenceWeeks = [
+const conferenceWeeks = [
   {
     start: parseDate('13.01.2020'),
     end: parseDate('17.01.2020'),
