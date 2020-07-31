@@ -25,7 +25,7 @@ export default async () => {
   // Open
   mongoose.connection
     .once('open', () => global.Log.info('MongoDB is running'))
-    .on('error', e => {
+    .on('error', (e) => {
       // Unknown if this ends up in main - therefore we log here
       global.Log.error(e.stack);
       throw e;

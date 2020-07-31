@@ -1,4 +1,5 @@
 import { Response, Request } from 'express';
+import DataLoader from 'dataloader';
 import {
   ProcedureModel,
   VoteModel,
@@ -28,6 +29,7 @@ export interface GraphQlContext {
   user: User;
   phone: Phone;
   device: Device;
+  votedLoader: DataLoader<string, boolean, unknown>;
 }
 
 export interface ExpressReqContext extends Request {
