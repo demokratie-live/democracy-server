@@ -11,15 +11,20 @@ export const votedLoader = async ({
   device: Device | null | undefined;
 }) => {
   if (phone) {
-    const votedProcedures = await VoteModel.find({
-      procedure: { $in: procedureObjIds },
-      type: 'Phone',
-      voters: {
-        $elemMatch: {
-          voter: phone._id,
+    const votedProcedures = await VoteModel.find(
+      {
+        procedure: { $in: procedureObjIds },
+        type: 'Phone',
+        voters: {
+          $elemMatch: {
+            voter: phone._id,
+          },
         },
       },
-    });
+      {
+        procedure: 1,
+      },
+    );
     const votedProcedureObjIds = votedProcedures.map(({ procedure }) =>
       (procedure as Types.ObjectId).toHexString(),
     );
