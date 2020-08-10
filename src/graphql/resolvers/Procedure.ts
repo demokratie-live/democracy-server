@@ -485,7 +485,6 @@ const ProcedureApi: Resolvers = {
     },
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
-      console.log('searchProceduresAutocomplete', term);
       // global.Log.graphql('Procedure.query.searchProceduresAutocomplete');
       const autocomplete: string[] = [];
 
@@ -508,7 +507,6 @@ const ProcedureApi: Resolvers = {
       const index = searchClient.getIndex<IProcedure>('procedures');
 
       const search = await index.search(term);
-      console.log('search', search);
       return {
         procedures: search.hits,
         autocomplete: [],
