@@ -13,6 +13,11 @@ import elasticsearch from '../../services/search';
 
 import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
 
+const searchClient = new MeiliSearch({
+  host: process.env.MEILI_SEARCH_HOST!,
+  apiKey: process.env.MEILI_SEARCH_SECRET!,
+});
+
 const ProcedureApi: Resolvers = {
   Query: {
     proceduresWithVoteResults: async (parent, { procedureIds }, { ProcedureModel }) => {
@@ -480,6 +485,7 @@ const ProcedureApi: Resolvers = {
     },
 
     searchProceduresAutocomplete: async (parent, { term }, { ProcedureModel }) => {
+      console.log('searchProceduresAutocomplete', term);
       // global.Log.graphql('Procedure.query.searchProceduresAutocomplete');
       const autocomplete: string[] = [];
 
@@ -499,14 +505,10 @@ const ProcedureApi: Resolvers = {
         };
       }
 
-      const searchClient = new MeiliSearch({
-        host: process.env.MEILI_SEARCH_HOST!,
-        apiKey: process.env.MEILI_SEARCH_SECRET!,
-      });
-
       const index = searchClient.getIndex<IProcedure>('procedures');
 
       const search = await index.search(term);
+      console.log('search', search);
       return {
         procedures: search.hits,
         autocomplete: [],
@@ -843,6 +845,18 @@ const ProcedureApi: Resolvers = {
     },
     votes: ({ votes }) => {
       return votes || 0;
+    },
+    submissionDate: ({ submissionDate }) => {
+      if (typeof submissionDate === 'string') {
+        return new Date(submissionDate);
+      }
+      return submissionDate;
+    },
+    voteDate: ({ voteDate }) => {
+      if (typeof voteDate === 'string') {
+        return new Date(voteDate);
+      }
+      return voteDate;
     },
   },
 };
