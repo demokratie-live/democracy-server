@@ -13,11 +13,6 @@ import elasticsearch from '../../services/search';
 
 import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
 
-const searchClient = new MeiliSearch({
-  host: process.env.MEILI_SEARCH_HOST!,
-  apiKey: process.env.MEILI_SEARCH_SECRET!,
-});
-
 const ProcedureApi: Resolvers = {
   Query: {
     proceduresWithVoteResults: async (parent, { procedureIds }, { ProcedureModel }) => {
@@ -503,6 +498,12 @@ const ProcedureApi: Resolvers = {
           autocomplete,
         };
       }
+
+      const searchClient = new MeiliSearch({
+        host: process.env.MEILI_SEARCH_HOST!,
+        apiKey: process.env.MEILI_SEARCH_SECRET!,
+      });
+
       const index = searchClient.getIndex<IProcedure>('procedures');
 
       const search = await index.search(term);
