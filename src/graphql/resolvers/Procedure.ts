@@ -506,7 +506,7 @@ const ProcedureApi: Resolvers = {
 
       const index = searchClient.getIndex<IProcedure>('procedures');
 
-      const search = await index.search(term);
+      const search = await index.search(term, { limit: 100 });
       return {
         procedures: search.hits,
         autocomplete: [],
