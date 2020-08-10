@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.24
+
+- [Changed] use MeiliSearch for search
+
 ### 0.2.22
 
 - [Changed] add dataloader to graphql resolver procedures.voted

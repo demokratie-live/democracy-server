@@ -5,12 +5,18 @@ import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bunde
 import { IProcedure } from '@democracy-deutschland/democracy-common';
 import { MongooseFilterQuery } from 'mongoose';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
+import MeiliSearch from 'meilisearch';
 import PROCEDURE_STATES from '../../config/procedureStates';
 import CONFIG from '../../config';
 
 import elasticsearch from '../../services/search';
 
 import { Resolvers, ListType, ProcedureType } from '../../generated/graphql';
+
+const searchClient = new MeiliSearch({
+  host: process.env.MEILI_SEARCH_HOST!,
+  apiKey: process.env.MEILI_SEARCH_SECRET!,
+});
 
 const ProcedureApi: Resolvers = {
   Query: {
@@ -497,69 +503,11 @@ const ProcedureApi: Resolvers = {
           autocomplete,
         };
       }
+      const index = searchClient.getIndex<IProcedure>('procedures');
 
-      const mongoSearchProcedures = await ProcedureModel.find({ $text: { $search: term } });
-      if (mongoSearchProcedures.length > 0) {
-        return {
-          procedures: mongoSearchProcedures,
-          autocomplete,
-        };
-      }
-
-      const { hits } = await elasticsearch.search<{ procedureId: string }>({
-        index: 'procedures',
-        type: 'procedure',
-        body: {
-          query: {
-            function_score: {
-              query: {
-                bool: {
-                  must: [
-                    {
-                      term: { period: 19 },
-                    },
-                    {
-                      query_string: {
-                        query: "type:'Antrag' OR type:'Gesetzgebung'",
-                      },
-                    },
-                    {
-                      multi_match: {
-                        query: `*${term}*`,
-                        fields: ['title^3', 'tags^2.5', 'abstract^2'],
-                        fuzziness: 'AUTO',
-                        prefix_length: 3,
-                      },
-                    },
-                  ],
-                },
-              },
-            },
-          },
-
-          suggest: {
-            autocomplete: {
-              text: `${term}`,
-              term: {
-                field: 'title',
-                suggest_mode: 'popular',
-              },
-            },
-          },
-        },
-      });
-
-      // prepare procedures
-      const procedureIds = hits.hits.map(({ _source: { procedureId } }) => procedureId);
-      const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIds } });
-
-      // prepare autocomplete
-      // if (suggest.autocomplete[0]) {
-      //   autocomplete = suggest.autocomplete[0].options.map(({ text }) => text);
-      // }
+      const search = await index.search(term);
       return {
-        procedures:
-          _.sortBy(procedures, ({ procedureId }) => procedureIds.indexOf(procedureId)) || [],
+        procedures: search.hits,
         autocomplete: [],
       };
     },
