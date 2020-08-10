@@ -431,9 +431,9 @@ const ProcedureApi: Resolvers = {
         // Pagination
         .limit(pageSize as number)
         .skip(offset as number)
-        .then(procedures => {
+        .then((procedures) => {
           // Filter Andere(fraktionslos) from partyVotes array in result, rename party(CDU -> Union)
-          return procedures.map(p => {
+          return procedures.map((p) => {
             // MongoObject to JS Object
             const procedure: IProcedure = p.toObject();
             // eslint-disable-next-line no-param-reassign
@@ -611,7 +611,7 @@ const ProcedureApi: Resolvers = {
         _id: { $in: device.notificationSettings.procedures },
       });
 
-      return procedures.map(procedure => ({
+      return procedures.map((procedure) => ({
         ...procedure.toObject(),
         notify: true,
       }));
@@ -752,7 +752,7 @@ const ProcedureApi: Resolvers = {
               ])
                 // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
                 // Remove elements with property constituency: null (of no votes on it)
-                .then(data => data.filter(({ constituency }) => constituency))
+                .then((data) => data.filter(({ constituency }) => constituency))
             : [];
       } else {
         // do cache community results for next requests
@@ -778,70 +778,60 @@ const ProcedureApi: Resolvers = {
       return null;
     },
     activityIndex: async (procedure, args, { ActivityModel, phone, device }) => {
-      // global.Log.graphql('Procedure.field.activityIndex');
-      const activityIndex = procedure.activities || 0;
-      let { active } = procedure;
-      if (active === undefined) {
-        active =
-          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
-            ? false
-            : !!(await ActivityModel.findOne({
-                actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
-                kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-                procedure: procedure._id,
-              }));
-      }
       return {
-        activityIndex,
-        active,
+        activityIndex: procedure.votes || 0,
+        active: false,
       };
+      // // deprecated
+      // const activityIndex = procedure.activities || 0;
+      // let { active } = procedure;
+      // if (active === undefined) {
+      //   active =
+      //     (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
+      //       ? false
+      //       : !!(await ActivityModel.findOne({
+      //           actor: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
+      //           kind: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
+      //           procedure: procedure._id,
+      //         }));
+      // }
+      // return {
+      //   activityIndex,
+      //   active,
+      // };
     },
-    voted: async (procedure, args, { VoteModel, device, phone }) => {
-      // global.Log.graphql('Procedure.field.voted');
-      let { voted } = procedure;
-
+    voted: async ({ voted, _id }, args, { votedLoader }) => {
       if (voted === undefined) {
-        voted =
-          (CONFIG.SMS_VERIFICATION && !phone) || (!CONFIG.SMS_VERIFICATION && !device)
-            ? false
-            : !!(await VoteModel.findOne({
-                procedure: procedure._id,
-                type: CONFIG.SMS_VERIFICATION ? 'Phone' : 'Device',
-                voters: {
-                  $elemMatch: {
-                    voter: CONFIG.SMS_VERIFICATION ? phone._id : device._id,
-                  },
-                },
-              }));
+        return votedLoader.load(_id);
       }
       return !!voted;
     },
-    votedGovernment: procedure => {
+    votedGovernment: (procedure) => {
       // global.Log.graphql('Procedure.field.votedGovernment');
       return !!(
         procedure.voteResults &&
         (procedure.voteResults.yes || procedure.voteResults.abstination || procedure.voteResults.no)
       );
     },
-    completed: procedure => {
+    completed: (procedure) => {
       // global.Log.graphql('Procedure.field.completed');
       return PROCEDURE_STATES.COMPLETED.includes(procedure.currentStatus || '');
     },
     // DEPRECATED ListType 2019-01-29 use list instead
-    listType: procedure => {
+    listType: (procedure) => {
       // global.Log.graphql('Procedure.field.listType');
       if (
         procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.BESCHLUSSEMPFEHLUNG ||
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
-        PROCEDURE_STATES.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+        PROCEDURE_STATES.COMPLETED.some((s) => s === procedure.currentStatus || procedure.voteDate)
       ) {
         return ProcedureType.InVote;
       }
       return ProcedureType.Preparation;
     },
-    list: procedure => {
+    list: (procedure) => {
       // global.Log.graphql('Procedure.field.list');
       if (procedure.voteDate && new Date(procedure.voteDate) < new Date()) {
         return ListType.Past;
@@ -851,7 +841,7 @@ const ProcedureApi: Resolvers = {
         (procedure.currentStatus === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN &&
           procedure.voteDate &&
           new Date(procedure.voteDate) >= new Date()) ||
-        PROCEDURE_STATES.COMPLETED.some(s => s === procedure.currentStatus || procedure.voteDate)
+        PROCEDURE_STATES.COMPLETED.some((s) => s === procedure.currentStatus || procedure.voteDate)
       ) {
         return ListType.InVote;
       }
@@ -861,7 +851,7 @@ const ProcedureApi: Resolvers = {
       // global.Log.graphql('Procedure.field.currentStatusHistory');
       const cleanHistory = [...new Set(currentStatusHistory)];
       const referStatusIndex = cleanHistory.findIndex(
-        status => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
+        (status) => status === PROCEDURE_DEFINITIONS.STATUS.UEBERWIESEN,
       );
       if (referStatusIndex !== -1) {
         cleanHistory.splice(referStatusIndex, 0, '1. Beratung');
@@ -884,7 +874,7 @@ const ProcedureApi: Resolvers = {
         PROCEDURE_DEFINITIONS.STATUS.BP_ZUSTIMMUNGSVERWEIGERUNG,
         PROCEDURE_DEFINITIONS.STATUS.ZUSTIMMUNG_VERSAGT,
       ];
-      const resultStatusIndex = cleanHistory.findIndex(status => resultStaties.includes(status));
+      const resultStatusIndex = cleanHistory.findIndex((status) => resultStaties.includes(status));
       if (resultStatusIndex !== -1) {
         cleanHistory.splice(resultStatusIndex, 0, '2. Beratung / 3. Beratung');
       }

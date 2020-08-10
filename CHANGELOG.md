@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.22
+
+- [Changed] add dataloader to graphql resolver procedures.voted
+
 ### 0.2.13
 
 - [Changed] decouple cronjob push-send-queued

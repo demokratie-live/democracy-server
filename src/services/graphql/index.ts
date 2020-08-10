@@ -6,6 +6,8 @@ import { ExpressReqContext } from '../../types/graphqlContext';
 import typeDefs from '../../graphql/schemas';
 import resolvers from '../../graphql/resolvers';
 import { permissions } from '../../express/auth/permissions';
+import DataLoader from 'dataloader';
+import { votedLoader } from '../../graphql/resolvers/dataLoaders';
 
 // Models
 import {
@@ -20,6 +22,7 @@ import {
   SearchTermModel,
   DeputyModel,
 } from '@democracy-deutschland/democracy-common';
+import { Types } from 'mongoose';
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
@@ -56,6 +59,9 @@ const graphql = new ApolloServer({
     PushNotificationModel,
     SearchTermModel,
     DeputyModel,
+    votedLoader: new DataLoader<Types.ObjectId, boolean, unknown>((procedureObjIds) =>
+      votedLoader({ procedureObjIds, device: req.device, phone: req.phone }),
+    ),
   }),
   tracing: CONFIG.DEBUG,
 });
