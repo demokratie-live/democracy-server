@@ -26,12 +26,16 @@ export const votedLoader = async ({
       },
     );
     const votedProcedureObjIds = votedProcedures.map(({ procedure }) =>
-      (procedure as Types.ObjectId).toHexString(),
+      typeof procedure === 'string' ? procedure : (procedure as Types.ObjectId).toHexString(),
     );
 
-    return procedureObjIds.map((procedureObjId) =>
-      votedProcedureObjIds.includes(procedureObjId.toHexString()),
-    );
+    return procedureObjIds.map((procedureObjId) => {
+      if (typeof procedureObjId === 'string') {
+        return votedProcedureObjIds.includes(procedureObjId);
+      } else {
+        return votedProcedureObjIds.includes(procedureObjId.toHexString());
+      }
+    });
   }
   return procedureObjIds.map(() => false);
 };
