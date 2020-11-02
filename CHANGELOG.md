@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.31
+
+- [Changed] add procedureId as id type for vote mutation
+
 ### 0.2.24
 
 - [Fix] dataloader procedure id handling

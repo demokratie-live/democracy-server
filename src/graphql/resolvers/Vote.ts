@@ -2,6 +2,7 @@
 
 import { PROCEDURE as PROCEDURE_DEFINITIONS } from '@democracy-deutschland/bundestag.io-definitions';
 import { Vote, IDeputy } from '@democracy-deutschland/democracy-common';
+import { Types } from 'mongoose';
 import { MongooseFilterQuery } from 'mongoose';
 import CONFIG from '../../config';
 import PROCEDURE_STATES from '../../config/procedureStates';
@@ -126,7 +127,7 @@ const queryVotes = async (
         ])
           // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
           // Remove elements with property constituency: null (of no votes on it)
-          .then(data => data.filter(({ constituency }) => constituency))
+          .then((data) => data.filter(({ constituency }) => constituency))
       : [];
 
   if (votesGlobal.length > 0) {
@@ -244,7 +245,7 @@ const VoteApi: Resolvers = {
             ])
               // TODO Change query to make the filter obsolet (preserveNullAndEmptyArrays)
               // Remove elements with property constituency: null (of no votes on it)
-              .then(data => data.filter(({ constituency }) => constituency))
+              .then((data) => data.filter(({ constituency }) => constituency))
           : [];
 
       if (votesGlobal.length > 0) {
@@ -312,7 +313,9 @@ const VoteApi: Resolvers = {
     ) => {
       global.Log.graphql('Vote.mutation.vote');
       // Find procedure
-      const procedure = await ProcedureModel.findById(procedureId);
+      const procedure = Types.ObjectId.isValid(procedureId)
+        ? await ProcedureModel.findById(procedureId)
+        : await ProcedureModel.findOne({ procedureId });
       // Fail if not existant or not votable
       if (!procedure) {
         throw new Error('Not votable');
@@ -466,7 +469,7 @@ const VoteApi: Resolvers = {
       if (device.notificationSettings.outcomePushs) {
         await DeviceModel.updateOne(
           { _id: device._id },
-          { $addToSet: { 'notificationSettings.procedures': procedureId } },
+          { $addToSet: { 'notificationSettings.procedures': procedure._id } },
         );
       }
 
@@ -484,7 +487,7 @@ const VoteApi: Resolvers = {
     },
   },
   VoteResult: {
-    governmentDecision: parent => {
+    governmentDecision: (parent) => {
       const { yes, no } = parent;
       if (typeof yes === 'number' && typeof no === 'number') {
         return yes > no ? VoteSelection.Yes : VoteSelection.No;
