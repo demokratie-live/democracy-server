@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.32
+
+- [Fix] WOM Constituency fix sort procedures
+
 ### 0.2.31
 
 - [Changed] add procedureId as id type for vote mutation

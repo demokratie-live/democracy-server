@@ -77,7 +77,7 @@ const DeputyApi: Resolvers = {
             return prev;
           },
           [],
-        ).then(r => r.slice(offset as number, (offset as number) + (pageSize as number)));
+        ).then((r) => r.slice(offset as number, (offset as number) + (pageSize as number)));
         // .slice(offset, offset + pageSize);
 
         return returnValue;
@@ -90,14 +90,14 @@ const DeputyApi: Resolvers = {
       // if need more procedure data get procedure object from database
       const procedures = await ProcedureModel.find({ procedureId: { $in: procedureIdsSelected } })
         .sort({
-          lastUpdateDate: -1,
+          voteDate: -1,
           title: 1,
         })
         .limit(pageSize || 9999999)
         .skip(offset);
 
       const result = await Promise.all(
-        procedures.map(async procedure => {
+        procedures.map(async (procedure) => {
           const p = await filteredVotes.find(
             ({ procedureId }) => procedure.procedureId === procedureId,
           );
